@@ -1,0 +1,63 @@
+﻿<html>
+<head>
+    <title>JiYu Trainer 在线更新</title>
+    <style>
+         html {
+             overflow: hidden;
+             overflow-y: scroll;
+         }
+         body {
+             font-family: "Microsoft YaHei", Tahoma, sans-serif;
+             margin: 15px;
+             padding: 0;
+         }
+        .btn {
+            display: inline-block;
+            padding: 6px 13px;
+            background-color: #bababa;
+            border-radius: 50%;
+            color: #fff;
+            text-decoration: none;
+        }
+        .btn:hover {
+            background-color: #0094ff;
+        }
+        #progress_bg {
+            margin-top: 50px;
+            background-color: #a1a1a1;
+            border-radius: 50%;
+            height: 26px;
+        }
+        #progress {
+            background-color: #0094ff;
+            display: inline-block;
+            border-radius: 50%;
+            width: 0%;
+            height: 26px;
+        }
+        #progress_text {
+            margin-top: 10px;
+            color: #808080;
+        }
+        #bottom_bar{
+            text-align: right;
+            position: absolute;
+            bottom: 5px;
+            left: 5px;
+            right: 5px;
+        }
+    </style>
+</head>
+
+<body class="window-shadow">
+    <div class="text-center">
+        <div id="progress_bg">
+            <div id="progress"></div>
+        </div>
+        <span id="progress_text">正在初始化，请稍后...</span>
+    </div>
+    <div id="bottom_bar">
+        <a class="btn" href="#" id="link_exit">取消更新</a>
+    </div>
+</body>
+</html>

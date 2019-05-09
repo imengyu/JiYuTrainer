@@ -33,6 +33,9 @@
     <ClInclude Include="HelpWindow.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="UpdaterWindow.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -48,6 +51,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="HelpWindow.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="UpdaterWindow.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -106,5 +112,6 @@
   <ItemGroup>
     <None Include="MainWindow.html" />
     <None Include="HelpWindow.html" />
+    <None Include="UpdaterWindow.html" />
   </ItemGroup>
 </Project>

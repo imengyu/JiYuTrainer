@@ -64,6 +64,7 @@ private:
 	bool setAutoIncludeFullWindow = false;
 	bool setAllowAllRunOp = false;
 	bool setAutoForceKill = false;
+	bool setAutoUpdate = true;
 	int setCkInterval = 3100;
 
 	Logger* currentLogger = nullptr;
@@ -92,7 +93,13 @@ private:
 	sciter::dom::element check_auto_fkill;
 	sciter::dom::element check_auto_fck;
 	sciter::dom::element check_allow_op;
+	sciter::dom::element check_auto_update;
 	sciter::dom::element input_ckinterval;
+
+	sciter::dom::element common_message;
+	sciter::dom::element common_message_title;
+	sciter::dom::element common_message_text;
+	sciter::dom::element update_message;
 
 	void OnWmCommand(WPARAM wParam); 
 	BOOL OnWmCreate();
@@ -108,10 +115,12 @@ private:
 	void OnResolveBlackScreenWindow() override;
 	void OnBeforeSendStartConf() override;
 	HWND GetMainHWND() { return _hWnd; }
+	void OnSimpleMessageCallback(LPCWSTR text)override;
 
 	void ShowHelp();
 
 	void ShowFastTip(LPCWSTR text);
+	void ShowFastMessage(LPCWSTR title, LPCWSTR text);
 
 	void LoadSettings();
 	void LoadSettingsToUi();

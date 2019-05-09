@@ -1,3 +1,26 @@
 #pragma once
+#include "stdafx.h"
 
-#include "resource.h"
+#define UPDATE_STATUS_NOT_SUPPORT 0
+#define UPDATE_STATUS_LATEST 1
+#define UPDATE_STATUS_CHECKED 2
+#define UPDATE_STATUS_HAS_UPDATE 3
+#define UPDATE_STATUS_COULD_NOT_CONNECT 4
+#define UPDATE_STATUS_COULD_NOT_CREATE_FILE 5
+#define UPDATE_STATUS_DWONLAODING 6
+#define UPDATE_STATUS_FINISHED 7
+
+UPEXPORT_CFUNC(BOOL) JUpdater_CheckInternet();
+UPEXPORT_CFUNC(BOOL) JUpdater_CheckUpdate(bool byUser);
+
+int CheckServerForUpdateInfo(bool byUser);
+bool CheckLastUpdateDate(LPCWSTR iniPath);
+DWORD WINAPI UpdateDownloadThread(LPVOID lpThreadParameter);
+int UpdateProgressFunc(void* ptr, double TotalToDownload, double NowDownloaded, double TotalToUpload, double NowUploaded);
+
+typedef void(*UpdateDownloadCallback)(LPCWSTR precent, LPARAM lParam, int status);
+
+UPEXPORT_CFUNC(BOOL) JUpdater_DownLoadUpdateFile(UpdateDownloadCallback callBack, LPARAM lpararm);
+UPEXPORT_CFUNC(BOOL) JUpdater_Updatering();
+UPEXPORT_CFUNC(BOOL) JUpdater_CancelDownLoadUpdateFile();
+UPEXPORT_CFUNC(BOOL) JUpdater_RunInstallion();

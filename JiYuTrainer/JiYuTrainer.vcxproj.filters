@@ -19,12 +19,6 @@
     <Filter Include="源文件\Utils">
       <UniqueIdentifier>{ffb67cba-cbf8-4886-9af9-5fe80756690a}</UniqueIdentifier>
     </Filter>
-    <Filter Include="头文件\Trainer">
-      <UniqueIdentifier>{6be94e45-f909-4bc0-8162-5fa2e89ee94b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="源文件\Trainer">
-      <UniqueIdentifier>{965a27b9-acb6-46a4-842d-1dde19e6576d}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="stdafx.h">
@@ -72,11 +66,11 @@
     <ClInclude Include="SettingHlp.h">
       <Filter>头文件\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="TrainerWorker.h">
-      <Filter>头文件\Trainer</Filter>
-    </ClInclude>
     <ClInclude Include="MsgCenter.h">
       <Filter>头文件\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="TrainerWorker.h">
+      <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -113,11 +107,11 @@
     <ClCompile Include="SettingHlp.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="TrainerWorker.cpp">
-      <Filter>源文件\Trainer</Filter>
-    </ClCompile>
     <ClCompile Include="MsgCenter.cpp">
       <Filter>源文件\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="TrainerWorker.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

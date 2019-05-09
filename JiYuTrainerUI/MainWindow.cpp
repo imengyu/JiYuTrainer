@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "MainWindow.h"
 #include "HelpWindow.h"
+#include "UpdaterWindow.h"
 #include "resource.h"
 #include "../JiYuTrainer/JiYuTrainer.h"
 #include "../JiYuTrainer/App.h"
@@ -9,6 +10,7 @@
 #include "../JiYuTrainer/KernelUtils.h"
 #include "../JiYuTrainer/DriverLoader.h"
 #include "../JiYuTrainer/SysHlp.h"
+#include "../JiYuTrainerUpdater/JiYuTrainerUpdater.h"
 
 using namespace std;
 
@@ -124,7 +126,13 @@ sciter::value MainWindow::docunmentComplete()
 	check_auto_fkill = root.get_element_by_id(L"check_auto_fkill");
 	check_auto_fck = root.get_element_by_id(L"check_auto_fck");
 	check_allow_op = root.get_element_by_id(L"check_allow_op");
+	check_auto_update = root.get_element_by_id(L"check_auto_update");
 	input_ckinterval = root.get_element_by_id(L"input_ckinterval");
+
+	common_message = root.get_element_by_id(L"common_message");
+	common_message_title = root.get_element_by_id(L"common_message_title");
+	common_message_text = root.get_element_by_id(L"common_message_text");
+	update_message = root.get_element_by_id(L"update_message");
 
 	domComplete = true;
 
@@ -236,7 +244,7 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 {
 	wstring cmdx(cmd);
 	if (cmdx == L"")
-		MessageBox(hWndMain, L"请输入命令！", L"命令帮助", MB_ICONEXCLAMATION);
+		ShowFastTip(L"<h4>请输入命令！</h4>");
 	else {
 		bool succ = true;
 		vector<wstring> cmds;
@@ -265,13 +273,9 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 		else if (cmd == L"uninstall") {
 
 		}
+		else if (cmd == L"inspector") sciter::dom::element(get_root()).call_function("runInspector");
 		else if (cmd == L"test1") {
-			HMODULE fuckModul = GetModuleHandle(L"LibTDProcHook32.dll");
-			if (fuckModul) {
 
-				JTLog(L"LibTDProcHook32 : 0x%08X", fuckModul);
-			}
-			else JTLog(L"未加载 LibTDProcHook32.dll");
 		}
 		else if (cmd == L"whereisi") {
 			JTLog(L"本程序路径是：%s", appCurrent->GetFullPath());
@@ -280,7 +284,7 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 		else if (cmd == L"hide")  SendMessage(hWndMain, WM_COMMAND, IDM_SHOWMAIN, NULL);
 		else {
 			succ = false;
-			MessageBox(0, L"未知命令\n请点击“所有命令”查看命令帮助。", L"JY Killer", 0);
+			ShowFastMessage(L"未知命令", L"这是调试功能，如果您执意要使用，请在源代码中查看命令帮助。");
 		}
 		if (succ) input_cmd.set_value(sciter::value(L""));
 	}
@@ -307,6 +311,17 @@ void MainWindow::OnFirstShow()
 	//初始化控制器
 	currentWorker->Init();
 	currentWorker->Start();
+
+	//显示重启提示
+	if (appCurrent->IsCommandExists(L"-r1"))
+		ShowFastMessage(L"刚才进程意外退出", L"极域可能试图结束本进程，或是其他软件（比如任务管理器）结束了本进程，为了安全，我们已经重启了软件进程，您如果要退出本软件的话，请手动点击托盘图标>退出软件。");
+	else if (appCurrent->IsCommandExists(L"-r2")) 
+		ShowFastTip(L"刚才意外与病毒失去联系，现已重启软件进程");
+	
+	//运行更新
+	if(setAutoUpdate)
+		if (JUpdater_CheckInternet() && JUpdater_CheckUpdate(false) == UPDATE_STATUS_HAS_UPDATE) 
+			update_message.set_attribute("class", L"window-extend-area shown");
 
 	JTLogInfo(L"控制器已启动");
 }
@@ -350,9 +365,25 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 			ShowFastTip(L"<h4>已恢复默认设置</h4>");
 		}
 		else if (ele.get_attribute("id") == L"link_checkupdate") {
-
+			ShowFastTip(L"正在检查更新... ");
+			if (JUpdater_CheckInternet()) {
+				int updateStatus = JUpdater_CheckUpdate(true);
+				if (updateStatus == UPDATE_STATUS_LATEST)  ShowFastTip(L"<h4>您的JiYu Trainer 是最新版本！</h4>");
+				else if (updateStatus == UPDATE_STATUS_HAS_UPDATE) update_message.set_attribute("class", L"window-extend-area shown");
+				else if (updateStatus == UPDATE_STATUS_COULD_NOT_CONNECT) ShowFastTip(L"检查更新失败，请检查您的网络连接？");
+				else if (updateStatus == UPDATE_STATUS_NOT_SUPPORT) ShowFastMessage(L"糟糕，更新服务器出了一点故障，请你稍后再试", L"更新服务器返回了错误的结果");
+			}
+			else ShowFastTip(L"检查更新失败，请检查您的网络连接？");
+		}
+		else if (ele.get_attribute("id") == L"link_runcmd") {
+			sciter::value cmdsx(input_cmd.get_value());
+			OnRunCmd(cmdsx.to_string().c_str());
 		}
 		else if (ele.get_attribute("id") == L"link_exit") SendMessage(_hWnd, WM_COMMAND, IDM_EXIT, NULL);
+		else if (ele.get_attribute("id") == L"update_message_update") {
+			UpdaterWindow updateWindow(_hWnd);
+			updateWindow.RunLoop();
+		}
 	}
 	else if (type == BUTTON_CLICK)
 	{
@@ -367,13 +398,6 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 				ele.set_value(sciter::value(true));
 				JTLogInfo(L"控制器正在运行");
 			}
-		}
-		else if (ele.get_attribute("id") == L"btn_runcmd") {
-			sciter::value cmdsx(input_cmd.get_value());
-			OnRunCmd(cmdsx.to_string().c_str());
-		}
-		else if (ele.get_attribute("id") == L"btn_allcmd") {
-			MessageBox(_hWnd, L"所有命令", L"JiYuTrainer - 帮助", 0);
 		}
 	}
 	return false;
@@ -395,8 +419,14 @@ void MainWindow::OnUpdateStudentMainInfo(bool running, LPCWSTR fullPath, DWORD p
 		btn_kill.set_attribute("style", L"display: none;");
 	}
 
-	if (StringHlp::StrEmeptyW(fullPath)) status_jiyu_path.set_text(L"未知");
-	else status_jiyu_path.set_text(fullPath);
+	if (StringHlp::StrEmeptyW(fullPath)) status_jiyu_path.set_text(L"未找到极域电子教室");
+	else {
+		std::wstring s1(fullPath);
+		s1 += L"<br/><small>点击运行极域电子教室</small>";
+		LPCSTR textMore2 = StringHlp::UnicodeToUtf8(s1.c_str());
+		status_jiyu_path.set_html((UCHAR*)textMore2, strlen(textMore2));
+		FreeStringPtr(textMore2);
+	}
 }
 void MainWindow::OnUpdateState(TrainerStatus status, LPCWSTR textMain, LPCWSTR textMore)
 {
@@ -426,10 +456,16 @@ void MainWindow::OnUpdateState(TrainerStatus status, LPCWSTR textMain, LPCWSTR t
 void MainWindow::OnResolveBlackScreenWindow()
 {
 	if (!domComplete) return;
+	ShowFastTip(L"<h5>已关闭极域的黑屏窗口，您可以继续您的工作了！</h5>");
 }
 void MainWindow::OnBeforeSendStartConf()
 {
 	SetTimer(_hWnd, TIMER_RB_DELAY, 1500, NULL);
+}
+void MainWindow::OnSimpleMessageCallback(LPCWSTR text)
+{
+	if (!domComplete) return;
+	ShowFastTip(text);
 }
 
 void MainWindow::ShowHelp()
@@ -444,11 +480,18 @@ void MainWindow::ShowFastTip(LPCWSTR text)
 	FreeStringPtr(textMore2);
 	sciter::dom::element(get_root()).call_function("showFastTip");
 }
+void MainWindow::ShowFastMessage(LPCWSTR title, LPCWSTR text)
+{
+	common_message_title.set_text(title);
+	common_message_text.set_text(text);
+	common_message.set_attribute("class", L"window-extend-area shown");
+}
 
 void MainWindow::LoadSettings()
 {
 	SettingHlp *settings = appCurrent->GetSettings();
 	setTopMost = settings->GetSettingBool(L"TopMost");
+	setAutoUpdate = settings->GetSettingBool(L"AutoUpdate ", true);
 	setAutoIncludeFullWindow = settings->GetSettingBool(L"AutoIncludeFullWindow");
 	setAllowAllRunOp = settings->GetSettingBool(L"AllowAllRunOp");
 	setAutoForceKill = settings->GetSettingBool(L"AutoForceKill");
@@ -463,6 +506,7 @@ void MainWindow::LoadSettingsToUi()
 	check_auto_fck.set_value(sciter::value(setAutoIncludeFullWindow));
 	check_allow_op.set_value(sciter::value(!setAllowAllRunOp));
 	check_auto_fkill.set_value(sciter::value(setAutoForceKill));
+	check_auto_update.set_value(sciter::value(setAutoUpdate));
 	input_ckinterval.set_value(sciter::value(setCkInterval));
 }
 void MainWindow::SaveSettings()
@@ -474,12 +518,14 @@ void MainWindow::SaveSettings()
 	setAutoIncludeFullWindow = check_auto_fck.get_value().get(false);
 	setAllowAllRunOp = !check_allow_op.get_value().get(true);
 	setAutoForceKill = check_auto_fkill.get_value().get(false);
+	setAutoUpdate = check_auto_update.get_value().get(true);
 
 	SettingHlp *settings = appCurrent->GetSettings();
 	settings->SetSettingBool(L"TopMost", setTopMost);
 	settings->SetSettingBool(L"AutoIncludeFullWindow", setAutoIncludeFullWindow);
 	settings->SetSettingBool(L"AllowAllRunOp", setAllowAllRunOp);
 	settings->SetSettingBool(L"AutoForceKill", setAutoForceKill);
+	settings->SetSettingBool(L"AutoUpdate", setAutoUpdate);
 	settings->SetSettingInt(L"CKInterval", setCkInterval);
 
 	currentWorker->InitSettings();
@@ -489,6 +535,7 @@ void MainWindow::ResetSettings()
 	setAutoIncludeFullWindow = false;
 	setAllowAllRunOp = false;
 	setAutoForceKill = false;
+	setAutoUpdate = true;
 	setCkInterval = 3100;
 
 	LoadSettingsToUi();

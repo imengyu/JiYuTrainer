@@ -10,6 +10,9 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JiYuTrainer", "JiYuTrainer\
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JiYuTrainerUI", "JiYuTrainerUI\JiYuTrainerUI.vcxproj", "{B6EF0CE6-FCCD-4869-9B3D-420DDF39C67D}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FCBCDF55-4E94-42E9-9F80-FD555B754092} = {FCBCDF55-4E94-42E9-9F80-FD555B754092}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "JiYuTrainerDriver", "JiYuTrainerDriver\JiYuTrainerDriver.vcxproj", "{F53C06B4-5DD9-437F-96AB-A0E7D450DE2B}"
 EndProject

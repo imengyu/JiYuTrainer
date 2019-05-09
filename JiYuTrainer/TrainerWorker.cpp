@@ -207,7 +207,8 @@ bool TrainerWorkerInternal::Rerun(bool autoWork)
 {
 	if (!_StudentMainFileLocated) {
 		JTLogWarn(L"未找到极域电子教室");
-		if(!autoWork) MessageBox(hWndMain, L"我们无法在此计算机上找到极域电子教室，您需要手动启动", L"JiYuTrainer - 错误", MB_ICONEXCLAMATION);
+		if (!autoWork && _Callback)
+			_Callback->OnSimpleMessageCallback(L"<h5>我们无法在此计算机上找到极域电子教室，您需要手动启动</h5>");
 		return false;
 	}
 	return SysHlp::RunApplication(_StudentMainPath.c_str(), NULL);
@@ -468,7 +469,12 @@ void TrainerWorkerInternal::UpdateState()
 		}
 		else {
 			_StatusTextMain = L"极域电子教室未运行";
-			if (_StudentMainFileLocated) {
+			if (!_Running) {
+				_StatusTextMain = L"极域电子教室未运行 并且控制器未启动";
+				_StatusTextMore = L"您已手动停止控制器<br / >当前不会检测极域的运行";
+				status = TrainerWorkerCallback::TrainerStatus::TrainerStatusStopped;
+			}
+			else if (_StudentMainFileLocated) {
 				status = TrainerWorkerCallback::TrainerStatus::TrainerStatusNotRunning;
 				_StatusTextMore = L"已在此计算机上找到极域电子教室<br / >你可以点击 <b>下方按钮< / b> 运行它";
 			}

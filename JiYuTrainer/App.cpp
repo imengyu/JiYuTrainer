@@ -140,6 +140,10 @@ EXTRACT_RES JTAppInternal::InstallResFile(HINSTANCE resModule, LPWSTR resId, LPC
 
 	return result;
 }
+bool JTAppInternal::IsCommandExists(LPCWSTR cmd)
+{
+	return FindArgInCommandLine(appArgList, appArgCount, cmd) >= 0;
+}
 int JTAppInternal::FindArgInCommandLine(LPWSTR *szArgList, int argCount, const wchar_t * arg) {
 	for (int i = 0; i < argCount; i++) {
 		if (wcscmp(szArgList[i], arg) == 0)

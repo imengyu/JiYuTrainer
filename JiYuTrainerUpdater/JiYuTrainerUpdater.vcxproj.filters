@@ -396,6 +396,9 @@
     <ClInclude Include="curl\vtls\vtls.h">
       <Filter>头文件\curl</Filter>
     </ClInclude>
+    <ClInclude Include="NetUtils.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -754,6 +757,9 @@
     </ClCompile>
     <ClCompile Include="curl\vtls\vtls.c">
       <Filter>源文件\curl</Filter>
+    </ClCompile>
+    <ClCompile Include="NetUtils.cpp">
+      <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

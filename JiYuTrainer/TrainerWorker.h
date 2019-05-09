@@ -25,6 +25,7 @@ public:
 	virtual void OnUpdateStudentMainInfo(bool running, LPCWSTR fullPath, DWORD pid, bool byuser) {}
 	virtual void OnUpdateState(TrainerStatus status, LPCWSTR textMain, LPCWSTR textMore) {}
 	virtual void OnResolveBlackScreenWindow() {}
+	virtual void OnSimpleMessageCallback(LPCWSTR text) {}
 	virtual void OnBeforeSendStartConf() {}
 	virtual HWND GetMainHWND() { return NULL; }
 };

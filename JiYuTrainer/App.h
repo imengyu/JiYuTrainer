@@ -44,6 +44,9 @@ public:
 	*/
 	virtual EXTRACT_RES InstallResFile(HINSTANCE resModule, LPWSTR resId, LPCWSTR resType, LPCWSTR extractTo) { return EXTRACT_RES::ExtractUnknow; }
 
+	//检测命令行参数是否存在某个参数
+	virtual bool IsCommandExists(LPCWSTR cmd) { return false; }
+
 	//获取命令行参数数组
 	virtual LPWSTR *GetCommandLineArray() { return nullptr; }
 	//获取命令行参数数组大小
@@ -116,13 +119,9 @@ public:
 	LPWSTR *GetCommandLineArray() { return appArgList; };
 	//获取命令行参数数组大小
 	int GetCommandLineArraySize() { return appArgCount; };
-	/*
-		查找命令行参数在数组中的位置
-		[szArgList] 命令行参数数组
-		[argCount] 命令行参数数组大小
-		[arg] 要查找命令行参数
-		[返回] 如果找到，返回索引，否则返回-1
-	*/
+
+	bool IsCommandExists(LPCWSTR cmd);
+
 	int FindArgInCommandLine(LPWSTR *szArgList, int argCount, const wchar_t * arg);
 
 	/*
@@ -168,7 +167,7 @@ private:
 		std::wstring(L"JiYuTrainerUI.dll"),
 		std::wstring(L"JiYuTrainerHooks.dll"), 
 		std::wstring(L"JiYuTrainerDriver.sys"),
-		std::wstring(L"JiYuTrainerUpdater.exe"),
+		std::wstring(L"JiYuTrainerUpdater.dll"),
 		std::wstring(L"sciter.dll"),
 	};
 	int partsResId[PART_COUNT] = {
