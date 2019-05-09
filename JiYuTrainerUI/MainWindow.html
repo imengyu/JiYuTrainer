@@ -1,0 +1,708 @@
+<html>
+<head>
+    <title>JiYu Trainer Main Window</title>
+    <style>
+        html {
+            background: transparent;
+            overflow: hidden;
+        }
+
+        /* Window anim*/
+
+        body {
+            font-family: "Microsoft YaHei", Tahoma, sans-serif;
+            transform: scale(0.6);
+            transition: transform linear 150ms, opacity linear 150ms;
+            opacity: .3;
+        }
+        body.shown {
+            transform: scale(1);
+            opacity: 1;
+        }
+        body.minize {
+            transition: opacity linear 100ms;
+            opacity: .3;
+        }
+
+        .window-shadow {
+            position: relative;
+        }
+        .window-box {
+            display: block;
+            position: relative;
+            margin: 20px;
+            border-radius: 15px;
+            box-shadow: 0 0 13px rgba(0,0,0,.5);
+            background-color: #fff;
+            height: 480px;
+        }
+
+        /* Window title*/
+        .window-title-area {
+            position: relative;
+            height: 36px;
+        }
+        .window-title-area h5 {
+            display: inline-block;
+            position: absolute;
+            top: 3px;
+            left: 50px;
+            width: 300px;
+            color: #fff;
+        }
+        .window-title-area img {
+            display: inline-block;
+            width: 16px;
+            height: 16px;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+        }
+
+        /* Window close*/
+        .title-close {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            position: absolute;
+            top: 12px;
+            right: 45px;
+            background: url(res:btn-close.png) no-repeat 0px 0;
+            border-radius: 50%;
+        }
+        .title-close:hover {
+             background-position: -32px 0;
+        }
+        .title-min {
+            display: inline-block;
+            width: 32px;
+            height: 32px;
+            position: absolute;
+            top: 12px;
+            right: 80px;
+            background: url(res:btn-min.png) no-repeat 0px 0;
+            border-radius: 50%;
+        }
+        .title-min:hover {
+             background-position: -32px 0;
+        }
+
+        .window-area {
+            display: block;
+            position: relative;
+            width: 100%;
+            height: 380px;
+            border-radius: 15px;
+        }
+        .state-ok .window-area {
+            background: linear-gradient(to bottom, rgb(46,164,240) 0%,rgb(46,140,240) 100%);
+        }
+        .state-work .window-area {
+            background: linear-gradient(to bottom, rgb(0, 204, 5) 0%,rgb(40, 140, 0) 100%);
+        }
+        .state-notwork .window-area {
+            background: linear-gradient(to bottom, rgb(108, 117, 125) 0%,rgb(77, 88, 99) 100%);
+        }
+        .state-warn .window-area {
+            background: linear-gradient(to bottom, rgba(255, 153, 0, 0.77) 0%,rgb(228, 126, 0) 100%);
+        }
+
+        .window-footer-area {
+            position: absolute;
+            width: 374px;
+            height: 180px;
+            bottom: 50px;
+            left: 0;
+            right: 0;
+            background-image: url(res:footer-x2.png);
+            background-repeat: no-repeat;
+            background-size: 374px 180px;
+        }
+        .state-ok .window-footer-area {
+            background-image: url(res:footer-xok.png);
+        }
+        .state-warn .window-footer-area {
+            background-image: url(res:footer-xwarn.png);
+        }
+        .state-notwork .window-footer-area {
+            background-image: url(res:footer-xnotwork.png);
+        }
+        .state-work .window-footer-area {
+            background-image: url(res:footer-xwork.png);
+        }
+
+        /* Window extend area */
+        .window-extend-area {
+            display: none;
+            z-index: 10;
+            position: absolute;
+            bottom: 0;
+            left: -5px;
+            right: -5px;
+            top: 60px;
+            bottom: 80px;
+            transform: scale(0.8);
+            border-radius: 15px;
+            box-shadow: 0px 0px 10px 0px rgba(0,0,0,.3);
+            background-color: #fff;
+            opacity: 0;
+            transition: transform linear 100ms, opacity linear 100ms;
+            padding: 3px 10px;
+        }
+        .window-extend-area.shown {
+            display: block;
+             transform: scale(1);
+            opacity: 1;
+        }
+        .window-extend-area.hidden{
+             display: block;
+             transform: scale(0.8) ;
+             opacity: 0;
+        }
+
+        /* Window base content */
+        .main-state {
+            text-align: center;
+        }
+        .main-state .inner {
+            display: inline-block;
+            width: 190px;
+            height: 190px;
+            margin-top: 15px;
+            margin-left: 5px;
+            background-image: url(res:bg-main-state.png);
+        }
+        .main-state .inner img {
+            display: inline-block;
+            width: 94px;
+            height: 94px;
+            background: url(res:states.png) no-repeat 0px 0;
+            margin-top: 48px;
+        }
+        .main-state .inner img.state-ctl-no-lock {
+            background-position: -0px 0;
+        }        
+        .main-state .inner img.state-ctl-unlock {
+            background-position: -94px 0;
+        }
+        .main-state .inner img.state-failed {
+            background-position: -188px 0;
+        }
+        .main-state .inner img.state-manual-stop {
+            background-position: -282px 0;
+        }
+        .main-state .inner img.state-not-found {
+            background-position: -376px 0;
+        }
+        .main-state .inner img.state-unknow-problem {
+            background-position: -470px 0;
+        }
+        .main-state .inner img.state-not-run {
+            background-position: -564px 0;
+        }
+
+        .main-state .status-text {
+            display: inline-block;
+            margin-top: 10px;
+            color: #fff;
+            font-size: 16px;
+            font-weight: bold;
+        }
+        .main-state .status-text2 {
+            display: inline-block;
+            margin-top: 3px;
+            color: #fff;
+            font-size: 14px;
+        }
+
+        .btn-footers {
+            display: inline-block;
+            position: relative;
+            width: 40px;
+            height: 40px;
+            background-image: url(res:btn-footers.png);
+            margin-left: 35px;
+        }
+        .btn-footers-area{
+            display: block;
+            position: absolute;
+            text-align: center;
+            bottom: -30px;
+            left: 0;
+            right: 0;
+        }
+        .btn-footers.btn-kill {
+            background-position: -80px 0;
+         }
+         .btn-footers.btn-kill:hover {
+            background-position: -120px 0;
+         }
+         .btn-footers.btn-restart {
+            background-position: 0px 0;
+         }
+         .btn-footers.btn-restart:hover {
+            background-position: -40px 0;
+         }
+         .btn-footers.btn-top {
+            background-position: -240px 0;
+         }
+         .btn-footers.btn-top:hover,  .btn-footers.btn-top.topmost {
+            background-position: -280px 0;
+         }
+         .btn-footers.btn-debug {
+            background-position: -160px 0;
+         }
+         .btn-footers.btn-debug:hover {
+            background-position: -200px 0;
+         }
+         .btn-footers.btn-about {
+            background-position: -320px 0;
+         }
+         .btn-footers.btn-about:hover {
+            background-position: -360px 0;
+         }
+
+         /* Tooltip */
+        .window-tooltips-top {
+            display: block;
+            position: absolute;
+            top: 0;
+            height: 2px;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            overflow: visible;
+        }
+        .window-tooltips-bottom {
+            display: block;
+            position: absolute;
+            bottom: 0;
+            height: 2px;
+            left: 0;
+            right: 0;
+            z-index: 20;
+            overflow: visible;
+        }
+
+        .tooltip {
+            display: inline-block;
+            background-color: #000;
+            border-radius: 4px;
+            padding: 4px 8px;
+            color: #fff;
+            text-align: center;
+            z-index: 20;
+            opacity: 0;
+            transform: scale(0);
+            transition: transform linear 100ms, opacity linear 100ms;
+            position: absolute;
+        }
+        .tooltip.shown {
+           transform: scale(1);
+           display: inline-block;
+           opacity: 1;
+        }
+
+        /*Tab*/
+        .window-tab{
+            display: block;
+            position: absolute;
+            height: 40px;
+            left: 0;
+            right: 0;
+            bottom: 0px;
+            padding-top: 8px;
+            text-align: center;
+        }
+        .window-page {
+            display: none;
+            padding: 10px;
+        }
+        .window-page.active {
+             display: block;  
+        }
+        .btn-tab {
+            display: inline-block;
+            border-radius: 20px;
+            padding: 5px 15px;
+            background-color: #cecece;
+            color: #fff;
+            text-decoration: none;
+        }
+        .btn-tab:hover, .btn-tab.active{
+            background-color: #0072ff;
+            color: #fff;
+        }
+
+
+
+        .btn-about {
+            position: absolute;
+            bottom: 55px;
+            left: -15px;
+        }
+
+        /***/
+        #status_area {
+            width: 100%;
+            height: 190px;
+            border: 1px solid #cecece;
+            overflow-y: scroll;
+            font-size:12px;
+        }
+
+        /* Utitles*/
+        .m-0 {
+            margin: 0px;
+        }
+        .ml-0 {
+            margin-left: 0;
+        }
+        .mt-0 {
+            margin-top: 0;
+        }
+        .mt-1 {
+            margin-top: 3px;
+        }
+        .mt-2 {
+            margin-top: 5px;
+        }
+        .mt-3 {
+            margin-top: 8px;
+        }
+        .p-0 {
+            padding: 0px;
+        }
+        .p-3{
+            padding: 10px;
+        }
+
+        .text-black {
+            color: #000 !important;
+        }
+        .text-info {
+            color: #17a2b8 !important;
+        }
+        .text-danger {
+            color: #dc3545 !important;
+        }
+        .text-success {
+            color: #28a745 !important;
+        }
+        .text-warning {
+            color: #d58300;
+        }
+        .text-secondary {
+            color: #6c757d !important;
+        }
+        .text-primary {
+            color: #007bff !important;
+        }
+
+        label {
+            display: inline-block;
+            margin-bottom: .5rem;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .form-check {
+            position: relative;
+            display: block;
+        }
+
+        #page_about {
+            text-align:center;
+        }
+        .alert {
+            display: block;
+            position: relative;
+            padding: 12px 20px;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+    </style>
+
+</head>
+
+<body class="window-shadow">
+    <div class="window-box" id="wnd">
+        <div class="window-area">
+
+            <div class="window-title-area" id="title-area">
+                <img src="res:icon-main-small.png" id="title-icon" />
+                <h5 id="title">JiYu Trainer Main Window</h5>
+                <a class="title-min" id="btn_min" href="#"></a>
+                <a class="title-close" id="btn_close" href="#"></a>
+            </div>
+
+            <div class="main-state">
+                <div class="inner">
+                    <img class="state-not-found" id="status_icon" />
+                </div>
+                <br /><span class="status-text" id="status_text_main">正在初始化</span>
+                <br /><span class="status-text2" id="status_text_more">...</span>
+            </div>
+
+        </div>
+        <div class="window-tooltips-top">
+            <div class="tooltip" id="tooltip_fast" style="top: 100px; left: 30px; right: 30px"></div>
+        </div>
+        <div class="window-tooltips-bottom">
+            <div class="tooltip tooltip-vesion" style="bottom: 103px; left: 70px; width: 150px">当前版本 ：V1.6<br /><small>点击查看帮助</small></div>
+            <div class="tooltip tooltip-jiyu-pid" style="bottom: 68px; left: 30px; width: 300px">StudentMain.exe PID : <span id="status_jiyu_pid">未知</span><br /><small>点击杀死极域电子教室</small></div>
+            <div class="tooltip tooltip-jiyu-restart" style="bottom: 69px; left: 30px; width: 300px"><h4 class="m-0">极域位置</h4><span id="status_jiyu_path" style="color: #cecece">未知</span><br /><small class="mt-2">点击重新运行极域电子教室</small></div>
+            <div class="tooltip tooltip-topmost" id="tooltip_top" style="bottom: 65px; left: 60px; width: 80px">本窗口置顶</div>
+            <div class="tooltip tooltip-sets" style="bottom: 65px; left: 218px; width: 80px">控制台和设置</div>
+        </div>
+        <div class="window-footer-area">
+
+            <a class="btn-footers btn-about" id="btn_about" href="#"></a>
+
+            <div class="btn-footers-area">
+
+                <a class="btn-footers btn-top ml-0" id="btn_top" href="#"></a>
+                <a class="btn-footers btn-kill" id="btn_kill" href="#" style="display:none;"></a>
+                <a class="btn-footers btn-restart" id="btn_restart" href="#"></a>
+                <a class="btn-footers btn-debug" id="btn_debug" href="#"></a>
+
+            </div>
+
+        </div>
+        <div class="window-extend-area" id="extend_area">
+            <div class="window-tab">
+                <a class="btn-tab active" href="#" id="btn_tab_setting" style="width: 30px">设置</a>
+                <a class="btn-tab" href="#" id="btn_tab_debug" style="width: 30px; margin-left: 5px;">调试</a>
+                <a class="btn-tab" href="#" id="btn_tab_about" style="width: 30px; margin-left: 5px;">关于</a>
+            </div>
+            <div class="window-page active" id="page_setting">
+                <h4 class="mb-0">程序配置</h4>
+                <div class="from-group">
+                    <div class="form-check">
+                        <input type="checkbox" id="check_auto_fck">
+                        <label for="check_auto_fck">启用严格窗口控制模式</label>
+                    </div>
+                    <div class="form-check" title=" 注意，关闭将导致极域脱离控制">
+                        <input type="checkbox" id="check_ck" checked="checked" />
+                        <label for="check_ck">是否启用控制器</label>
+                    </div>
+                    <div class="form-check" title=" 是否启用自动强制清除模式，该模式会在操作失败时直接清除极域有关进程">
+                        <input type="checkbox" id="check_auto_fkill" />
+                        <label for="check_auto_fkill">不客气模式</label>
+                    </div>
+                    <div class="form-check" title=" 是否监控极域运行进程，通常教师可以通过极域远程执行应用程序，
+如果你勾选此项则会监控极域运行进程，你可以选择允许或阻止">
+                        <input type="checkbox" id="check_allow_op" checked="checked" />
+                        <label for="check_allow_op">监控极域运行进程</label>
+                    </div>
+                </div>
+                <div class="from-group" style="margin-top:20px; margin-left: 5px;">
+                    <label for="input_ckinterval">监控时间间隔（毫秒，必须在1000-10000之间）</label><br />
+                    <input style="width: 50px;margin-top: 5px;" type="text" id="input_ckinterval" /><br />
+                </div>
+                <br /><br />
+                <a href="#" id="link_save_setting">保存设置</a>&nbsp;&nbsp;<a href="#" id="link_setto_default">恢复默认</a>&nbsp;&nbsp;<a href="#" id="link_exit">退出软件</a>
+            </div>
+            <div class="window-page" id="page_debug">
+                <h4 class="mb-0">程序输出和调试命令</h4>
+                <div id="status_area">
+
+                </div>
+                <div style="margin-top:5px;">
+                    <input id="input_cmd" style="width:140px;" />&nbsp;
+                    <button id="btn_runcmd">执行</button><button id="btn_allcmd">所有命令</button><button id="btn_inspector">inspector</button>
+                </div>
+            </div>
+            <div class="window-page" id="page_about">
+                <div style="position: absolute; display: block; left: 0px; top: -20px; right: 0;">
+                    <img src="res:logo128.png" style="width:100px; height:100px;border-radius: 50%; box-shadow: 0 0 13px rgba(0,0,0,.5); background-color: #fff;" />
+                </div>
+                <h2 style="margin-top: 80px">JiYu Killer</h2>
+                <span>V 1.3 2019/5/6</span><br />
+                <br />
+                <a href="#" id="link_help" class="link">软件帮助</a>&nbsp;|&nbsp;<a href="#" id="link_checkupdate" class="link" style="color: rgb(228, 126, 0)">检查更新</a>&nbsp;|&nbsp;<a href="#" id="link_github" class="link">Github</a><br />
+                <br />
+                <div class="alert alert-success">
+                    你喜欢 JiYu Trainer 吗？如果你喜欢，不妨向你的好友推荐这个软件吧！
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/tiscript">
+
+        const body = $(body);
+        const extend_area = $(#extend_area);
+
+        //Button events
+        $(#btn_close).onClick = function() {
+            closeWindow();
+        }
+        $(#btn_min).onClick = function()
+        {
+            body.onAnimationEnd = function(){
+                 view.state = View.WINDOW_MINIMIZED;
+                 if(body.attributes.hasClass("minize"))
+                     body.attributes.removeClass("minize");
+            }
+            body.attributes.addClass("minize");
+        }
+        $(#btn_debug).onClick = function()
+        {
+            if(extend_area.attributes.hasClass("shown")) {
+                extend_area.attributes.removeClass("shown");
+                extend_area.attributes.addClass("hidden");
+                this.timer(200ms, function() {
+                     extend_area.attributes.removeClass("hidden");
+                });
+            }
+            else extend_area.attributes.addClass("shown");
+        }
+        $(#btn_inspector).onClick = function()
+        {
+            if(!view.inspectorIsPresent()) // native function, defined in sciter.cpp
+                System.exec( System.home("inspector.exe") );
+            // give it a time to start ...
+            this.timer(200ms, function() {
+                if( var connectToInspector = view.connectToInspector )
+                    connectToInspector($(html));
+            });
+        }
+        $(#status_icon).onClick = function(){
+            //view.test1();
+        }
+        $(#link_github).onClick = function (){
+            System.exec("https://github.com/717021");
+        }
+
+        //Tooltips
+        $(#btn_kill).on("mouseenter", function () { $(.tooltip.tooltip-jiyu-pid).attributes.addClass("shown"); });
+        $(#btn_kill).on("mouseleave", function () { $(.tooltip.tooltip-jiyu-pid).attributes.removeClass("shown"); });
+        $(#btn_restart).on("mouseenter", function () { $(.tooltip.tooltip-jiyu-restart).attributes.addClass("shown"); });
+        $(#btn_restart).on("mouseleave", function () { $(.tooltip.tooltip-jiyu-restart).attributes.removeClass("shown"); });
+        $(#btn_about).on("mouseenter", function () { $(.tooltip.tooltip-vesion).attributes.addClass("shown"); });
+        $(#btn_about).on("mouseleave", function () { $(.tooltip.tooltip-vesion).attributes.removeClass("shown"); });
+        $(#btn_top).on("mouseenter", function () { $(.tooltip.tooltip-topmost).attributes.addClass("shown"); });
+        $(#btn_top).on("mouseleave", function () { $(.tooltip.tooltip-topmost).attributes.removeClass("shown"); });
+        $(#btn_debug).on("mouseenter", function () { $(.tooltip.tooltip-sets).attributes.addClass("shown"); });
+        $(#btn_debug).on("mouseleave", function () { $(.tooltip.tooltip-sets).attributes.removeClass("shown"); });
+        $(#tooltip_fast).onClick = function() { $(#tooltip_fast).attributes.removeClass("shown"); }
+
+        //Tabs
+        $(#btn_tab_setting).onClick = function() { selectTab(this, $(#page_setting)); }
+        $(#btn_tab_debug).onClick = function() { selectTab(this, $(#page_debug)); }
+        $(#btn_tab_about).onClick = function() { selectTab(this, $(#page_about)); }
+
+        function selectTab(btn, targetTab){
+            $(.btn-tab.active).attributes.removeClass("active");
+            $(.window-page.active).attributes.removeClass("active");
+            btn.attributes.addClass("active");
+            targetTab.attributes.addClass("active");
+        }
+
+        function showFastTip(){
+            const tooltip_fast = $(#tooltip_fast);
+            tooltip_fast.attributes.addClass("shown");
+            body.timer(2s, function() { tooltip_fast.attributes.removeClass("shown") });
+        }
+        function showWindow(){
+            body.onAnimationEnd = function(){ };
+            if(!body.attributes.hasClass("shown"))
+                body.attributes.addClass("shown");
+        }
+        function closeWindow(){
+             if(extend_area.attributes.hasClass("shown"))
+                extend_area.attributes.removeClass("shown");
+             else {
+                body.onAnimationEnd = function(){
+                    view.exitClick();
+                };
+                body.attributes.removeClass("shown");
+            }
+        }
+        function checkGfx()
+        {
+            if(!view.backend)
+                view.msgbox(#alert,"Failed to initialize layered window!");
+             return ["Unknown","GDI+","D2D/WARP","D2D/DX"][view.backend];
+        }
+        function self.ready()
+        {
+            body.timer(1,:: this.attributes.addClass("shown"));
+            view.docunmentComplete();
+        }
+
+        //Drag and drop
+        function movable() // install movable window handler
+        {
+          var xoff,yoff;
+          var dragging = false;
+          var body = $(body);
+
+          function doDrag()
+          {
+            while( dragging )
+              view.doEvent();
+          }
+
+          function onMouseDown(evt)
+          {
+            if( evt.target !== body && evt.target !== $(#title-area) && evt.target !== $(#title-icon) && evt.target !== $(#title))
+              return false;
+            xoff = evt.x;
+            yoff = evt.y;
+            dragging = true;
+            view.root.capture(true);
+            doDrag();
+            return true;
+          }
+
+          function onMouseMove(evt)
+          {
+            if( dragging )
+            {
+              view.move( evt.xScreen - xoff, evt.yScreen - yoff, true); // true - x,y are coordinates of the client area on the screen
+              return true;
+            }
+            return false;
+          }
+
+          function stopDrag()
+          {
+            if(dragging)
+            {
+              dragging = false;
+              view.root.capture(false);
+              return true;
+            }
+            return false;
+          }
+
+          function onMouseUp(evt) { return stopDrag(); }
+          function onKeyDown(evt) { if(evt.keyCode == Event.VK_ESCAPE ) return stopDrag(); }
+
+          // hookup event handlers:
+          view.root.subscribe(onMouseDown, Event.MOUSE, Event.MOUSE_DOWN );
+          view.root.subscribe(onMouseUp, Event.MOUSE, Event.MOUSE_UP );
+          view.root.subscribe(onMouseMove, Event.MOUSE, Event.MOUSE_MOVE );
+          view.root.subscribe(onKeyDown, Event.KEY, Event.KEY_DOWN );
+          return false;
+        }
+
+        movable();
+
+        self.on("complete", function() {
+          stdout.println("got complete");
+          //$(button#test).text = "complete";
+        });
+
+    </script>
+
+</body>
+</html>

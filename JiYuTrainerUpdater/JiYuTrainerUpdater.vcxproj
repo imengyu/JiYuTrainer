@@ -1,0 +1,418 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <VCProjectVersion>15.0</VCProjectVersion>
+    <ProjectGuid>{FCBCDF55-4E94-42E9-9F80-FD555B754092}</ProjectGuid>
+    <Keyword>Win32Proj</Keyword>
+    <RootNamespace>JiYuTrainerUpdater</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0.17763.0</WindowsTargetPlatformVersion>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141_xp</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141_xp</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v141</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>Unicode</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="Shared">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LinkIncremental>true</LinkIncremental>
+    <IncludePath>E:\Programming\Example\curl-7.43.0\include;$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(SolutionDir)JiYuTrainerUpdater\curl</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LinkIncremental>true</LinkIncremental>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <LinkIncremental>false</LinkIncremental>
+    <IncludePath>E:\Programming\Example\curl-7.43.0\include;$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(SolutionDir)JiYuTrainerUpdater\curl</IncludePath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <LinkIncremental>false</LinkIncremental>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;_DEBUG;_WINDOWS;JTUPDATE_EXPORT;BUILDING_LIBCURL;DEBUGBUILD;CINTERFACE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>ws2_32.lib;wldap32.lib;Shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>_DEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <PrecompiledHeader>NotUsing</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>WIN32;NDEBUG;JTUPDATE_EXPORT;BUILDING_LIBCURL;CINTERFACE;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+      <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <AdditionalDependencies>ws2_32.lib;wldap32.lib;Shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <PrecompiledHeader>Use</PrecompiledHeader>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <PreprocessorDefinitions>NDEBUG;_WINDOWS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <ConformanceMode>true</ConformanceMode>
+    </ClCompile>
+    <Link>
+      <SubSystem>Windows</SubSystem>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="curl\amigaos.h" />
+    <ClInclude Include="curl\arpa_telnet.h" />
+    <ClInclude Include="curl\asyn.h" />
+    <ClInclude Include="curl\config-amigaos.h" />
+    <ClInclude Include="curl\config-dos.h" />
+    <ClInclude Include="curl\config-mac.h" />
+    <ClInclude Include="curl\config-os400.h" />
+    <ClInclude Include="curl\config-riscos.h" />
+    <ClInclude Include="curl\config-symbian.h" />
+    <ClInclude Include="curl\config-tpf.h" />
+    <ClInclude Include="curl\config-vxworks.h" />
+    <ClInclude Include="curl\config-win32.h" />
+    <ClInclude Include="curl\config-win32ce.h" />
+    <ClInclude Include="curl\conncache.h" />
+    <ClInclude Include="curl\connect.h" />
+    <ClInclude Include="curl\content_encoding.h" />
+    <ClInclude Include="curl\cookie.h" />
+    <ClInclude Include="curl\curlx.h" />
+    <ClInclude Include="curl\curl_addrinfo.h" />
+    <ClInclude Include="curl\curl_base64.h" />
+    <ClInclude Include="curl\curl_des.h" />
+    <ClInclude Include="curl\curl_endian.h" />
+    <ClInclude Include="curl\curl_fnmatch.h" />
+    <ClInclude Include="curl\curl_gethostname.h" />
+    <ClInclude Include="curl\curl_gssapi.h" />
+    <ClInclude Include="curl\curl_hmac.h" />
+    <ClInclude Include="curl\curl_ldap.h" />
+    <ClInclude Include="curl\curl_md4.h" />
+    <ClInclude Include="curl\curl_md5.h" />
+    <ClInclude Include="curl\curl_memory.h" />
+    <ClInclude Include="curl\curl_memrchr.h" />
+    <ClInclude Include="curl\curl_multibyte.h" />
+    <ClInclude Include="curl\curl_ntlm.h" />
+    <ClInclude Include="curl\curl_ntlm_core.h" />
+    <ClInclude Include="curl\curl_ntlm_msgs.h" />
+    <ClInclude Include="curl\curl_ntlm_wb.h" />
+    <ClInclude Include="curl\curl_printf.h" />
+    <ClInclude Include="curl\curl_rtmp.h" />
+    <ClInclude Include="curl\curl_sasl.h" />
+    <ClInclude Include="curl\curl_sec.h" />
+    <ClInclude Include="curl\curl_setup.h" />
+    <ClInclude Include="curl\curl_setup_once.h" />
+    <ClInclude Include="curl\curl_sspi.h" />
+    <ClInclude Include="curl\curl_threads.h" />
+    <ClInclude Include="curl\dict.h" />
+    <ClInclude Include="curl\dotdot.h" />
+    <ClInclude Include="curl\easyif.h" />
+    <ClInclude Include="curl\escape.h" />
+    <ClInclude Include="curl\file.h" />
+    <ClInclude Include="curl\fileinfo.h" />
+    <ClInclude Include="curl\formdata.h" />
+    <ClInclude Include="curl\ftp.h" />
+    <ClInclude Include="curl\ftplistparser.h" />
+    <ClInclude Include="curl\getinfo.h" />
+    <ClInclude Include="curl\gopher.h" />
+    <ClInclude Include="curl\hash.h" />
+    <ClInclude Include="curl\hostcheck.h" />
+    <ClInclude Include="curl\hostip.h" />
+    <ClInclude Include="curl\http.h" />
+    <ClInclude Include="curl\http2.h" />
+    <ClInclude Include="curl\http_chunks.h" />
+    <ClInclude Include="curl\http_digest.h" />
+    <ClInclude Include="curl\http_negotiate.h" />
+    <ClInclude Include="curl\http_proxy.h" />
+    <ClInclude Include="curl\if2ip.h" />
+    <ClInclude Include="curl\imap.h" />
+    <ClInclude Include="curl\inet_ntop.h" />
+    <ClInclude Include="curl\inet_pton.h" />
+    <ClInclude Include="curl\llist.h" />
+    <ClInclude Include="curl\memdebug.h" />
+    <ClInclude Include="curl\multihandle.h" />
+    <ClInclude Include="curl\multiif.h" />
+    <ClInclude Include="curl\netrc.h" />
+    <ClInclude Include="curl\non-ascii.h" />
+    <ClInclude Include="curl\nonblock.h" />
+    <ClInclude Include="curl\parsedate.h" />
+    <ClInclude Include="curl\pingpong.h" />
+    <ClInclude Include="curl\pipeline.h" />
+    <ClInclude Include="curl\pop3.h" />
+    <ClInclude Include="curl\progress.h" />
+    <ClInclude Include="curl\rawstr.h" />
+    <ClInclude Include="curl\rtsp.h" />
+    <ClInclude Include="curl\select.h" />
+    <ClInclude Include="curl\sendf.h" />
+    <ClInclude Include="curl\setup-os400.h" />
+    <ClInclude Include="curl\setup-vms.h" />
+    <ClInclude Include="curl\share.h" />
+    <ClInclude Include="curl\sigpipe.h" />
+    <ClInclude Include="curl\slist.h" />
+    <ClInclude Include="curl\smb.h" />
+    <ClInclude Include="curl\smtp.h" />
+    <ClInclude Include="curl\sockaddr.h" />
+    <ClInclude Include="curl\socks.h" />
+    <ClInclude Include="curl\speedcheck.h" />
+    <ClInclude Include="curl\splay.h" />
+    <ClInclude Include="curl\ssh.h" />
+    <ClInclude Include="curl\strdup.h" />
+    <ClInclude Include="curl\strequal.h" />
+    <ClInclude Include="curl\strerror.h" />
+    <ClInclude Include="curl\strtok.h" />
+    <ClInclude Include="curl\strtoofft.h" />
+    <ClInclude Include="curl\telnet.h" />
+    <ClInclude Include="curl\tftp.h" />
+    <ClInclude Include="curl\timeval.h" />
+    <ClInclude Include="curl\transfer.h" />
+    <ClInclude Include="curl\url.h" />
+    <ClInclude Include="curl\urldata.h" />
+    <ClInclude Include="curl\vtls\axtls.h" />
+    <ClInclude Include="curl\vtls\cyassl.h" />
+    <ClInclude Include="curl\vtls\darwinssl.h" />
+    <ClInclude Include="curl\vtls\gskit.h" />
+    <ClInclude Include="curl\vtls\gtls.h" />
+    <ClInclude Include="curl\vtls\nssg.h" />
+    <ClInclude Include="curl\vtls\openssl.h" />
+    <ClInclude Include="curl\vtls\polarssl.h" />
+    <ClInclude Include="curl\vtls\polarssl_threadlock.h" />
+    <ClInclude Include="curl\vtls\schannel.h" />
+    <ClInclude Include="curl\vtls\vtls.h" />
+    <ClInclude Include="curl\warnless.h" />
+    <ClInclude Include="curl\wildcard.h" />
+    <ClInclude Include="curl\x509asn1.h" />
+    <ClInclude Include="JiYuTrainerUpdater.h" />
+    <ClInclude Include="Resource.h" />
+    <ClInclude Include="stdafx.h" />
+    <ClInclude Include="targetver.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="curl\amigaos.c" />
+    <ClCompile Include="curl\asyn-ares.c" />
+    <ClCompile Include="curl\asyn-thread.c" />
+    <ClCompile Include="curl\base64.c" />
+    <ClCompile Include="curl\conncache.c" />
+    <ClCompile Include="curl\connect.c" />
+    <ClCompile Include="curl\content_encoding.c" />
+    <ClCompile Include="curl\cookie.c" />
+    <ClCompile Include="curl\curl_addrinfo.c" />
+    <ClCompile Include="curl\curl_des.c" />
+    <ClCompile Include="curl\curl_endian.c" />
+    <ClCompile Include="curl\curl_fnmatch.c" />
+    <ClCompile Include="curl\curl_gethostname.c" />
+    <ClCompile Include="curl\curl_gssapi.c" />
+    <ClCompile Include="curl\curl_memrchr.c" />
+    <ClCompile Include="curl\curl_multibyte.c" />
+    <ClCompile Include="curl\curl_ntlm.c" />
+    <ClCompile Include="curl\curl_ntlm_core.c" />
+    <ClCompile Include="curl\curl_ntlm_msgs.c" />
+    <ClCompile Include="curl\curl_ntlm_wb.c" />
+    <ClCompile Include="curl\curl_rtmp.c" />
+    <ClCompile Include="curl\curl_sasl.c" />
+    <ClCompile Include="curl\curl_sasl_gssapi.c" />
+    <ClCompile Include="curl\curl_sasl_sspi.c" />
+    <ClCompile Include="curl\curl_sspi.c" />
+    <ClCompile Include="curl\curl_threads.c" />
+    <ClCompile Include="curl\dict.c" />
+    <ClCompile Include="curl\dotdot.c" />
+    <ClCompile Include="curl\easy.c" />
+    <ClCompile Include="curl\escape.c" />
+    <ClCompile Include="curl\file.c" />
+    <ClCompile Include="curl\fileinfo.c" />
+    <ClCompile Include="curl\formdata.c" />
+    <ClCompile Include="curl\ftp.c" />
+    <ClCompile Include="curl\ftplistparser.c" />
+    <ClCompile Include="curl\getenv.c" />
+    <ClCompile Include="curl\getinfo.c" />
+    <ClCompile Include="curl\gopher.c" />
+    <ClCompile Include="curl\hash.c" />
+    <ClCompile Include="curl\hmac.c" />
+    <ClCompile Include="curl\hostasyn.c" />
+    <ClCompile Include="curl\hostcheck.c" />
+    <ClCompile Include="curl\hostip.c" />
+    <ClCompile Include="curl\hostip4.c" />
+    <ClCompile Include="curl\hostip6.c" />
+    <ClCompile Include="curl\hostsyn.c" />
+    <ClCompile Include="curl\http.c" />
+    <ClCompile Include="curl\http2.c" />
+    <ClCompile Include="curl\http_chunks.c" />
+    <ClCompile Include="curl\http_digest.c" />
+    <ClCompile Include="curl\http_negotiate.c" />
+    <ClCompile Include="curl\http_negotiate_sspi.c" />
+    <ClCompile Include="curl\http_proxy.c" />
+    <ClCompile Include="curl\idn_win32.c" />
+    <ClCompile Include="curl\if2ip.c" />
+    <ClCompile Include="curl\imap.c" />
+    <ClCompile Include="curl\inet_ntop.c" />
+    <ClCompile Include="curl\inet_pton.c" />
+    <ClCompile Include="curl\krb5.c" />
+    <ClCompile Include="curl\ldap.c" />
+    <ClCompile Include="curl\llist.c" />
+    <ClCompile Include="curl\md4.c" />
+    <ClCompile Include="curl\md5.c" />
+    <ClCompile Include="curl\memdebug.c" />
+    <ClCompile Include="curl\mprintf.c" />
+    <ClCompile Include="curl\multi.c" />
+    <ClCompile Include="curl\netrc.c" />
+    <ClCompile Include="curl\non-ascii.c" />
+    <ClCompile Include="curl\nonblock.c" />
+    <ClCompile Include="curl\nwlib.c" />
+    <ClCompile Include="curl\nwos.c" />
+    <ClCompile Include="curl\openldap.c" />
+    <ClCompile Include="curl\parsedate.c" />
+    <ClCompile Include="curl\pingpong.c" />
+    <ClCompile Include="curl\pipeline.c" />
+    <ClCompile Include="curl\pop3.c" />
+    <ClCompile Include="curl\progress.c" />
+    <ClCompile Include="curl\rawstr.c" />
+    <ClCompile Include="curl\rtsp.c" />
+    <ClCompile Include="curl\security.c" />
+    <ClCompile Include="curl\select.c" />
+    <ClCompile Include="curl\sendf.c" />
+    <ClCompile Include="curl\share.c" />
+    <ClCompile Include="curl\slist.c" />
+    <ClCompile Include="curl\smb.c" />
+    <ClCompile Include="curl\smtp.c" />
+    <ClCompile Include="curl\socks.c" />
+    <ClCompile Include="curl\socks_gssapi.c" />
+    <ClCompile Include="curl\socks_sspi.c" />
+    <ClCompile Include="curl\speedcheck.c" />
+    <ClCompile Include="curl\splay.c" />
+    <ClCompile Include="curl\ssh.c" />
+    <ClCompile Include="curl\strdup.c" />
+    <ClCompile Include="curl\strequal.c" />
+    <ClCompile Include="curl\strerror.c" />
+    <ClCompile Include="curl\strtok.c" />
+    <ClCompile Include="curl\strtoofft.c" />
+    <ClCompile Include="curl\telnet.c" />
+    <ClCompile Include="curl\tftp.c" />
+    <ClCompile Include="curl\timeval.c" />
+    <ClCompile Include="curl\transfer.c" />
+    <ClCompile Include="curl\url.c" />
+    <ClCompile Include="curl\version.c" />
+    <ClCompile Include="curl\vtls\axtls.c" />
+    <ClCompile Include="curl\vtls\cyassl.c" />
+    <ClCompile Include="curl\vtls\darwinssl.c" />
+    <ClCompile Include="curl\vtls\gskit.c" />
+    <ClCompile Include="curl\vtls\gtls.c" />
+    <ClCompile Include="curl\vtls\nss.c" />
+    <ClCompile Include="curl\vtls\openssl.c" />
+    <ClCompile Include="curl\vtls\polarssl.c" />
+    <ClCompile Include="curl\vtls\polarssl_threadlock.c" />
+    <ClCompile Include="curl\vtls\schannel.c" />
+    <ClCompile Include="curl\vtls\vtls.c" />
+    <ClCompile Include="curl\warnless.c" />
+    <ClCompile Include="curl\wildcard.c" />
+    <ClCompile Include="curl\x509asn1.c" />
+    <ClCompile Include="JiYuTrainerUpdater.cpp" />
+    <ClCompile Include="stdafx.cpp">
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
+      <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="JiYuTrainerUpdater.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Image Include="JiYuTrainerUpdater.ico" />
+    <Image Include="small.ico" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

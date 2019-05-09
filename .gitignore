@@ -1,0 +1,15 @@
+/.vs/
+/Debug/
+*.lib
+*.pdb
+*.idb
+*..lastbuildstate
+*.ilk
+*.exp
+*.tlog
+*.pdb
+*.obj
+*.idb
+*.pch
+*.log
+

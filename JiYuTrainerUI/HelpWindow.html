@@ -1,0 +1,128 @@
+﻿<html>
+<head>
+    <title>JiYu Trainer 帮助</title>
+    <style>
+        html {
+            overflow: hidden;
+            overflow-y: scroll;
+        }
+        body {
+            font-family: "Microsoft YaHei", Tahoma, sans-serif;
+            margin: 15px;
+            padding: 0;
+        }
+
+        .alert {
+            display: block;
+            position: relative;
+            padding: 12px 20px;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+
+        .alert-warning {
+            color: #856404;
+            background-color: #fff3cd;
+            border-color: #ffeeba;
+        }
+
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+
+        .mark {
+            background-color: #ffd04c;
+        }
+
+    </style>
+
+</head>
+
+<body class="window-shadow">
+
+    <h2 style="text-align: center; padding-top: 8px;">JiYu Trainer  简要帮助</h2>
+    <h3 style="color:#ff8b0d">简介</h3>
+    <p>
+        <span style="color:#006bef">本软件研发目的就是为了对抗极域电子教室，如果您的学校机房使用极域电子教室来控制学生电脑的话，本软件很可能会帮到你。</span><br />
+        <span class="mark">本软件与市面上其他对抗极域电子教室不同</span> ，本软件不是简简单单的强制杀死极域电子教室，而是会智能检测极域电子教室是否进行全屏广播，一旦发现全屏广播，将立即调整为<span class="mark">窗口模式</span>，你不仅可以继续进行你的操作，而且还可以看老师的操作，自由+学习两不误，这不是很爽的事情吗？<br />
+        该软件对极域电子教室进行反HOOK，极域不能控制键盘或鼠标，<b>因此在被控制时你不但可以自由操作电脑，而且教师并不能对你的电脑进行操控（已测试），发现“黑屏肃静”也会立即反控制</b>。
+    </p>
+    <h3 style="color:#ff8b0d">操作方法</h3>
+    <p>
+        <span style="color:#006bef">本软件专为小白设计，默认情况下，您不需要修改任何参数，直接运行exe，并最小化即可，软件会自动进行操作。</span><br />
+        如果您希望探索软件其他功能，请查看 <a href="#" id="link_help" class="link">完整帮助文档</a> 。
+    </p>
+    <div class="alert alert-warning">
+        <b>附加说明</b>：本软件不依赖任何运行库，您只需复制一个 <b>JiYuKiller.exe</b> 至目标电脑即可运行，本软件已将需要的DLL打包，它会自动进行安装。
+    </div>
+    <h3 style="color:#ff8b0d">紧急全屏</h3>
+    <p>
+        <span class="mark">如果老师经过你的电脑，发现唯独只有你一个人没有被控制，这有点糟糕啊... </span> ，所以本软件有一个暂时全屏的功能：<br />
+        您可以使用 <b>Ctrl+Alt+F</b> 暂时将广播或黑屏窗口调整至全屏，等老师走后再次按 <b>Ctrl+Alt+F</b> 重新切换回窗口。
+    </p>
+
+    <h3 style="color:#ff8b0d">其他</h3>
+    <p>
+        极域并没有使用驱动保护进程（WinXP有保护，Win7没有），如果在旧版本极域有驱动保护进程（软件出现注入失败的问题），可选择本软件进行卸载驱动， 或直接使用本软件进行内核模式强杀。
+    </p>
+    <p>
+        如果您在使用软件过程中发现Bug，欢迎向我反馈！<br />
+        <ul>
+            <li>该项目 Github 地址：<a href="#" id="link_github" class="link">JiYu Trainer </a></li>
+            <li>作者 QQ：1501076885 （请备注 <u>来自JiYuTrainer </u>）</li>
+        </ul>
+    </p>
+    <div class="alert alert-success">
+        如果你喜欢这个软件，不妨向你的好友推荐一下吧！
+    </div>
+    <p>
+        <b style="color:#006bef">已测试的版本：</b>
+        <ul>
+            <li>极域电子教室 :  4.0 和 6.0（2010 和 2016版本）</li>
+            <li>已测试的系统 :  WinXP、 Win7、Win10</li>
+        </ul>
+        <b style="color:#006bef">软件需求：</b>
+        <ul>
+            <li>本软件最低最低也要在 Windows XP sp3上运行，上古版本的系统不支持 </li>
+            <li>极域电子教室 推荐在 4.0/6.0 版本，其他版本可能无法达到最好的防御效果 </li>
+        </ul>
+    </p>
+    <h3 style="color:#ff0000">免责声明</h3>
+    <div class="alert alert-warning">
+        <b>注意：</b>本软件研发之初仅供学习交流使用，<span style="color:red;font-weight:bold;">严禁将该软件用于不符合法律、道德的行为，本软件仅供技术交流，擅自用于不正当行为所造成的后果将由您自行承担！</span>自您使用本软件起，即表明您同意了该声明。
+    </div>
+    <br />
+    <div class="alert alert-danger">
+        <b>注意：</b>本软件严禁用于商业用途，其遵守 MIT 协议。
+    </div>
+
+    <br />
+    <a href="#" id="link_exit" class="link"  style="text-align: right; font-size: 16px;display: block;">关闭</a><br />
+    
+    <script type="text/tiscript">
+
+        const body = $(body);
+        const extend_area = $(#extend_area);
+
+        $(#link_exit).onClick = function (){
+            view.close();
+        }
+        $(#link_github).onClick = function (){
+            System.exec("https://github.com/717021");
+        }
+        $(#link_help).onClick = function (){
+            System.exec("https://github.com/717021");
+        }
+    </script>
+
+</body>
+</html>
