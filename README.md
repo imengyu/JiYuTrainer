@@ -23,6 +23,7 @@
 # 直接下载：
 
 [下载软件最新版](https://github.com/717021/JiYuTrainer/blob/master/Release/JiYuTrainer.exe) 
+[备用地址](http://update.imyzc.com/JiYuTrainer/files/JiYuTrainer.exe) 
 
 ![软件主要界面](https://raw.githubusercontent.com/717021/JiYuTrainer/master/ScreenShots.png)
 
