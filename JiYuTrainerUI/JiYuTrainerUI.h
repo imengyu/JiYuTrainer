@@ -1,4 +1,5 @@
 #pragma once
 
+UIEXPORT_CFUNC(void *) JTUI_GetMainWindow();
 UIEXPORT_CFUNC(int) JTUI_RunMain();
-int JTUI_RunMainWindow();
+UIEXPORT_CFUNC(int) JTUI_RunMainWindow();

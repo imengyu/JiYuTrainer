@@ -1,11 +1,15 @@
 #include "stdafx.h"
 #include "SysHlp.h"
+#include "NtHlp.h"
 #include "VersionHelpers.h"
 #include <Shlwapi.h>
 #include <ShellAPI.h>
+#include <WinIoCtl.h>
 
-BOOL _Is64BitOS = false;
-BOOL _IsRunasAdmin = false;
+SHSTDAPI_(BOOL) SHGetSpecialFolderPathW(__reserved HWND hwnd, __out_ecount(MAX_PATH) LPWSTR pszPath, __in int csidl, __in BOOL fCreate);
+
+BOOL _Is64BitOS = -1;
+BOOL _IsRunasAdmin = -1;
 SystemVersion currentVersion = SystemVersionUnknow;
 
 SystemVersion SysHlp::GetSystemVersion()
@@ -22,11 +26,11 @@ SystemVersion SysHlp::GetSystemVersion()
 	return currentVersion;
 }
 
-BOOL SysHlp::RunApplication(LPCWSTR path, LPCWSTR cmd)
+bool SysHlp::RunApplication(LPCWSTR path, LPCWSTR cmd)
 {
 	return (INT)ShellExecute(NULL, L"open", path, cmd, NULL, SW_NORMAL) > 32;
 }
-BOOL SysHlp::RunApplicationPriviledge(LPCWSTR path, LPCWSTR cmd)
+bool SysHlp::RunApplicationPriviledge(LPCWSTR path, LPCWSTR cmd)
 {
 	return (INT)ShellExecute(NULL, (currentVersion == SystemVersionWindowsXP ?  L"open" : L"runas"), path, cmd, NULL, SW_NORMAL) > 32;
 }
@@ -38,8 +42,55 @@ LPCWSTR SysHlp::ConvertErrorCodeToString(DWORD ErrorCode)
 		NULL, ErrorCode, 0, (LPWSTR)&LocalAddress, 0, NULL);
 	return (LPCWSTR)LocalAddress;
 }
+bool  SysHlp::CheckIsPortabilityDevice(LPCWSTR path) {
+	//
+//path: "\\\\?\\F:"
+#define IOCTL_STORAGE_QUERY_PROPERTY   CTL_CODE(IOCTL_STORAGE_BASE, 0x0500, METHOD_BUFFERED, FILE_ANY_ACCESS)
+	typedef  struct _STORAGE_DEVICE_DESCRIPTOR
+	{
+		DWORD Version;                DWORD Size;
+		BYTE  DeviceType;             BYTE  DeviceTypeModifier;
+		BOOLEAN RemovableMedia;       BOOLEAN CommandQueueing;
+		DWORD VendorIdOffset;         DWORD ProductIdOffset;
+		DWORD ProductRevisionOffset;  DWORD SerialNumberOffset;
+		STORAGE_BUS_TYPE BusType;     DWORD RawPropertiesLength;
+		BYTE  RawDeviceProperties[1];
+	} STORAGE_DEVICE_DESCRIPTOR;
 
-BOOL SysHlp::EnableDebugPriv(const wchar_t * name)
+	HANDLE hDisk;
+	STORAGE_DEVICE_DESCRIPTOR devDesc;
+	DWORD query[3] = { 0,0,1588180 };
+
+	DWORD cbBytesReturned;
+
+	TCHAR szBuf[300];
+	wsprintf(szBuf, L"\\\\?\\%C:", path[0]);
+	hDisk = CreateFile(szBuf, GENERIC_READ, FILE_SHARE_READ | FILE_SHARE_WRITE,
+		NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	if (hDisk == INVALID_HANDLE_VALUE)
+		return false;
+
+	if (DeviceIoControl(hDisk, IOCTL_STORAGE_QUERY_PROPERTY, &query, sizeof(query),
+		&devDesc, sizeof(devDesc), &cbBytesReturned, NULL))
+	{
+		if (devDesc.BusType == BusTypeUsb)
+		{
+			CloseHandle(hDisk);
+			return true;
+		}
+	}
+	return false;
+}
+bool SysHlp::CheckIsDesktop(LPCWSTR path)
+{
+	wchar_t desktopPath[MAX_PATH];
+	if (!SHGetSpecialFolderPathW(0, desktopPath, 0x0010, 0))
+		return FALSE;
+	return wcscmp(desktopPath, path) == 0;
+}
+
+bool SysHlp::EnableDebugPriv(const wchar_t * name)
 {
 	HANDLE hToken;
 	TOKEN_PRIVILEGES tp;
@@ -55,7 +106,7 @@ BOOL SysHlp::EnableDebugPriv(const wchar_t * name)
 	//调整权限
 	return AdjustTokenPrivileges(hToken, 0, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL);
 }
-BOOL SysHlp::IsRunasAdmin()
+bool SysHlp::IsRunasAdmin()
 {
 	if (_IsRunasAdmin = -1)
 	{
@@ -83,7 +134,7 @@ BOOL SysHlp::IsRunasAdmin()
 	}
 	return _IsRunasAdmin;
 }
-BOOL SysHlp::Is64BitOS()
+bool SysHlp::Is64BitOS()
 {
 	if (_Is64BitOS == -1)
 	{

@@ -3,6 +3,7 @@
 #include <stdio.h>
 #include <io.h>
 #include <stdarg.h>
+#include <list>
 
 enum LogLevel {
 	LogLevelText,
@@ -32,11 +33,19 @@ public:
 	virtual void SetLogOutPut(LogOutPut output) {}
 	virtual void SetLogOutPutCallback(LogCallBack callback, LPARAM lparam) {}
 	virtual void SetLogOutPutFile(const wchar_t *filePath) {}
+
+	virtual void ResentNotCaputureLog(){}
+	virtual void WritePendingLog(const wchar_t *str, LogLevel level) {}
 };
 
 class LoggerInternal : public Logger
 {
 public:
+
+	struct LOG_SLA {
+		std::wstring str;
+		LogLevel level;
+	};
 
 	LoggerInternal();
 	~LoggerInternal();
@@ -51,11 +60,15 @@ public:
 	void SetLogOutPutFile(const wchar_t *filePath) override;
 	void SetLogOutPutCallback(LogCallBack callback, LPARAM lparam);
 
+	void ResentNotCaputureLog();
+	void WritePendingLog(const wchar_t *str, LogLevel level);
+
 	void LogInternal(LogLevel level, const wchar_t *str, va_list arg);
 	void CloseLogFile();
 
 private:
 
+	std::list< LOG_SLA> logPendingBuffer;
 	WCHAR logFilePath[MAX_PATH];
 	FILE *logFile = nullptr;
 	LogLevel level = LogLevelInfo;

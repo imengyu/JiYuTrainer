@@ -14,6 +14,10 @@ EXPORT_CFUNC(BOOL) OpenDriver();
 //返回驱动是否加载
 EXPORT_CFUNC(BOOL) DriverLoaded();
 
+BOOL XinitSelfProtect();
+
 EXPORT_CFUNC(BOOL) XLoadDriver();
+
+EXPORT_CFUNC(BOOL) XCloseDriverHandle();
 
 EXPORT_CFUNC(BOOL) XUnLoadDriver();

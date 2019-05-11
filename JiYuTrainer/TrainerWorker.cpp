@@ -1,7 +1,7 @@
 #include "stdafx.h"
 #include "TrainerWorker.h"
 #include "JiYuTrainer.h"
-#include "App.h"
+#include "AppPublic.h"
 #include "NtHlp.h"
 #include "PathHelper.h"
 #include "StringHlp.h"
@@ -34,8 +34,8 @@ TrainerWorkerInternal::~TrainerWorkerInternal()
 		CloseDesktop(hDesktop);
 		hDesktop = NULL;
 	}
-	if (_Running) 
-		Stop();
+
+	StopInternal();
 	ClearProcess();
 
 	currentTrainerWorker = nullptr;
@@ -85,10 +85,15 @@ void TrainerWorkerInternal::Start()
 void TrainerWorkerInternal::Stop()
 {
 	if (_Running) {
+		StopInternal();
+		UpdateState();
+	}
+}
+void TrainerWorkerInternal::StopInternal() {
+	if (_Running) {
 		_Running = false;
 		KillTimer(hWndMain, TIMER_CK);
 		KillTimer(hWndMain, TIMER_RESET_PID);
-		UpdateState();
 	}
 }
 
@@ -176,6 +181,7 @@ bool TrainerWorkerInternal::Kill(bool autoWork)
 			JTLogError(L"结束进程错误：0x%08X，请手动结束", status);
 			if (!autoWork)
 				MessageBox(hWndMain, L"无法结束极域电子教室，您需要使用其他工具手动结束", L"JiYuTrainer - 错误", MB_ICONERROR);;
+			CloseHandle(hProcess);
 			return false;
 		}
 		else if (status == STATUS_INVALID_CID || status == STATUS_INVALID_HANDLE) {
@@ -183,6 +189,7 @@ bool TrainerWorkerInternal::Kill(bool autoWork)
 			_StudentMainControlled = false;
 			UpdateState();
 			UpdateStudentMainInfo(!autoWork);
+			CloseHandle(hProcess);
 			return true;
 		}
 	}
@@ -228,6 +235,10 @@ bool TrainerWorkerInternal::RunOperation(TrainerWorkerOp op) {
 		swprintf_s(s, L"hk:inipath:%s", currentApp->GetPartFullPath(PART_INI));
 		MsgCenterSendToVirus(s, hWndMain);
 		break;
+	case TrainerWorkerOpForceUnLoadVirus: {
+		UnLoadAllVirus();
+		break;
+	}
 	}
 	return false;
 }
@@ -237,6 +248,7 @@ bool TrainerWorkerInternal::RunCk()
 	_LastResolveWindowCount = 0;
 	_LastResoveBroadcastWindow = false;
 	_LastResoveBlackScreenWindow = false;
+	_FirstBlackScreenWindow = false;
 
 	EnumDesktopWindows(hDesktop, EnumWindowsProc, (LPARAM)this);
 
@@ -248,6 +260,12 @@ void TrainerWorkerInternal::RunResetPid()
 {
 	FlushProcess();
 
+	//CK GET STAT DELAY
+	if (_NextLoopGetCkStat) {
+		_NextLoopGetCkStat = false;
+		SendMessageToVirus(L"hk:ckstat");
+	}
+
 	//Find jiyu main process
 	DWORD newPid = 0;
 	if (LocateStudentMain(&newPid)) { //找到极域
@@ -258,6 +276,8 @@ void TrainerWorkerInternal::RunResetPid()
 
 			if (InstallVirus()) {
 				_VirusInstalled = true;
+				_NextLoopGetCkStat = true;
+
 				JTLog(L"向 StudentMain.exe [%d] 注入DLL成功", newPid);
 			}
 			else  JTLogError(L"向 StudentMain.exe [%d] 注入DLL失败", newPid);
@@ -323,6 +343,59 @@ void TrainerWorkerInternal::ClearProcess()
 }
 bool TrainerWorkerInternal::FindProcess(LPCWSTR processName, DWORD * outPid)
 {
+	return false;
+}
+bool TrainerWorkerInternal::KillProcess(DWORD pid, bool force)
+{
+	HANDLE hProcess;
+	NTSTATUS status = MOpenProcessNt(_StudentMainPid, &hProcess);
+	if (!NT_SUCCESS(status)) {
+		if (status == STATUS_INVALID_CID || status == STATUS_INVALID_HANDLE) {
+			JTLogError(L"找不到进程 [%d] ", pid);
+			return true;
+		}
+		else {
+			JTLogError(L"打开进程 [%d] 错误：0x%08X，请手动结束", pid);
+			return false;
+		}
+	}
+	status = MTerminateProcessNt(0, hProcess);
+	if (NT_SUCCESS(status)) {
+		JTLog(L"进程 [%d] 结束成功", pid);
+		CloseHandle(hProcess);
+		return TRUE;
+	}
+	else {
+		if (status == STATUS_ACCESS_DENIED) {
+			if (force) goto FORCEKILL;
+			else JTLogError(L"结束进程 [%d] 错误：拒绝访问。可尝试使用驱动结束", pid);
+			CloseHandle(hProcess);
+		}
+		else if (status != STATUS_INVALID_CID && status != STATUS_INVALID_HANDLE) {
+			JTLogError(L"结束进程 [%d] 错误：0x%08X，请手动结束", pid);
+			CloseHandle(hProcess);
+			return false;
+		}
+		else if (status == STATUS_INVALID_CID || status == STATUS_INVALID_HANDLE) {
+			JTLogError(L"找不到进程 [%d] ", pid);
+			CloseHandle(hProcess);
+			return true;
+		}
+	}
+FORCEKILL:
+	if (DriverLoaded())
+	{
+		if (KForceKill(_StudentMainPid, &status)) {
+			JTLog(L"进程 [%d] 强制结束成功", pid);
+			CloseHandle(hProcess);
+			return true;
+		}
+		else {
+			JTLogError(L"驱动强制结束进程 [%d] 错误：0x%08X", pid);
+		}
+	}
+	else JTLog(L"驱动未加载，无法强制结束进程");
+	CloseHandle(hProcess);
 	return false;
 }
 bool TrainerWorkerInternal::LocateStudentMainLocation()
@@ -533,6 +606,61 @@ bool TrainerWorkerInternal::InjectDll(DWORD pid, LPCWSTR dllPath)
 	CloseHandle(hRemoteThread);
 
 	return true;
+}
+bool TrainerWorkerInternal::UnInjectDll(DWORD pid, LPCWSTR moduleName)
+{
+	HANDLE hProcess;
+	//打开进程
+	NTSTATUS ntStatus = MOpenProcessNt(pid, &hProcess);
+	if (!NT_SUCCESS(ntStatus)) {
+		JTLogError(L"卸载病毒失败！打开进程失败：0x%08X", ntStatus);
+		return FALSE;
+	}
+	DWORD pszLibFileRemoteSize = sizeof(wchar_t) * (lstrlen(moduleName) + 1);
+	wchar_t *pszLibFileRemote;
+	//使用VirtualAllocEx函数在远程进程的内存地址空间分配DLL文件名空间
+	pszLibFileRemote = (wchar_t *)VirtualAllocEx(hProcess, NULL, pszLibFileRemoteSize, MEM_COMMIT, PAGE_READWRITE);
+	//使用WriteProcessMemory函数将DLL的路径名写入到远程进程的内存空间
+	WriteProcessMemory(hProcess, pszLibFileRemote, (void *)moduleName, pszLibFileRemoteSize, NULL);
+
+	DWORD dwHandle;
+	DWORD dwID;
+	LPVOID pFunc = GetModuleHandleA;
+	HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)pFunc, pszLibFileRemote, 0, &dwID);
+	if (!hThread) {
+		JTLogError(L"卸载病毒失败！创建远程线程失败：d", GetLastError());
+		return FALSE;
+	}
+	// 等待GetModuleHandle运行完毕
+	WaitForSingleObject(hThread, INFINITE);
+	// 获得GetModuleHandle的返回值
+	GetExitCodeThread(hThread, &dwHandle);
+	// 释放目标进程中申请的空间
+	VirtualFreeEx(hProcess, pszLibFileRemote, pszLibFileRemoteSize, MEM_DECOMMIT);
+	CloseHandle(hThread);
+	// 使目标进程调用FreeLibrary，卸载DLL
+	pFunc = FreeLibrary;
+	hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)pFunc, (LPVOID)dwHandle, 0, &dwID);
+	if (!hThread) {
+		JTLogError(L"卸载病毒失败！创建远程线程失败：d", GetLastError());
+		return FALSE;
+	}
+	
+	// 等待FreeLibrary卸载完毕
+	WaitForSingleObject(hThread, INFINITE);
+	CloseHandle(hThread);
+	CloseHandle(hProcess);
+
+	return true;
+}
+bool TrainerWorkerInternal::UnLoadAllVirus()
+{
+	if (_MasterHelperPid > 4) 
+		UnInjectDll(_MasterHelperPid, L"JiYuTrainerHooks.dll");
+	if (_StudentMainPid > 4) 
+		UnInjectDll(_StudentMainPid, L"JiYuTrainerHooks.dll");
+	
+	return false;
 }
 
 void TrainerWorkerInternal::SwitchFakeFull()

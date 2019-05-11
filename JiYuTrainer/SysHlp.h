@@ -16,13 +16,16 @@ public:
 
 	static LPCWSTR ConvertErrorCodeToString(DWORD ErrorCode);
 
-	static BOOL EnableDebugPriv(const wchar_t * name);
+	static bool CheckIsPortabilityDevice(LPCWSTR path);
+	static bool CheckIsDesktop(LPCWSTR path);
 
-	static BOOL IsRunasAdmin();
-	static BOOL Is64BitOS();
+	static bool EnableDebugPriv(const wchar_t * name);
 
-	static BOOL RunApplication(LPCWSTR path, LPCWSTR cmd);
-	static BOOL RunApplicationPriviledge(LPCWSTR path, LPCWSTR cmd);
+	static bool IsRunasAdmin();
+	static bool Is64BitOS();
+
+	static bool RunApplication(LPCWSTR path, LPCWSTR cmd);
+	static bool RunApplicationPriviledge(LPCWSTR path, LPCWSTR cmd);
 
 };
 

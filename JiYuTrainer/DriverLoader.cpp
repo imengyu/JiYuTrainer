@@ -1,9 +1,11 @@
+#include "DriverLoader.h"
+#include "DriverLoader.h"
 #include "stdafx.h"
 #include "DriverLoader.h"
 #include "JiYuTrainer.h"
 #include "KernelUtils.h"
 #include "SysHlp.h"
-#include "App.h"
+#include "AppPublic.h"
 #include <shlwapi.h>
 
 extern JTApp * currentApp;
@@ -221,10 +223,17 @@ BOOL XLoadDriver() {
 			if (OpenDriver()) {
 				JTLogInfo(L"驱动加载成功");
 				KFSendDriverinitParam(isXp, isWin7);
-				if (isWin7 && currentApp->GetSelfProtect() && !XinitSelfProtect())
-					JTLogWarn(L"驱动自我保护失败！");
+				return TRUE;
 			}
 			else JTLogWarn(L"驱动加载成功，但打开驱动失败");
+	}
+	return FALSE;
+}
+BOOL XCloseDriverHandle() {
+	if (hKDrv) {
+		CloseHandle(hKDrv);
+		hKDrv = nullptr;
+		return TRUE;
 	}
 	return FALSE;
 }

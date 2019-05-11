@@ -43,7 +43,7 @@ LRESULT hWndOutOfControlConformRs = 0;
 INT screenWidth, screenHeight;
 bool outlineEndJiy = false;
 HWND hWndOpConformNoBtn = NULL;
-bool bandAllRunOp = false, allowNextRunOp = false, allowAllRunOp  = true;
+bool bandAllRunOp = false, allowNextRunOp = false, allowAllRunOp  = false;
 std::list<std::wstring> runOPWhiteList;
 bool forceKill = false;
 int wdCount = 0;
@@ -128,8 +128,7 @@ void VLoad() {
 		}
 	}
 	else if (name == L"JiYuTrainer.exe") {
-		//本进程，需要挂钩以保证极域 LibTDProcHook32 无法正常运行
-		VInstallHooks(VirusModeProtet);
+		VLoadMainProtect();
 	}
 	else if (name == L"MasterHelper.exe") {
 		//MasterHelper.exe 搞一些事情
@@ -315,6 +314,12 @@ void VFixGuangBoWindow(HWND hWnd) {
 		VOutPutStatus(L"Hooked hWnd %d (0x%08x) WNDPROC", hWnd, hWnd);
 		SendMessage(hWnd, WM_SHOWWINDOW, TRUE, FALSE);
 	}
+	LONG style = GetWindowLong(hWnd, GWL_STYLE);
+	if ((style & WS_OVERLAPPEDWINDOW) != WS_OVERLAPPEDWINDOW)
+	{
+		style |= WS_OVERLAPPEDWINDOW;
+		SetWindowLong(hWnd, GWL_STYLE, style);
+	}
 }
 bool VIsInIllegalWindows(HWND hWnd) {
 	list<HWND>::iterator testiterator;
@@ -372,7 +377,7 @@ void VSendMessageBack(LPCWSTR buff, HWND hDlg) {
 			{
 				outlineEndJiy = false;
 				if (_waccess_s(mainFullPath, 0) == 0)
-					ShellExecute(hWndMsgCenter, L"open", mainFullPath, NULL, NULL, SW_NORMAL);
+					ShellExecute(hWndMsgCenter, L"open", mainFullPath, L"-r3", NULL, SW_NORMAL);
 			}
 		}
 	}
@@ -707,10 +712,11 @@ void VInstallHooks(VirusMode mode) {
 		hk8 = Mhook_SetHook((PVOID*)&faSetWindowsHookExA, hkSetWindowsHookExA);
 		hk19 = Mhook_SetHook((PVOID*)&faExitWindowsEx, hkExitWindowsEx);
 		hk22 = Mhook_SetHook((PVOID*)&faCreateProcessW, hkCreateProcessW);
-		hk25 = Mhook_SetHook((PVOID*)&faCallNextHookEx, hkCallNextHookEx);
 	}
-	if (mode == VirusModeHook || mode == VirusModeProtet) {
-		hk25 = Mhook_SetHook((PVOID*)&faCallNextHookEx, hkCallNextHookEx);
+	if (mode == VirusModeProtet) {
+
+		SetWindowsHookExA(WH_CBT, VCBTProc, hInst, GetCurrentThreadId());
+
 	}
 }
 void VUnInstallHooks() {
@@ -946,7 +952,7 @@ BOOL WINAPI hkCreateProcessW(LPCWSTR lpApplicationName, LPWSTR lpCommandLine, LP
 	if (StringHlp::StrContainsW(lowStr, L"shutdown.exe", NULL)) {
 		if (MessageBox(NULL, L"极域电子教室试图关机或重启，是否允许极域继续操作？", L"JiYu Killer 防护警告", MB_ICONEXCLAMATION | MB_YESNO) == IDNO) canContinue = false;
 	} 
-	else if (StringHlp::StrContainsW(lowStr, L"jiyukiller.exe", NULL) 
+	else if (StringHlp::StrContainsW(lowStr, L"jiyutrainer.exe", NULL) 
 		|| StringHlp::StrContainsW(lowStr, L"sogouinput", NULL)
 		|| StringHlp::StrContainsW(lowStr, L"baidupinyin", NULL)
 		|| VIsOpInWhiteList(lowStr)) canContinue = true;
@@ -1012,7 +1018,7 @@ UINT WINAPI hkWinExec(LPCSTR lpCmdLine, UINT uCmdShow) {
 	if (StringHlp::StrContainsW(lowStr, L"shutdown.exe", NULL)) {
 		if (MessageBox(NULL, L"极域电子教室试图关机或重启，是否允许极域继续操作？", L"JiYu Killer 防护警告", MB_ICONEXCLAMATION | MB_YESNO) == IDNO) canContinue = false;
 	}
-	else if (StringHlp::StrContainsW(lowStr, L"jiyukiller.exe", NULL)
+	else if (StringHlp::StrContainsW(lowStr, L"jiyutrainer.exe", NULL)
 		|| StringHlp::StrContainsW(lowStr, L"sogouinput", NULL)
 		|| StringHlp::StrContainsW(lowStr, L"baidupinyin", NULL)
 		|| VIsOpInWhiteList(lowStr)) canContinue = true;
@@ -1021,7 +1027,7 @@ UINT WINAPI hkWinExec(LPCSTR lpCmdLine, UINT uCmdShow) {
 
 	delete uniStr;
 	if (canContinue) return faWinExec(lpCmdLine, uCmdShow);
-	else return TRUE;
+	else return 32;
 }
 LRESULT WINAPI hkCallNextHookEx(HHOOK hhk, int nCode, WPARAM wParam, LPARAM lParam) 
 {

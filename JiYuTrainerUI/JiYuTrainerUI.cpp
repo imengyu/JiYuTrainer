@@ -3,12 +3,17 @@
 
 #include "stdafx.h"
 #include "MainWindow.h"
-#include "../JiYuTrainer/App.h"
+#include "../JiYuTrainer/AppPublic.h"
 #include "../JiYuTrainer/JiYuTrainer.h"
 #include "JiYuTrainerUI.h"
 
 JTApp* appCurrent = nullptr;
+MainWindow *appCurrentMainWindow = nullptr;
 
+UIEXPORT_CFUNC(void*) JTUI_GetMainWindow()
+{
+	return appCurrentMainWindow;
+}
 UIEXPORT_CFUNC(int) JTUI_RunMain()
 {
 	appCurrent = (JTApp*)JTGetCurrentApp();
@@ -17,8 +22,10 @@ UIEXPORT_CFUNC(int) JTUI_RunMain()
 	SciterSetOption(NULL, SCITER_SET_DEBUG_MODE, TRUE);
 	SciterClassName();
 
-	MainWindow mainWindow;
-	return mainWindow.RunLoop();
+	appCurrentMainWindow = new MainWindow();
+	int result = appCurrentMainWindow->RunLoop();
+	delete appCurrentMainWindow;
+	return result;
 }
 UIEXPORT_CFUNC(int) JTUI_RunUpdate() 
 {

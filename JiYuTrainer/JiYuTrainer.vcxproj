@@ -97,6 +97,9 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>Shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
+    <ResourceCompile>
+      <PreprocessorDefinitions>_DEBUG;_USING_V110_SDK71_;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -151,13 +154,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AppPublic.h" />
     <ClInclude Include="DriverLoader.h" />
     <ClInclude Include="JiYuTrainer.h" />
     <ClInclude Include="App.h" />
     <ClInclude Include="KernelUtils.h" />
     <ClInclude Include="Logger.h" />
+    <ClInclude Include="md5.h" />
+    <ClInclude Include="MD5Utils.h" />
     <ClInclude Include="MsgCenter.h" />
     <ClInclude Include="NtHlp.h" />
+    <ClInclude Include="PartsMD5.h" />
     <ClInclude Include="PathHelper.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SettingHlp.h" />
@@ -175,6 +182,8 @@
     <ClCompile Include="App.cpp" />
     <ClCompile Include="KernelUtils.cpp" />
     <ClCompile Include="Logger.cpp" />
+    <ClCompile Include="md5.cpp" />
+    <ClCompile Include="MD5Utils.cpp" />
     <ClCompile Include="MsgCenter.cpp" />
     <ClCompile Include="NtHlp.cpp" />
     <ClCompile Include="PathHelper.cpp" />
@@ -196,6 +205,18 @@
     <Image Include="JiYuKillerLoader.ico" />
     <Image Include="JiYuTrainer.ico" />
     <Image Include="small.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Debug\JiYuTrainerDriver.sys" />
+    <None Include="..\Debug\JiYuTrainerHooks.dll" />
+    <None Include="..\Debug\JiYuTrainerUI.dll" />
+    <None Include="..\Debug\JiYuTrainerUpdater.dll" />
+    <None Include="..\Debug\sciter.dll" />
+    <None Include="..\Release\JiYuTrainerDriver.sys" />
+    <None Include="..\Release\JiYuTrainerHooks.dll" />
+    <None Include="..\Release\JiYuTrainerUI.dll" />
+    <None Include="..\Release\JiYuTrainerUpdater.dll" />
+    <None Include="..\Release\sciter.dll" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

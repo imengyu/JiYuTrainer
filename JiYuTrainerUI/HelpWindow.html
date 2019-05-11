@@ -39,6 +39,12 @@
             border-color: #c3e6cb;
         }
 
+        .alert-primary {
+            color: #004085;
+            background-color: #cce5ff;
+            border-color: #b8daff;
+        }
+
         .mark {
             background-color: #ffd04c;
         }
@@ -75,27 +81,29 @@
         极域并没有使用驱动保护进程（WinXP有保护，Win7没有），如果在旧版本极域有驱动保护进程（软件出现注入失败的问题），可选择本软件进行卸载驱动， 或直接使用本软件进行内核模式强杀。
     </p>
     <p>
-        如果您在使用软件过程中发现Bug，欢迎向我反馈！<br />
-        <ul>
-            <li>该项目 Github 地址：<a href="#" id="link_github" class="link">JiYu Trainer </a></li>
-            <li>作者 QQ：1501076885 （请备注 <u>来自JiYuTrainer </u>）</li>
-        </ul>
+        如果您在使用软件过程中发现Bug，欢迎向我反馈！
     </p>
+    <ul>
+        <li>该项目 Github 地址：<a href="#" id="link_github" class="link">JiYu Trainer </a></li>
+        <li>作者 QQ：1501076885 （请备注 <u>来自JiYuTrainer </u>）</li>
+    </ul>
     <div class="alert alert-success">
         如果你喜欢这个软件，不妨向你的好友推荐一下吧！
     </div>
-    <p>
-        <b style="color:#006bef">已测试的版本：</b>
-        <ul>
-            <li>极域电子教室 :  4.0 和 6.0（2010 和 2016版本）</li>
-            <li>已测试的系统 :  WinXP、 Win7、Win10</li>
-        </ul>
-        <b style="color:#006bef">软件需求：</b>
-        <ul>
-            <li>本软件最低最低也要在 Windows XP sp3上运行，上古版本的系统不支持 </li>
-            <li>极域电子教室 推荐在 4.0/6.0 版本，其他版本可能无法达到最好的防御效果 </li>
-        </ul>
-    </p>
+    <br />
+    <b style="color:#006bef">已测试的版本：</b>
+    <ul>
+        <li>极域电子教室 :  4.0 和 6.0（2010 和 2016版本）</li>
+        <li>已测试的系统 :  WinXP、 Win7、Win10</li>
+    </ul>
+    <b style="color:#006bef">软件需求：</b>
+    <ul>
+        <li>本软件最低最低也要在 Windows XP sp3上运行，上古版本的系统不支持 </li>
+        <li>极域电子教室 推荐在 4.0/6.0 版本，其他版本可能无法达到最好的防御效果 </li>
+    </ul>
+    <div class="alert alert-primary">
+        <b>提示：</b>由于本软件需要对极域电子教室进行操作，可能会被某些杀毒软件误识别为病毒，您需要选择添加白名单。如果您不信任本软件，可以在软件 Github 页下载源代码自行编译。
+    </div>
     <h3 style="color:#ff0000">免责声明</h3>
     <div class="alert alert-warning">
         <b>注意：</b>本软件研发之初仅供学习交流使用，<span style="color:red;font-weight:bold;">严禁将该软件用于不符合法律、道德的行为，本软件仅供技术交流，擅自用于不正当行为所造成的后果将由您自行承担！</span>自您使用本软件起，即表明您同意了该声明。
@@ -106,22 +114,15 @@
     </div>
 
     <br />
-    <a href="#" id="link_exit" class="link"  style="text-align: right; font-size: 16px;display: block;">关闭</a><br />
-    
-    <script type="text/tiscript">
+    <a href="#" id="link_exit" class="link" style="text-align: right; font-size: 16px;display: block;">关闭</a><br />
 
+    <script type="text/tiscript">
         const body = $(body);
         const extend_area = $(#extend_area);
 
-        $(#link_exit).onClick = function (){
-            view.close();
-        }
-        $(#link_github).onClick = function (){
-            System.exec("https://github.com/717021");
-        }
-        $(#link_help).onClick = function (){
-            System.exec("https://github.com/717021");
-        }
+        $(#link_exit).onClick = function (){ view.close(); }
+        $(#link_github).onClick = function (){ view.goToGithub(); }
+        $(#link_help).onClick = function (){ view.goToFullHelp(); }
     </script>
 
 </body>

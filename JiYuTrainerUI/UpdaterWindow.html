@@ -4,18 +4,17 @@
     <style>
          html {
              overflow: hidden;
-             overflow-y: scroll;
          }
          body {
              font-family: "Microsoft YaHei", Tahoma, sans-serif;
              margin: 15px;
-             padding: 0;
+             padding: 15px;
          }
         .btn {
             display: inline-block;
             padding: 6px 13px;
             background-color: #bababa;
-            border-radius: 50%;
+            border-radius: 15px;
             color: #fff;
             text-decoration: none;
         }
@@ -23,28 +22,40 @@
             background-color: #0094ff;
         }
         #progress_bg {
-            margin-top: 50px;
+            margin-top:  20px;
             background-color: #a1a1a1;
-            border-radius: 50%;
+            border-radius: 15px;
             height: 26px;
         }
         #progress {
             background-color: #0094ff;
             display: inline-block;
-            border-radius: 50%;
+            border-radius: 15px;
             width: 0%;
             height: 26px;
         }
         #progress_text {
+            display: block;
             margin-top: 10px;
             color: #808080;
         }
-        #bottom_bar{
+        #progress_info {
+            display: block;
+        }
+        #progress_info span {
+            display: inline-block;
+        }
+        #progress_value {
+            margin-top: 10px;
+            float: right;
+            color: #0094ff;
+        }
+        #bottom_bar {
             text-align: right;
             position: absolute;
-            bottom: 5px;
+            bottom: 15px;
             left: 5px;
-            right: 5px;
+            right: 15px;
         }
     </style>
 </head>
@@ -54,7 +65,7 @@
         <div id="progress_bg">
             <div id="progress"></div>
         </div>
-        <span id="progress_text">正在初始化，请稍后...</span>
+        <div id="progress_info"><span id="progress_text">正在初始化，请稍后...</span> <span id="progress_value"></span></div>
     </div>
     <div id="bottom_bar">
         <a class="btn" href="#" id="link_exit">取消更新</a>

@@ -6,6 +6,7 @@ enum TrainerWorkerOp {
 	TrainerWorkerOpVirusBoom,
 	TrainerWorkerOpVirusQuit,
 	TrainerWorkerOp1,
+	TrainerWorkerOpForceUnLoadVirus,
 };
 
 class TrainerWorkerCallback
@@ -44,6 +45,8 @@ public:
 	virtual bool Running() { return false; }
 	virtual bool RunOperation(TrainerWorkerOp op) { return false; }
 	virtual void SwitchFakeFull() {}
+	virtual bool FindProcess(LPCWSTR processName, DWORD*outPid) { return false; }
+	virtual bool KillProcess(DWORD pid, bool force){ return false; }
 
 	virtual bool Kill(bool autoWork = false) { return false;  }
 	virtual bool Rerun(bool autoWork = false) { return false; }
@@ -52,6 +55,9 @@ public:
 	virtual void HandleMessageFromVirus(LPCWSTR buf) {}
 	virtual void SendMessageToVirus(LPCWSTR buf) {}
 };
+
+#ifdef JTEXPORT
+
 class TrainerWorkerInternal : public TrainerWorker
 {
 public:
@@ -65,6 +71,7 @@ public:
 
 	void Start();
 	void Stop();
+	void StopInternal();
 	bool Running() { return _Running; }
 	bool RunOperation(TrainerWorkerOp op);
 
@@ -95,6 +102,8 @@ private:
 	int setCkInterval = 3100;
 	int screenWidth, screenHeight;
 
+	bool _NextLoopGetCkStat = false;
+
 	bool _FakeFull = false;
 	bool _LastResoveBroadcastWindow = false, _LastResoveBlackScreenWindow = false;
 	bool _FirstBlackScreenWindow = false;
@@ -110,6 +119,7 @@ private:
 	bool FlushProcess();
 	void ClearProcess();
 	bool FindProcess(LPCWSTR processName, DWORD*outPid);
+	bool KillProcess(DWORD pid, bool force);
 
 	bool LocateStudentMainLocation();
 	bool LocateStudentMain(DWORD *outFirstPid);
@@ -125,6 +135,8 @@ private:
 	bool InstallVirus();
 	bool InstallVirusForMaster();
 	bool InjectDll(DWORD pid, LPCWSTR dllPath);
+	bool UnInjectDll(DWORD pid, LPCWSTR moduleName);
+	bool UnLoadAllVirus();
 
 	/*Window resolver*/
 
@@ -139,4 +151,6 @@ private:
 	static BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam);
 	static VOID CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD);
 };
+
+#endif
 

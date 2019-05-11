@@ -72,6 +72,18 @@
     <ClInclude Include="TrainerWorker.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="md5.h">
+      <Filter>头文件\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="MD5Utils.h">
+      <Filter>头文件\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="PartsMD5.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="AppPublic.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -113,6 +125,12 @@
     <ClCompile Include="TrainerWorker.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="MD5Utils.cpp">
+      <Filter>源文件\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="md5.cpp">
+      <Filter>源文件\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="JiYuTrainer.rc">
@@ -129,5 +147,17 @@
     <Image Include="JiYuKillerLoader.ico">
       <Filter>资源文件</Filter>
     </Image>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Debug\JiYuTrainerDriver.sys" />
+    <None Include="..\Debug\JiYuTrainerHooks.dll" />
+    <None Include="..\Debug\JiYuTrainerUI.dll" />
+    <None Include="..\Debug\JiYuTrainerUpdater.dll" />
+    <None Include="..\Debug\sciter.dll" />
+    <None Include="..\Release\JiYuTrainerDriver.sys" />
+    <None Include="..\Release\JiYuTrainerHooks.dll" />
+    <None Include="..\Release\JiYuTrainerUI.dll" />
+    <None Include="..\Release\JiYuTrainerUpdater.dll" />
+    <None Include="..\Release\sciter.dll" />
   </ItemGroup>
 </Project>

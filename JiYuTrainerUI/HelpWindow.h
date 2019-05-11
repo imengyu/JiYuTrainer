@@ -5,7 +5,7 @@
 
 extern HINSTANCE hInst;
 
-class HelpWindow  : public sciter::host<HelpWindow>
+class HelpWindow  : public sciter::host<HelpWindow>, public sciter::event_handler
 {
 public:
 	HelpWindow(HWND parentHWnd);
@@ -19,6 +19,14 @@ public:
 	static LRESULT CALLBACK	wndProc(HWND, UINT, WPARAM, LPARAM);
 	static HelpWindow* ptr(HWND hwnd);
 	static bool initClass();
+
+	sciter::value goToGithub();
+	sciter::value goToFullHelp();
+
+	BEGIN_FUNCTION_MAP
+		FUNCTION_0("goToFullHelp", goToFullHelp);
+		FUNCTION_0("goToGithub", goToGithub);
+	END_FUNCTION_MAP
 
 public:
 	// notification_handler traits:

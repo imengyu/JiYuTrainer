@@ -4,12 +4,14 @@
 #include "UpdaterWindow.h"
 #include "resource.h"
 #include "../JiYuTrainer/JiYuTrainer.h"
-#include "../JiYuTrainer/App.h"
+#include "../JiYuTrainer/AppPublic.h"
 #include "../JiYuTrainer/StringHlp.h"
 #include "../JiYuTrainer/StringSplit.hpp"
 #include "../JiYuTrainer/KernelUtils.h"
 #include "../JiYuTrainer/DriverLoader.h"
 #include "../JiYuTrainer/SysHlp.h"
+#include "../JiYuTrainer/MD5Utils.h"
+#include "../JiYuTrainer/PathHelper.h"
 #include "../JiYuTrainerUpdater/JiYuTrainerUpdater.h"
 
 using namespace std;
@@ -26,12 +28,14 @@ int screenWidth, screenHeight;
 
 MainWindow::MainWindow()
 {
-	initClass();
+	swprintf_s(wndClassName, L"sciter-jytrainer-main-window");
+
+	if (!initClass()) return;
 
 	screenWidth = GetSystemMetrics(SM_CXSCREEN);
 	screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-	hWndMain = CreateWindowExW(WS_EX_APPWINDOW, WINDOW_CLASS_NAME, L"JiYu Trainer Main Window", WS_POPUP, CW_USEDEFAULT, CW_USEDEFAULT, 430, 520, nullptr, nullptr, hInst, this);
+	hWndMain = CreateWindow(wndClassName, L"JiYu Trainer Main Window", WS_POPUP, 0, 0, 430, 520, NULL, NULL, hInst, this);
 	if (!hWndMain)
 		return;
 
@@ -45,14 +49,8 @@ MainWindow::MainWindow()
 
 bool MainWindow::initClass()
 {
-	static ATOM cls = 0;
-	if (cls)
-		return true;
-
-	WNDCLASSEX wcex;
-
+	WNDCLASSEXW wcex;
 	wcex.cbSize = sizeof(WNDCLASSEX);
-
 	wcex.style = CS_HREDRAW | CS_VREDRAW;
 	wcex.lpfnWndProc = wndProc;
 	wcex.cbClsExtra = 0;
@@ -62,11 +60,12 @@ bool MainWindow::initClass()
 	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 	wcex.lpszMenuName = 0;//MAKEINTRESOURCE(IDC_PLAINWIN);
-	wcex.lpszClassName = WINDOW_CLASS_NAME;
+	wcex.lpszClassName = wndClassName;
 	wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_APP));
 
-	cls = RegisterClassEx(&wcex);
-	return cls != 0;
+	if (RegisterClassExW(&wcex) || GetLastError() == ERROR_CLASS_ALREADY_EXISTS)
+		return TRUE;
+	return FALSE;
 }
 MainWindow* MainWindow::ptr(HWND hwnd)
 {
@@ -81,8 +80,13 @@ bool MainWindow::init()
 
 	//Init worker
 	currentLogger = appCurrent->GetLogger();
+	currentLogger->SetLogOutPut(LogOutPutCallback);
+	currentLogger->SetLogOutPutCallback(LogCallBack, (LPARAM)this);
+
 	currentWorker = appCurrent->GetTrainerWorker();
 	currentWorker->SetUpdateInfoCallback(this);
+
+	appCurrent->LoadDriver();
 	
 	BOOL result = FALSE;
 	HRSRC hResource = FindResource(hInst, MAKEINTRESOURCE(IDR_HTML_MAIN), RT_HTML);
@@ -138,6 +142,7 @@ sciter::value MainWindow::docunmentComplete()
 
 	//Appily settings to ui
 	LoadSettingsToUi();
+	WritePendingLogs();
 
 	return sciter::value(domComplete);
 }
@@ -155,6 +160,10 @@ sciter::value MainWindow::exitClick()
 	SendMessage(_hWnd, WM_SYSCOMMAND, SC_CLOSE, NULL);
 	return sciter::value::null();
 }
+sciter::value MainWindow::toGithub() {
+	SysHlp::RunApplication(L"https://github.com/717021/JiYuTrainer", NULL);
+	return sciter::value::null();
+}
 
 void MainWindow::OnWmCommand(WPARAM wParam)
 {
@@ -168,7 +177,7 @@ void MainWindow::OnWmCommand(WPARAM wParam)
 		else
 		{
 			ShowWindow(_hWnd, SW_SHOW);
-			SetWindowPos(_hWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
+			SetWindowPos(_hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
 			sciter::dom::element root(get_root());
 			root.call_function("showWindow"); 
 		}
@@ -176,20 +185,17 @@ void MainWindow::OnWmCommand(WPARAM wParam)
 	}
 	case IDM_EXIT: {
 		if (currentControlled) {
-			int id = MessageBox(_hWnd, L"极域正在运行，您是否还要退出？\n点击“是”将会强制分离极，导致极域脱离控制；点击“否”不退出；点击“取消”将会退出本软件，并杀死极域。", L"注意", MB_YESNOCANCEL | MB_ICONEXCLAMATION);
-			if (id == IDYES) {
-				isUserCancel = true;
-				DestroyWindow(_hWnd);
-			}
-			else if (id == IDCANCEL) {
-				isUserCancel = true;
-				DestroyWindow(_hWnd);
-			}
+			sciter::dom::element(get_root()).call_function("showExitMessage");
+			if (!IsWindowVisible(_hWnd)) SendMessage(_hWnd, WM_COMMAND, IDM_SHOWMAIN, NULL);
 		}
-		else DestroyWindow(_hWnd);
+		else Close();
 		break;
 	}
 	case IDM_HELP:ShowHelp(); break;
+	case IDC_UPDATE_CLOSE: {
+		Close();
+		break;
+	}
 	default: break;
 	}
 }
@@ -203,13 +209,13 @@ BOOL MainWindow::OnWmCreate()
 void MainWindow::OnWmDestroy()
 {
 	if (!isUserCancel && currentControlled)
-	{
 		SysHlp::RunApplicationPriviledge(appCurrent->GetFullPath(), L"-r1");
-		ExitProcess(0);
-	}
 
 	UnregisterHotKey(_hWnd, hotkeyShowHide);
 	UnregisterHotKey(_hWnd, hotkeySwFull);
+
+	SetWindowLong(_hWnd, GWL_USERDATA, 0);
+
 	PostQuitMessage(0);
 }
 void MainWindow::OnWmHotKey(WPARAM wParam)
@@ -249,6 +255,7 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 		bool succ = true;
 		vector<wstring> cmds;
 		SplitString(cmdx, cmds, L" ");
+		int len = cmds.size();
 		wstring cmd = (cmds)[0];
 		if (cmd == L"killst") {
 			if (currentWorker->Kill())
@@ -257,6 +264,23 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 		else if (cmd == L"rerunst") {
 			if (currentWorker->Rerun())
 				JTLog(L"已成功运行极域进程");
+		}
+		else if (cmd == L"kill") {
+			if (len >= 2) {
+				bool force = false;
+				if (len >= 3)  force = ((cmds)[2] == L"true");
+				currentWorker->KillProcess(_wtoi((cmds)[1].c_str()), force);
+			}
+			else JTLogError(L"缺少参数 (pid)");
+		}
+		else if (cmd == L"findps") {
+			if (len >= 2) {
+				DWORD pid = 0;
+				LPCWSTR procName = (cmds)[1].c_str();
+				if (currentWorker->FindProcess(procName, &pid)) JTLogError(L"进程名为：%s 的第一个进程PID 为：%d", procName, pid);
+				else JTLogError(L"未找到进程：%s", procName);
+			}
+			else JTLogError(L"缺少参数 (pid)");
 		}
 		else if (cmd == L"ss") { currentWorker->RunOperation(TrainerWorkerOpVirusBoom); JTLog(L"已发送 ss 命令"); }
 		else if (cmd == L"sss") ExitWindowsEx(EWX_SHUTDOWN | EWX_FORCE, 0);
@@ -270,15 +294,29 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 		else if (cmd == L"fuljydrv") {
 			UnLoadKernelDriver(L"TDProcHook");
 		}
-		else if (cmd == L"uninstall") {
-
-		}
 		else if (cmd == L"inspector") sciter::dom::element(get_root()).call_function("runInspector");
-		else if (cmd == L"test1") {
-
+		else if (cmd == L"md5") {
+			if (len >= 2) {
+				LPCWSTR filePath = (cmds)[1].c_str();
+				if (Path::Exists(filePath)) {
+					std::wstring *md5Sting = MD5Utils::GetFileMD5(filePath);
+					JTLog(L"MD5 : %s", md5Sting->c_str());
+					FreeStringPtr(md5Sting);
+				}
+				else JTLogError(L"文件不存在");
+			}
+			else JTLogError(L"缺少参数 (filePath)");
 		}
 		else if (cmd == L"whereisi") {
 			JTLog(L"本程序路径是：%s", appCurrent->GetFullPath());
+		}
+		else if (cmd == L"testupdate") {
+			UpdaterWindow u(_hWnd);
+			u.RunLoop();
+		}
+		else if (cmd == L"unloaddrv") {
+			if (XUnLoadDriver())
+				JTLog(L"驱动卸载成功");
 		}
 		else if (cmd == L"exit")  SendMessage(hWndMain, WM_COMMAND, IDM_EXIT, NULL);
 		else if (cmd == L"hide")  SendMessage(hWndMain, WM_COMMAND, IDM_SHOWMAIN, NULL);
@@ -291,9 +329,6 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 }
 void MainWindow::OnFirstShow()
 {
-	currentLogger->SetLogOutPut(LogOutPutCallback);
-	currentLogger->SetLogOutPutCallback(LogCallBack, (LPARAM)this);
-
 	//热键
 	hotkeyShowHide = GlobalAddAtom(L"HotKeyShowHide");
 	hotkeySwFull = GlobalAddAtom(L"HotKeySwFull");
@@ -316,12 +351,18 @@ void MainWindow::OnFirstShow()
 	if (appCurrent->IsCommandExists(L"-r1"))
 		ShowFastMessage(L"刚才进程意外退出", L"极域可能试图结束本进程，或是其他软件（比如任务管理器）结束了本进程，为了安全，我们已经重启了软件进程，您如果要退出本软件的话，请手动点击托盘图标>退出软件。");
 	else if (appCurrent->IsCommandExists(L"-r2")) 
-		ShowFastTip(L"刚才意外与病毒失去联系，现已重启软件进程");
-	
+		ShowFastTip(L"刚才意外与病毒失去联系，现已杀死极域并重启软件主进程");
+	else if (appCurrent->IsCommandExists(L"-r3"))
+		ShowFastTip(L"软件已重启");
+
+	if (appCurrent->IsCommandExists(L"-ia"))
+		ShowFastMessage(L"更新完成！", L"您已经更新到软件最新版本，我们努力保证您的最佳使用体验，时常更新是非常好的做法。");
+
 	//运行更新
 	if(setAutoUpdate)
 		if (JUpdater_CheckInternet() && JUpdater_CheckUpdate(false) == UPDATE_STATUS_HAS_UPDATE) 
 			update_message.set_attribute("class", L"window-extend-area shown");
+
 
 	JTLogInfo(L"控制器已启动");
 }
@@ -349,7 +390,7 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 			}
 		}
 		else if (ele.get_attribute("id") == L"btn_kill") {
-			if(currentWorker->Kill())
+			if (currentWorker->Kill())
 				ShowFastTip(L"<h4>已成功结束极域电子教室</h4>");
 		}
 		else if (ele.get_attribute("id") == L"btn_restart") {
@@ -383,6 +424,23 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 		else if (ele.get_attribute("id") == L"update_message_update") {
 			UpdaterWindow updateWindow(_hWnd);
 			updateWindow.RunLoop();
+		}
+		else if (ele.get_attribute("id") == L"exit_message_kill_and_exit") {
+			isUserCancel = true;
+			currentWorker->Kill(true);
+			Close();
+		}
+		else if (ele.get_attribute("id") == L"exit_message_end_ctl_and_exit") {
+			isUserCancel = true;
+			currentWorker->RunOperation(TrainerWorkerOpVirusQuit);
+			Close();
+		}
+		else if (ele.get_attribute("id") == L"link_uninstall") {
+			if (MessageBox(_hWnd, L"你是否真的要卸载本软件？\n卸载会删除本软件相关安装文件，但不会删除源安装包。", L"JiYuTrainer - 警告", MB_YESNO | MB_ICONEXCLAMATION) == IDYES)
+			{
+				SysHlp::RunApplicationPriviledge(appCurrent->GetPartFullPath(PART_UNINSTALL), NULL);
+				ExitProcess(0);
+			}
 		}
 	}
 	else if (type == BUTTON_CLICK)
@@ -545,21 +603,24 @@ void MainWindow::ResetSettings()
 void MainWindow::LogCallBack(const wchar_t * str, LogLevel level, LPARAM lParam)
 {
 	MainWindow*self = (MainWindow*)lParam;
-	if (self && self->domComplete) {
-		sciter::dom::element newEle = self->status_area.create("div", str);
-		switch (level)
-		{
-		case LogLevelText:newEle.set_attribute("class", L"text-black"); break;
-		case LogLevelInfo:newEle.set_attribute("class", L"text-info");  break;
-		case LogLevelWarn:newEle.set_attribute("class", L"text-warning");  break;
-		case LogLevelError: newEle.set_attribute("class", L"text-danger");  break;
-		}
-		self->status_area.append(newEle);
-		newEle.scroll_to_view();
+	if (self && self->domComplete)  self->WriteLogItem(str, level);
+	else self->currentLogger->WritePendingLog(str, level);
+}
+void MainWindow::WriteLogItem(const wchar_t * str, LogLevel level)
+{
+	sciter::dom::element newEle = status_area.create("div", str);
+	switch (level)
+	{
+	case LogLevelText:newEle.set_attribute("class", L"text-black"); break;
+	case LogLevelInfo:newEle.set_attribute("class", L"text-info");  break;
+	case LogLevelWarn:newEle.set_attribute("class", L"text-warning");  break;
+	case LogLevelError: newEle.set_attribute("class", L"text-danger");  break;
 	}
-	else {
-
-	}
+	status_area.append(newEle);
+	newEle.scroll_to_view();
+}
+void MainWindow::WritePendingLogs() {
+	currentLogger->ResentNotCaputureLog();
 }
 
 int MainWindow::RunLoop()
@@ -576,6 +637,10 @@ int MainWindow::RunLoop()
 	}
 
 	return msg.lParam;
+}
+void MainWindow::Close()
+{
+	DestroyWindow(_hWnd);
 }
 
 //Tray
@@ -656,7 +721,7 @@ LRESULT CALLBACK MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 		switch (wParam)
 		{
 		case SC_RESTORE: ShowWindow(hWnd, SW_RESTORE); SetForegroundWindow(hWnd); return TRUE;
-		case SC_MINIMIZE: ShowWindow(hWnd, SW_MINIMIZE);  return TRUE;
+		case SC_MINIMIZE:  ShowWindow(hWnd, SW_MINIMIZE);  return TRUE;
 		case SC_CLOSE: {
 			ShowWindow(hWnd, SW_HIDE);
 			if (!self->setTopMost) SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);

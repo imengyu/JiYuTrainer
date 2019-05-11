@@ -1,6 +1,6 @@
 //{{NO_DEPENDENCIES}}
 // Microsoft Visual C++ 生成的包含文件。
-// 供 JiYuKillerVirus.rc 使用
+// 供 JiYuTrainerHooks.rc 使用
 //
 #define IDD_MSGCT                       101
 #define IDD_OPASK                       107

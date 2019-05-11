@@ -15,6 +15,7 @@ void VLoad();
 void VRunMain();
 
 void VLoadRealVirus();
+void VLoadMainProtect();
 void VParamInit();
 
 void VCreateMsgCenter();

@@ -347,26 +347,18 @@
             background-color: #009bea;
             color: #fff;
         }
-        .btn-tab.red{
-            background-color: #e58500;
-            color: #fff;
-        }
-        .btn-tab.red:hover {
-            background-color: #ff8b3f;
-            color: #fff;
-        }
 
         /* Button*/
         .btn-common {
             display: inline-block;
             border-radius: 20px;
             padding: 5px 15px;
-            background-color: rgb(68, 105, 138);
+            background-color: #cdcdcd;
             color: #fff;
             text-decoration: none;
         }
         .btn-common:hover{
-            background-color: #0072ff;
+            background-color: #3ca0d0;
             color: #fff;
         }
         .btn-about {
@@ -375,12 +367,59 @@
             left: -15px;
         }
 
-        /***/
+        .btn-dager {
+            background-color: #ff9b40;
+        }
+        .btn-dager:hover {
+            background-color: #ff7a00;
+        }
+        .btn-primary {
+            background-color: #0072ff;
+        }
+        .btn-primary:hover {
+            background-color: #3ca0d0;
+        }
+        .btn-secondary {
+            background-color: #676767;
+        }
+        .btn-secondary:hover {
+            background-color: #91adc4;
+        }
+
+        #link_close_extend_area i {
+            display: inline-block;
+            width: 13px;
+            padding-left: 0;
+            padding-right: 0;
+            margin-left: -1px;
+            background-image: url(res:btn-close.png);
+            background-repeat: no-repeat;
+            background-position: -10px -7px;
+
+        }
+        #link_close_extend_area {
+            background-color: #ff6440;
+        }
+        #link_close_extend_area:hover {
+            background-color: #ff3100;
+        }
+
+        /*Status area*/
         #status_area {
             width: 100%;
             height: 190px;
-            overflow-y: scroll;
-            font-size:12px;
+            overflow: scroll;
+            font-size: 12px;
+            font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
+            behavior: sticky-scroll; /* keep position of viewed element */
+            overflow: scroll-indicator;
+            padding-bottom: 5px;
+            padding-right: 5px;
+        }
+        #status_area div {
+            width: auto;
+            word-break: keep-all;
+            white-space: nowrap;
         }
 
         /* Utitles*/
@@ -504,6 +543,7 @@
             <div class="tooltip tooltip-jiyu-restart" style="bottom: 69px; left: 30px; width: 300px"><h4 class="m-0">极域位置</h4><span id="status_jiyu_path" style="color: #cecece">未找到极域电子教室</span></div>
             <div class="tooltip tooltip-topmost" id="tooltip_top" style="bottom: 65px; left: 60px; width: 80px">本窗口置顶</div>
             <div class="tooltip tooltip-sets" style="bottom: 65px; left: 218px; width: 80px">控制台和设置</div>
+            <div class="tooltip tooltip-close-debug" style="right: 90px; bottom: 110px; width: 80px">关闭控制台</div>
         </div>
         <!--底栏-->
         <div class="window-footer-area">
@@ -521,7 +561,7 @@
         <div class="window-extend-area" id="extend_area">
             <!--Tab 按钮-->
             <div class="window-tab">
-                <a class="btn-tab active" href="#" id="btn_tab_setting" style="width: 30px; border-top-left-radius: 20px; border-bottom-left-radius: 20px;">设置</a><a class="btn-tab" href="#" id="btn_tab_debug" style="width: 30px;">调试</a><a class="btn-tab" href="#" id="btn_tab_about" style="width: 30px;">关于</a><a href="#" id="link_exit" class="btn-tab red" style="border-top-right-radius: 20px; border-bottom-right-radius: 20px;">退出软件</a>
+                <a class="btn-tab active" href="#" id="btn_tab_setting" style="width: 30px; border-top-left-radius: 20px; border-bottom-left-radius: 20px;">设置</a><a class="btn-tab" href="#" id="btn_tab_debug" style="width: 30px;">调试</a><a class="btn-tab" href="#" id="btn_tab_about" style="width: 30px;">关于</a><a href="#" id="link_exit" class="btn-tab btn-dager">退出软件</a><a href="#" id="link_close_extend_area" class="btn-tab" style="border-top-right-radius: 20px; border-bottom-right-radius: 20px;"><i>&nbsp;</i></a>
             </div>
             <!--Tab 区域-->
             <div class="window-page active" id="page_setting">
@@ -550,7 +590,7 @@
                     </div>
                 </div>
                 <div class="from-group" style="margin-top:20px; margin-left: 5px;">
-                    <label for="input_ckinterval">监控时间间隔（毫秒，必须在1000-10000之间）</label><br />
+                    <label for="input_ckinterval">监控时间间隔(毫秒)</label><br />
                     <input style="width: 50px;margin-top: 5px;" type="text" id="input_ckinterval" /><br />
                 </div>
                 <div class="text-center" style="margin-top:30px;">
@@ -574,7 +614,7 @@
                 <h2 style="margin-top: 100px">JiYu Trainer</h2>
                 <span>V 1.6 2019/5/9</span><br />
                 <br />
-                <a href="#" id="link_help" class="link">软件帮助</a>&nbsp;|&nbsp;<a href="#" id="link_checkupdate" class="link" style="color: rgb(228, 126, 0)">检查更新</a>&nbsp;|&nbsp;<a href="#" id="link_github" class="link">Github</a><br />
+                <a href="#" id="link_help" class="link">软件帮助</a>&nbsp;|&nbsp;<a href="#" id="link_checkupdate" class="link">检查更新</a>&nbsp;|&nbsp;<a href="#" id="link_github" class="link">Github</a>&nbsp;|&nbsp;<a href="#" id="link_uninstall" class="link" style="color: rgb(228, 126, 0);font-size: 12px;">卸载软件</a><br />
                 <br />
                 <div class="alert alert-success">
                     你喜欢 JiYu Trainer 吗？如果你喜欢，不妨向你的好友推荐这个软件吧！
@@ -587,7 +627,7 @@
             <h3 id="common_message_title">测试消息</h3>
             <p id="common_message_text">测试消息文字，尝试 DEBUG</p>
             <div class="text-right" style="position: absolute;bottom: 0; left: 15px; right: 15px; height :45px;">
-                <a href="#" class="btn-common" id="common_message_close2">我知道了</a>
+                <a href="#" class="btn-common btn-primary" id="common_message_close2">我知道了</a>
             </div>
         </div>
         <!--初次提示框-->
@@ -595,11 +635,26 @@
 
         </div>
         <!--更新提示框-->
-        <div class="window-extend-area" style="bottom: 150px; top :145px; left: -15px; right: -15px; " id="update_message">
-            <h3 class="text-center" style="margin-top: 30px;">您的 JiYu Trainer 有新的版本了，是否更新？</h3>
+        <div class="window-extend-area" style="bottom: 150px; top :145px; left: -15px; right: -15px; padding: 10px 20px; " id="update_message">
+            <h3 class="text-center">您的 JiYu Trainer 有新的版本了，是否更新？</h3>
+            <p id="common_message_text">更新到最新版本，可以获得更稳定的使用体验！<br/>更新过程中会暂时关闭极域</p>
             <div class="text-right" style="position: absolute;bottom: 0; left: 15px; right: 15px; height :45px;">
-                <a href="#" class="btn-common" id="update_message_update">立即更新!</a>
+                <a href="#" class="btn-common btn-primary" id="update_message_update">立即更新!</a>
                 <a href="#" class="btn-common" id="update_message_close">我不想更新</a>
+            </div>
+        </div>
+        <!--退出提示框-->
+        <div class="window-extend-area" id="exit_message" style="bottom: 135px; top :135px; left: -15px; right: -15px; padding: 10px 20px;" >
+            <a href="#" class="title-close black" id="exit_message_close"></a>
+            <h3>极域正在运行，您是否还要退出？</h3>
+            <p>
+                当前正在控制极域，退出软件会非常不安全。
+                <br />你可以选择强制分离极域，但会导致极域脱离控制(不推荐)；也可以选择退出本软件，并杀死极域。
+            </p>
+            <div class="text-right" style="position: absolute;bottom: 0; left: 0px; right: 15px; height :45px;">
+                <a href="#" class="btn-common" id="exit_message_kill_and_exit">杀死极域并退出</a>
+                <a href="#" class="btn-common btn-secondary" id="exit_message_end_ctl_and_exit">分离极域并退出(不推荐)</a>
+                <a href="#" class="btn-common btn-primary" id="exit_message_close2">不退出</a>
             </div>
         </div>
     </div>
@@ -635,11 +690,20 @@
             else extend_area.attributes.addClass("shown");
         }
 
+        $(#link_close_extend_area).onClick = function(){
+            if(extend_area.attributes.hasClass("shown")) {
+                extend_area.attributes.removeClass("shown");
+                extend_area.attributes.addClass("hidden");
+                this.timer(200ms, function() {
+                     extend_area.attributes.removeClass("hidden");
+                });
+            }
+        }
         $(#status_icon).onClick = function(){
             //view.test1();
         }
         $(#link_github).onClick = function (){
-            System.exec("https://github.com/717021");
+            view.toGithub();
         }
 
         function common_close_extend_area(area){
@@ -655,7 +719,8 @@
         $(#common_message_close2).onClick = function (){ common_close_extend_area(common_message); }
         $(#update_message_close).onClick =  function (){ common_close_extend_area($(#update_message)); }
         $(#update_message_update).onClick =  function (){ common_close_extend_area($(#update_message)); }
-
+        $(#exit_message_close).onClick =  function (){ common_close_extend_area($(#exit_message)); }
+        $(#exit_message_close2).onClick =  function (){ common_close_extend_area($(#exit_message)); }
 
         //Tooltips
         $(#btn_kill).on("mouseenter", function () { $(.tooltip.tooltip-jiyu-pid).attributes.addClass("shown"); });
@@ -669,12 +734,17 @@
         $(#btn_debug).on("mouseenter", function () { $(.tooltip.tooltip-sets).attributes.addClass("shown"); });
         $(#btn_debug).on("mouseleave", function () { $(.tooltip.tooltip-sets).attributes.removeClass("shown"); });
         $(#tooltip_fast).onClick = function() { $(#tooltip_fast).attributes.removeClass("shown"); }
+        $(#link_close_extend_area).on("mouseenter", function () { $(.tooltip.tooltip-close-debug).attributes.addClass("shown"); });
+        $(#link_close_extend_area).on("mouseleave", function () { $(.tooltip.tooltip-close-debug).attributes.removeClass("shown"); });
 
         //Tabs
         $(#btn_tab_setting).onClick = function() { selectTab(this, $(#page_setting)); }
         $(#btn_tab_debug).onClick = function() { selectTab(this, $(#page_debug)); }
         $(#btn_tab_about).onClick = function() { selectTab(this, $(#page_about)); }
 
+        function showExitMessage() {
+            $(#exit_message).attributes.addClass("shown");
+        }
         function selectTab(btn, targetTab){
             $(.btn-tab.active).attributes.removeClass("active");
             $(.window-page.active).attributes.removeClass("active");

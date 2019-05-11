@@ -1,6 +1,7 @@
 #include "stdafx.h"
 #include "HelpWindow.h"
 #include "resource.h"
+#include "../JiYuTrainer/SysHlp.h"
 
 extern int screenWidth, screenHeight;
 
@@ -8,7 +9,8 @@ HelpWindow::HelpWindow(HWND parentHWnd)
 {
 	_parentHWnd = parentHWnd;
 
-	initClass();
+	if (!initClass()) return;
+
 	_hWnd = CreateWindowExW(0, L"sciter-jytrainer-help-window", L"JiYu Trainer Help Window", WS_OVERLAPPEDWINDOW ^ (WS_SIZEBOX | WS_MAXIMIZEBOX), CW_USEDEFAULT, CW_USEDEFAULT, 430, 520, nullptr, nullptr, hInst, this);
 	if (!_hWnd) return;
 	
@@ -33,6 +35,8 @@ int HelpWindow::RunLoop()
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+
+	SetForegroundWindow(_parentHWnd);
 
 	return msg.lParam;
 }
@@ -93,8 +97,19 @@ bool HelpWindow::initClass()
 	wcex.lpszClassName = L"sciter-jytrainer-help-window";
 	wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_APP));
 
-	cls = RegisterClassEx(&wcex);
-	return cls != 0;
+	if (RegisterClassExW(&wcex) || GetLastError() == ERROR_CLASS_ALREADY_EXISTS)
+		return TRUE;
+	return FALSE;
+}
+sciter::value HelpWindow::goToGithub()
+{
+	SysHlp::RunApplication(L"https://github.com/717021/JiYuTrainer", NULL);
+	return sciter::value::null();
+}
+sciter::value HelpWindow::goToFullHelp()
+{
+	SysHlp::RunApplication(L"https://github.com/717021/JiYuTrainer/docfull.md", NULL);
+	return sciter::value::null();
 }
 bool HelpWindow::init()
 {
@@ -112,3 +127,5 @@ bool HelpWindow::init()
 	}
 	return result;
 }
+
+

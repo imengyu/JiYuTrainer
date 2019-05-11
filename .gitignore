@@ -3,6 +3,9 @@
 *.lib
 *.pdb
 *.idb
+*.lnk
+*.iobj
+*.ipdb
 *..lastbuildstate
 *.ilk
 *.exp

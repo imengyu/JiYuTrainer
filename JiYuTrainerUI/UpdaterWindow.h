@@ -3,6 +3,8 @@
 #include "sciter-x.h"
 #include "sciter-x-host-callback.h"
 
+#define IDC_UPDATE_CLOSE 40012
+
 extern HINSTANCE hInst;
 
 class UpdaterWindow : public sciter::host<UpdaterWindow>, public sciter::event_handler
@@ -15,6 +17,8 @@ public:
 	bool _firstShow = true;
 
 	int RunLoop();
+
+	void Close();
 
 	static LRESULT CALLBACK	wndProc(HWND, UINT, WPARAM, LPARAM);
 	static UpdaterWindow* ptr(HWND hwnd);
@@ -33,10 +37,12 @@ public:
 private:
 
 	bool firstShow = true;
+	bool setDt1 = false;
 
 	std::wstring updateProgressPrect;
 	sciter::dom::element progress;
 	sciter::dom::element progress_text;
+	sciter::dom::element progress_value;
 
 	void OnCancel();
 	void OnFirstShow();

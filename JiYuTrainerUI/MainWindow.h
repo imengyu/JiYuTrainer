@@ -5,6 +5,7 @@
 #include <ShellAPI.h>
 #include "../JiYuTrainer/TrainerWorker.h"
 #include "../JiYuTrainer/Logger.h"
+#include <list>
 
 extern HINSTANCE hInst;
 
@@ -15,27 +16,33 @@ class MainWindow : public sciter::host<MainWindow>, public sciter::event_handler
 
 	static LRESULT CALLBACK	wndProc(HWND, UINT, WPARAM, LPARAM);
 	static MainWindow* ptr(HWND hwnd);
-	static bool initClass();
+
+	bool initClass();
 
 public:
 	// notification_handler traits:
 	HWND get_hwnd() { return _hWnd; }
 	HINSTANCE get_resource_instance() { return hInst; }
 
+	WCHAR wndClassName[64];
+
 	MainWindow();
 	bool init(); // instance
 	bool isValid() const { return _hWnd != 0; }
 
 	int RunLoop();
+	void Close();
 
 	sciter::value inspectorIsPresent();
 	sciter::value docunmentComplete();
 	sciter::value test1();
 	sciter::value exitClick();
+	sciter::value toGithub();
 
 	BEGIN_FUNCTION_MAP
 		FUNCTION_0("inspectorIsPresent", inspectorIsPresent);
 		FUNCTION_0("docunmentComplete", docunmentComplete);
+		FUNCTION_0("toGithub", toGithub);
 		FUNCTION_0("exitClick", exitClick);
 		FUNCTION_0("test1", test1);
 	END_FUNCTION_MAP
@@ -129,6 +136,8 @@ private:
 
 
 	static void LogCallBack(const wchar_t*str, LogLevel level, LPARAM lParam);
+	void WriteLogItem(const wchar_t * str, LogLevel level);
+	void WritePendingLogs();
 };
 
 
