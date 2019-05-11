@@ -180,6 +180,7 @@
     <ResourceCompile Include="JiYuTrainerUI.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\JiYuTrainerLogo.ico" />
     <Image Include="..\JiYuTrainer\JiYuKillerLoader.ico" />
     <Image Include="res\bg-area.png" />
     <Image Include="res\bg-main-state.png" />

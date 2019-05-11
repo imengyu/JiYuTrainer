@@ -60,6 +60,9 @@ void TrainerWorkerInternal::InitSettings()
 	setAutoIncludeFullWindow = settings->GetSettingBool(L"AutoIncludeFullWindow");
 	setCkInterval = currentApp->GetSettings()->GetSettingInt(L"CKInterval", 3100);
 	if (setCkInterval < 1000 || setCkInterval > 10000) setCkInterval = 3000;
+
+	if (_StudentMainControlled)
+		SendMessageToVirus(L"hk:reset");
 }
 void TrainerWorkerInternal::UpdateScreenSize()
 {
@@ -656,9 +659,11 @@ bool TrainerWorkerInternal::UnInjectDll(DWORD pid, LPCWSTR moduleName)
 }
 bool TrainerWorkerInternal::UnLoadAllVirus()
 {
-	if (_MasterHelperPid > 4) 
-		if(UnInjectDll(_MasterHelperPid, L"JiYuTrainerHooks.dll"))
+	if (_MasterHelperPid > 4) {
+		if (UnInjectDll(_MasterHelperPid, L"JiYuTrainerHooks.dll"))
 			JTLog(L"已强制卸载 MasterHelper 病毒");
+		//KillProcess(_MasterHelperPid, false);
+	}
 	if (_StudentMainPid > 4)
 		if (UnInjectDll(_StudentMainPid, L"JiYuTrainerHooks.dll"))
 			JTLog(L"已强制卸载 StudentMain 病毒");
@@ -753,6 +758,7 @@ void TrainerWorkerInternal::FixWindow(HWND hWnd, LPWSTR text)
 		SetWindowLong(hWnd, GWL_EXSTYLE, oldLong ^ WS_EX_TOPMOST);
 		SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 	}
+
 	//Set border and sizeable
 	SetWindowLong(hWnd, GWL_STYLE, GetWindowLong(hWnd, GWL_STYLE) | (WS_BORDER | WS_OVERLAPPEDWINDOW));
 

@@ -45,6 +45,8 @@ INT screenWidth, screenHeight;
 bool outlineEndJiy = false;
 HWND hWndOpConformNoBtn = NULL;
 bool bandAllRunOp = false, allowNextRunOp = false, allowAllRunOp  = false;
+bool allowMonitor = false;
+bool allowControl = false;
 std::list<std::wstring> runOPWhiteList;
 bool forceKill = false;
 int wdCount = 0;
@@ -192,12 +194,22 @@ void VParamInit() {
 void VInitSettings()
 {
 	WCHAR w[32];
-	GetPrivateProfileString(L"JYK", L"AutoForceKill", L"FALSE", w, 32, mainIniPath);
+	GetPrivateProfileString(L"JTSettings", L"AutoForceKill", L"FALSE", w, 32, mainIniPath);
 	if (StrEqual(w, L"TRUE") || StrEqual(w, L"true") || StrEqual(w, L"1")) forceKill = true;
-	GetPrivateProfileString(L"JYK", L"AllowAllRunOp", L"FALSE", w, 32, mainIniPath);
+	else forceKill = false;
+	GetPrivateProfileString(L"JTSettings", L"AllowAllRunOp", L"FALSE", w, 32, mainIniPath);
 	if (StrEqual(w, L"TRUE") || StrEqual(w, L"true") || StrEqual(w, L"1")) allowAllRunOp = true;
-	GetPrivateProfileString(L"JYK", L"BandAllRunOp", L"TRUE", w, 32, mainIniPath);
+	else allowAllRunOp = false;
+	GetPrivateProfileString(L"JTSettings", L"BandAllRunOp", L"TRUE", w, 32, mainIniPath);
 	if (!StrEqual(w, L"TRUE") && !StrEqual(w, L"true") && !StrEqual(w, L"1")) bandAllRunOp = false;
+	else bandAllRunOp = true;
+
+	GetPrivateProfileString(L"JTSettings", L"AllowMonitor", L"FALSE", w, 32, mainIniPath);
+	if (StrEqual(w, L"TRUE") || StrEqual(w, L"true") || StrEqual(w, L"1")) allowMonitor = true;
+	else allowMonitor = false;
+	GetPrivateProfileString(L"JTSettings", L"AllowControl", L"FALSE", w, 32, mainIniPath);
+	if (StrEqual(w, L"TRUE") || StrEqual(w, L"true") || StrEqual(w, L"1")) allowControl = true;
+	else allowControl = false;
 }
 void VLaterInit() {
 
@@ -882,11 +894,11 @@ HHOOK WINAPI hkSetWindowsHookExA(int idHook, HOOKPROC lpfn, HINSTANCE hmod, DWOR
 }
 VOID WINAPI hkmouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData,  ULONG_PTR dwExtraInfo)
 {
-	
+	if (allowControl) famouse_event(dwFlags, dx, dy, dwData, dwExtraInfo);
 }
 UINT WINAPI hkSendInput(UINT cInputs, LPINPUT pInputs, int cbSize)
 {
-	if (loaded)
+	if (!allowControl && loaded)
 		return cInputs;
 	return faSendInput(cInputs, pInputs, cbSize);
 }
@@ -1021,7 +1033,7 @@ BOOL WINAPI hkShowWindow(HWND hWnd, int nCmdShow)
 }
 HRESULT WINAPI hkDwmEnableComposition(UINT uCompositionAction)
 {
-	if(uCompositionAction == DWM_EC_DISABLECOMPOSITION)
+	if(!allowMonitor && uCompositionAction == DWM_EC_DISABLECOMPOSITION)
 		return  S_OK;
 	return faDwmEnableComposition(uCompositionAction);
 }

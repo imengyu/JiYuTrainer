@@ -567,33 +567,41 @@
             <div class="window-page active" id="page_setting">
                 <h4 class="mb-0">程序配置</h4>
                 <div class="from-group">
-                    <div class="form-check">
+                    <div style="display: inline-block; width: 180px;">
                         <input type="checkbox" id="check_auto_fck">
                         <label for="check_auto_fck">启用严格窗口控制模式</label>
                     </div>
-                    <div class="form-check" title=" 注意，关闭将导致极域脱离控制">
-                        <input type="checkbox" id="check_ck" checked="checked" />
-                        <label for="check_ck">是否启用控制器</label>
-                    </div>
-                    <div class="form-check" title=" 是否启用自动强制清除模式，该模式会在操作失败时直接清除极域有关进程">
+                    <div style="display: inline-block; width: 120px;" title=" 是否启用自动强制清除模式，该模式会在操作失败时直接清除极域有关进程">
                         <input type="checkbox" id="check_auto_fkill" />
                         <label for="check_auto_fkill">不客气模式</label>
                     </div>
-                    <div class="form-check" title=" 是否监控极域运行进程，通常教师可以通过极域远程执行应用程序，
-如果你勾选此项则会监控极域运行进程，你可以选择允许或阻止">
+                    <div class="form-check" title=" （重要）控制器和检测器负责检查和控制极域，&#10;&#13;如果关闭将导致极域脱离控制或无法检测到极域的操作">
+                        <input type="checkbox" id="check_ck" checked="checked" />
+                        <label for="check_ck" style="color: #007bff">是否启用控制器</label>
+                    </div>
+                    <div class="form-check" title=" 是否监控极域运行进程，通常教师可以通过极域远程执行应用程序，&#10;&#13;如果你勾选此项则会监控极域运行进程，你可以选择允许或阻止">
                         <input type="checkbox" id="check_allow_op" checked="checked" />
                         <label for="check_allow_op">监控极域运行进程</label>
+                    </div>
+                    <div class="form-check">
+                        <input type="checkbox" id="check_allow_monitor" />
+                        <label for="check_allow_monitor">允许教师监视你的电脑</label>
+                    </div>
+                    <span style="font-size: 11px; color: #8e8e8e; margin-left: 20px;">（测试功能，不一定可以禁止监视）</span>
+                    <div class="form-check">
+                        <input type="checkbox" id="check_allow_control" />
+                        <label for="check_allow_control">允许教师控制你的电脑</label>
                     </div>
                     <div class="form-check">
                         <input type="checkbox" id="check_auto_update">
                         <label for="check_auto_update">自动更新软件</label>
                     </div>
                 </div>
-                <div class="from-group" style="margin-top:20px; margin-left: 5px;">
+                <div class="from-group" style="margin-top:10px; margin-left: 5px;">
                     <label for="input_ckinterval">监控时间间隔(毫秒)</label><br />
                     <input style="width: 50px;margin-top: 5px;" type="text" id="input_ckinterval" /><br />
                 </div>
-                <div class="text-center" style="margin-top:30px;">
+                <div class="text-center" style="margin-top:10px;">
                     <a href="#" id="link_save_setting" class="btn-common">保存设置</a>&nbsp;
                     <a href="#" id="link_setto_default" class="btn-common">恢复默认</a>&nbsp;
                 </div>

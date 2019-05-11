@@ -132,6 +132,8 @@ sciter::value MainWindow::docunmentComplete()
 	check_allow_op = root.get_element_by_id(L"check_allow_op");
 	check_auto_update = root.get_element_by_id(L"check_auto_update");
 	input_ckinterval = root.get_element_by_id(L"input_ckinterval");
+	check_allow_control = root.get_element_by_id(L"check_allow_control");
+	check_allow_monitor = root.get_element_by_id(L"check_allow_monitor");
 
 	common_message = root.get_element_by_id(L"common_message");
 	common_message_title = root.get_element_by_id(L"common_message_title");
@@ -566,6 +568,8 @@ void MainWindow::LoadSettings()
 	setAutoIncludeFullWindow = settings->GetSettingBool(L"AutoIncludeFullWindow");
 	setAllowAllRunOp = settings->GetSettingBool(L"AllowAllRunOp");
 	setAutoForceKill = settings->GetSettingBool(L"AutoForceKill");
+	setAllowMonitor = settings->GetSettingBool(L"AllowMonitor", false);
+	setAllowControl = settings->GetSettingBool(L"AllowControl", false);
 	setCkInterval = settings->GetSettingInt(L"CKInterval", 3100);
 	if (setCkInterval < 1000 || setCkInterval > 10000) setCkInterval = 3000;
 }
@@ -578,6 +582,8 @@ void MainWindow::LoadSettingsToUi()
 	check_allow_op.set_value(sciter::value(!setAllowAllRunOp));
 	check_auto_fkill.set_value(sciter::value(setAutoForceKill));
 	check_auto_update.set_value(sciter::value(setAutoUpdate));
+	check_allow_control.set_value(sciter::value(setAllowControl));
+	check_allow_monitor.set_value(sciter::value(setAllowMonitor));
 	input_ckinterval.set_value(sciter::value(setCkInterval));
 }
 void MainWindow::SaveSettings()
@@ -590,6 +596,8 @@ void MainWindow::SaveSettings()
 	setAllowAllRunOp = !check_allow_op.get_value().get(true);
 	setAutoForceKill = check_auto_fkill.get_value().get(false);
 	setAutoUpdate = check_auto_update.get_value().get(true);
+	setAllowControl = check_allow_control.get_value().get(false);
+	setAllowMonitor = check_allow_monitor.get_value().get(false);
 
 	SettingHlp *settings = appCurrent->GetSettings();
 	settings->SetSettingBool(L"TopMost", setTopMost);
@@ -597,6 +605,8 @@ void MainWindow::SaveSettings()
 	settings->SetSettingBool(L"AllowAllRunOp", setAllowAllRunOp);
 	settings->SetSettingBool(L"AutoForceKill", setAutoForceKill);
 	settings->SetSettingBool(L"AutoUpdate", setAutoUpdate);
+	settings->SetSettingBool(L"AllowControl", setAllowControl);
+	settings->SetSettingBool(L"AllowMonitor", setAllowMonitor);
 	settings->SetSettingInt(L"CKInterval", setCkInterval);
 
 	currentWorker->InitSettings();
@@ -608,6 +618,8 @@ void MainWindow::ResetSettings()
 	setAutoForceKill = false;
 	setAutoUpdate = true;
 	setCkInterval = 3100;
+	setAllowControl = false;
+	setAllowMonitor = false;
 
 	LoadSettingsToUi();
 	SaveSettings();

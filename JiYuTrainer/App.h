@@ -135,6 +135,7 @@ private:
 	SettingHlp *appSetting = nullptr;
 	TrainerWorker *appWorker = nullptr;
 
+	void MergePathString(LPCWSTR path);
 	void InitPath();
 	void InitCommandLine();
 	void InitArgs();
@@ -144,6 +145,7 @@ private:
 
 	int RunCheckRunningApp();
 	bool RunArgeementDialog();
+	bool RunMd5ShowDialog();
 
 	int RunInternal();
 	bool ExitInternal();
@@ -152,6 +154,7 @@ private:
 	static HFONT hFontRed;
 
 	static INT_PTR CALLBACK ArgeementWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+	static INT_PTR CALLBACK Md5ShowWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 };
 
 #endif

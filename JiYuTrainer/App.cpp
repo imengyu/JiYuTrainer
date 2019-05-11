@@ -15,6 +15,7 @@
 #include <ShellAPI.h>
 
 extern LoggerInternal * currentLogger;
+extern JTApp * currentApp;
 
 JTAppInternal::JTAppInternal(HINSTANCE hInstance)
 {
@@ -26,24 +27,8 @@ JTAppInternal::~JTAppInternal()
 }
 
 int JTAppInternal::CheckMd5()
-{
-	FILE *fp = NULL;
-	std::wstring output(fullDir);
-	output += L"\\JiYuTrainerMd5Result.txt";
-	_wfopen_s(&fp, output.c_str(), L"w");
-	if (fp) {
-		for (int i = 1; i < PART_COUNT; i++) {
-			LPCWSTR path = parts[i].c_str();
-			if (partsResId[i] != 0 && Path::Exists(path)) {
-				std::wstring*md5 = MD5Utils::GetFileMD5(path);
-				fwprintf_s(fp, L"#define %s L\"%s\"\n", partsMd5CheckNames[i], md5->c_str());
-				FreeStringPtr(md5);
-			}
-		}
-		fclose(fp);
-	}
-	MessageBox(0, output.c_str(), L"JiYuTrainer MD5", 0);
-	return 0;
+{	
+	return RunMd5ShowDialog();
 }
 int JTAppInternal::CheckInstall(APP_INSTALL_MODE mode)
 {
@@ -69,8 +54,7 @@ int JTAppInternal::CheckInstall(APP_INSTALL_MODE mode)
 	}
 
 	//拼合路径字符串
-	for (int i = 0; i < PART_COUNT; i++) 
-		parts[i] = std::wstring(installDir) + L"\\" + parts[i];
+	MergePathString(installDir);
 
 	if (mode == AppInstallNew) {
 		Sleep(1500);//Sleep for a while
@@ -85,7 +69,6 @@ int JTAppInternal::CheckInstall(APP_INSTALL_MODE mode)
 				fwprintf_s(fp, L"[JTArgeement]");
 				fwprintf_s(fp, L"\nArgeed=TRUE");
 				fwprintf_s(fp, L"\n[JTSettings]");
-				fwprintf_s(fp, L"\nLastCheckUpdateTime=5/10");
 				fwprintf_s(fp, L"\nTopMost=FALSE");
 				fwprintf_s(fp, L"\nAutoIncludeFullWindow=FALSE");
 				fwprintf_s(fp, L"\nAllowAllRunOp=FALSE");
@@ -298,6 +281,11 @@ bool JTAppInternal::RunArgeementDialog()
 	}
 	return false;
 }
+bool JTAppInternal::RunMd5ShowDialog()
+{
+	int rs = DialogBoxW(hInstance, MAKEINTRESOURCE(IDD_DIALOG_MD5SHOW), NULL, Md5ShowWndProc);
+	return (rs == IDYES);
+}
 int JTAppInternal::RunInternal()
 {
 	setlocale(LC_ALL, "chs");
@@ -432,6 +420,12 @@ void JTAppInternal::LoadDriver()
 			JTLogWarn(L"驱动自我保护失败！");
 }
 
+void JTAppInternal::MergePathString(LPCWSTR path)
+{		
+	//拼合路径字符串
+	for (int i = 0; i < PART_COUNT; i++)
+		parts[i] = std::wstring(path) + L"\\" + parts[i];
+}
 void JTAppInternal::InitPath()
 {
 	WCHAR buffer[MAX_PATH];
@@ -540,6 +534,46 @@ INT_PTR CALLBACK JTAppInternal::ArgeementWndProc(HWND hDlg, UINT message, WPARAM
 	}
 	case WM_DESTROY: {
 		DeleteObject(hFontRed);
+		break;
+	}
+	default: return DefWindowProc(hDlg, message, wParam, lParam);
+	}
+	return lResult;
+}
+INT_PTR CALLBACK JTAppInternal::Md5ShowWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	LRESULT lResult = 0;
+
+	switch (message)
+	{
+	case WM_INITDIALOG: {
+		SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP)));
+		SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP)));
+		
+		JTAppInternal * app = dynamic_cast<JTAppInternal *>(currentApp);
+		app->MergePathString(app->GetCurrentDir());
+		WCHAR buffer[1024] = { 0 };
+		WCHAR buffer2[128] = { 0 };
+		for (int i = 1; i < PART_COUNT; i++) {
+			LPCWSTR path = app->parts[i].c_str();
+			if (app->partsResId[i] != 0 && Path::Exists(path)) {
+				std::wstring*md5 = MD5Utils::GetFileMD5(path);
+				swprintf_s(buffer2, L"#define %s L\"%s\"\r\n", app->partsMd5CheckNames[i], md5->c_str());
+				wcscat_s(buffer, buffer2);
+				FreeStringPtr(md5);
+			}
+		}
+		lResult = TRUE;
+
+		SetDlgItemText(hDlg, IDC_EDIT_MD5, buffer);
+
+		break;
+	}
+	case WM_COMMAND: {
+		if (wParam == IDOK) {
+			EndDialog(hDlg, wParam);
+			lResult = wParam;
+		}
 		break;
 	}
 	default: return DefWindowProc(hDlg, message, wParam, lParam);
