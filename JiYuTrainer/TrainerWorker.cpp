@@ -625,12 +625,13 @@ bool TrainerWorkerInternal::UnInjectDll(DWORD pid, LPCWSTR moduleName)
 
 	DWORD dwHandle;
 	DWORD dwID;
-	LPVOID pFunc = GetModuleHandleA;
+	LPVOID pFunc = GetProcAddress(GetModuleHandle(TEXT("Kernel32")), "GetModuleHandleW");
 	HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)pFunc, pszLibFileRemote, 0, &dwID);
 	if (!hThread) {
-		JTLogError(L"卸载病毒失败！创建远程线程失败：d", GetLastError());
+		JTLogError(L"卸载病毒失败！创建远程线程失败：%d", GetLastError());
 		return FALSE;
 	}
+
 	// 等待GetModuleHandle运行完毕
 	WaitForSingleObject(hThread, INFINITE);
 	// 获得GetModuleHandle的返回值
@@ -639,10 +640,10 @@ bool TrainerWorkerInternal::UnInjectDll(DWORD pid, LPCWSTR moduleName)
 	VirtualFreeEx(hProcess, pszLibFileRemote, pszLibFileRemoteSize, MEM_DECOMMIT);
 	CloseHandle(hThread);
 	// 使目标进程调用FreeLibrary，卸载DLL
-	pFunc = FreeLibrary;
+	pFunc = GetProcAddress(GetModuleHandle(TEXT("Kernel32")), "FreeLibrary"); ;
 	hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)pFunc, (LPVOID)dwHandle, 0, &dwID);
 	if (!hThread) {
-		JTLogError(L"卸载病毒失败！创建远程线程失败：d", GetLastError());
+		JTLogError(L"卸载病毒失败！创建远程线程失败：%d", GetLastError());
 		return FALSE;
 	}
 	
@@ -656,10 +657,12 @@ bool TrainerWorkerInternal::UnInjectDll(DWORD pid, LPCWSTR moduleName)
 bool TrainerWorkerInternal::UnLoadAllVirus()
 {
 	if (_MasterHelperPid > 4) 
-		UnInjectDll(_MasterHelperPid, L"JiYuTrainerHooks.dll");
-	if (_StudentMainPid > 4) 
-		UnInjectDll(_StudentMainPid, L"JiYuTrainerHooks.dll");
-	
+		if(UnInjectDll(_MasterHelperPid, L"JiYuTrainerHooks.dll"))
+			JTLog(L"已强制卸载 MasterHelper 病毒");
+	if (_StudentMainPid > 4)
+		if (UnInjectDll(_StudentMainPid, L"JiYuTrainerHooks.dll"))
+			JTLog(L"已强制卸载 StudentMain 病毒");
+
 	return false;
 }
 

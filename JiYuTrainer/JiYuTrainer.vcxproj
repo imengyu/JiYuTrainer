@@ -202,6 +202,7 @@
     <ResourceCompile Include="JiYuTrainer.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\JiYuTrainerLogo.ico" />
     <Image Include="JiYuKillerLoader.ico" />
     <Image Include="JiYuTrainer.ico" />
     <Image Include="small.ico" />

@@ -318,6 +318,13 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 			if (XUnLoadDriver())
 				JTLog(L"驱动卸载成功");
 		}
+		else if (cmd == L"uj") {
+			if (currentWorker) {
+				//卸载病毒
+				currentWorker->RunOperation(TrainerWorkerOpVirusBoom);
+				currentWorker->RunOperation(TrainerWorkerOpForceUnLoadVirus);
+			}
+		}
 		else if (cmd == L"exit")  SendMessage(hWndMain, WM_COMMAND, IDM_EXIT, NULL);
 		else if (cmd == L"hide")  SendMessage(hWndMain, WM_COMMAND, IDM_SHOWMAIN, NULL);
 		else {
@@ -436,10 +443,16 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 			Close();
 		}
 		else if (ele.get_attribute("id") == L"link_uninstall") {
-			if (MessageBox(_hWnd, L"你是否真的要卸载本软件？\n卸载会删除本软件相关安装文件，但不会删除源安装包。", L"JiYuTrainer - 警告", MB_YESNO | MB_ICONEXCLAMATION) == IDYES)
+			if (MessageBox(_hWnd, L"你是否真的要卸载本软件？\n卸载会删除本软件相关安装文件，但不会删除源安装包；并且卸载过程中会暂时结束极域，稍后需要您重新启动。", L"JiYuTrainer - 警告", MB_YESNO | MB_ICONEXCLAMATION) == IDYES)
 			{
+				if (currentWorker) {
+					//卸载病毒
+					currentWorker->RunOperation(TrainerWorkerOpVirusBoom);
+					currentWorker->RunOperation(TrainerWorkerOpForceUnLoadVirus);
+				}
+				Sleep(1000);
 				SysHlp::RunApplicationPriviledge(appCurrent->GetPartFullPath(PART_UNINSTALL), NULL);
-				ExitProcess(0);
+				TerminateProcess(GetCurrentProcess(), 0);
 			}
 		}
 	}
@@ -652,7 +665,7 @@ void MainWindow::CreateTrayIcon(HWND hDlg) {
 	nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_INFO | NIF_TIP;
 	nid.uCallbackMessage = WM_USER;
 	nid.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_APP));
-	lstrcpy(nid.szTip, L"JY Killer");
+	lstrcpy(nid.szTip, L"JiYuTrainer");
 	Shell_NotifyIcon(NIM_ADD, &nid);
 }
 void MainWindow::ShowTrayBaloonTip(const wchar_t* title, const wchar_t* text) {

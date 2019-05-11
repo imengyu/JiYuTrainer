@@ -20,7 +20,7 @@ SystemVersion SysHlp::GetSystemVersion()
 		else if (IsWindowsVistaOrGreater())
 			currentVersion = SystemVersionWindows7OrLater;
 		else if (IsWindowsXPSP2OrGreater())
-			currentVersion = SystemVersionWindows7OrLater;
+			currentVersion = SystemVersionWindowsXP;
 		else currentVersion = SystemVersionNotSupport;
 	}
 	return currentVersion;

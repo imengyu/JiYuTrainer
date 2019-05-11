@@ -1,15 +1,43 @@
 #pragma once
 
 #ifdef _DEBUG
-#define PART_MD5_UI L"877e4923587346d81d31cc6d96fe3f6e"
-#define PART_MD5_HOOKS L"2bdcc02c17df7eb6b5d5966d12180166"
+#define PART_MD5_UI L"87e0776e9ae7d94b1c5d09246d4be094"
+#define PART_MD5_HOOKS L"efb28edc26a5651834ec88ae32c9273d"
 #define PART_MD5_DRIVER L"c537cee49a6e4faad5ae2153a79b7190"
-#define PART_MD5_UPDATER L"0da2d469c516b0aacb99240b0b3a3540"
+#define PART_MD5_UPDATER L"e382f48dc9738ccb4e6880e0c39d59dc"
 #define PART_MD5_SCITER L"4efd9dd2bf27ac03fe456077d6c5b261"
 #else
-#define PART_MD5_UI L"e9164a86b08989f282ac5eeb8b86daee"
-#define PART_MD5_HOOKS L"df7a937e05d63357cd63f62dcec4354c"
+#define PART_MD5_UI L"28cd9beea90e4d0173d43e6d25fed326"
+#define PART_MD5_HOOKS L"7cce29bbc12cbd1f0124099a4b417391"
 #define PART_MD5_DRIVER L"e40033c6b81ebe18dc6b70ec43cb9921"
-#define PART_MD5_UPDATER L"c92ad7f63ec1f468786c89828b16f60f"
+#define PART_MD5_UPDATER L"83c67ad9840f14198c343d2589fbde7b"
 #define PART_MD5_SCITER L"4efd9dd2bf27ac03fe456077d6c5b261"
 #endif
+
+/*
+#ifdef _DEBUG
+
+IDR_DLL_DRIVER          BIN                     "..\\Debug\\JiYuTrainerDriver.sys"
+
+IDR_DLL_HOOKS           BIN                     "..\\Debug\\JiYuTrainerHooks.dll"
+
+IDR_DLL_UI              BIN                     "..\\Debug\\JiYuTrainerUI.dll"
+
+IDR_DLL_UPDATER         BIN                     "..\\Debug\\JiYuTrainerUpdater.dll"
+
+IDR_DLL_SCITER          BIN                     "..\\Debug\\sciter.dll"
+
+#else
+
+IDR_DLL_DRIVER          BIN                     "..\\Release\\JiYuTrainerDriver.sys"
+
+IDR_DLL_HOOKS           BIN                     "..\\Release\\JiYuTrainerHooks.dll"
+
+IDR_DLL_UI              BIN                     "..\\Release\\JiYuTrainerUI.dll"
+
+IDR_DLL_UPDATER         BIN                     "..\\Release\\JiYuTrainerUpdater.dll"
+
+IDR_DLL_SCITER          BIN                     "..\\Release\\sciter.dll"
+
+#endif
+*/

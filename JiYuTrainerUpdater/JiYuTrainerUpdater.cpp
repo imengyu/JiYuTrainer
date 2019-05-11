@@ -14,8 +14,7 @@
 
 using namespace std;
 
-#define CURRENT_VERSION "1.6.510.1031" 
-//#define CURRENT_VERSION "1.3.506.9063" 
+#define CURRENT_VERSION "1.6.511.1031" 
 #define UPDATE_HOST "http://update.imyzc.com/JiYuTrainer/" 
 //#define UPDATE_HOST "http://localhost/JiYuTrainer/" 
 

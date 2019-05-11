@@ -15,6 +15,7 @@
 #include <ShellAPI.h>
 #include <CommCtrl.h>
 #include <windowsx.h>
+#include <dwmapi.h>
 
 #define TIMER_WATCH_DOG_SRV 10011
 #define TIMER_AUTO_HIDE 10012
@@ -663,7 +664,6 @@ void VInstallHooks(VirusMode mode) {
 	faShellExecuteW = (fnShellExecuteW)GetProcAddress(hShell32, "ShellExecuteW");
 	faShellExecuteExW = (fnShellExecuteExW)GetProcAddress(hShell32, "ShellExecuteExW");
 
-
 	if(hDwmApi) faDwmEnableComposition = (fnDwmEnableComposition)GetProcAddress(hDwmApi, "DwmEnableComposition");
 
 	//HMODULE hTDDesk2 = GetModuleHandle(L"libtddesk2.dll");
@@ -673,9 +673,9 @@ void VInstallHooks(VirusMode mode) {
 
 	if (mode == VirusModeHook) {
 
-		HMODULE hTDMaster = GetModuleHandle(L"libTDMaster.dll");
-		UnHookLocalInput = (fnUnHookLocalInput)GetProcAddress(hTDMaster, "UnHookLocalInput");
-		if (UnHookLocalInput) UnHookLocalInput();
+		//HMODULE hTDMaster = GetModuleHandle(L"libTDMaster.dll");
+		//UnHookLocalInput = (fnUnHookLocalInput)GetProcAddress(hTDMaster, "UnHookLocalInput");
+		//if (UnHookLocalInput) UnHookLocalInput();
 
 		hk1 = Mhook_SetHook((PVOID*)&raSetWindowPos, hkSetWindowPos);
 		hk2 = Mhook_SetHook((PVOID*)&raMoveWindow, hkMoveWindow);
@@ -695,28 +695,24 @@ void VInstallHooks(VirusMode mode) {
 		hk16 = Mhook_SetHook((PVOID*)&faSetWindowLongA, hkSetWindowLongA);
 		hk17 = Mhook_SetHook((PVOID*)&faSetWindowLongW, hkSetWindowLongW);
 		hk18 = Mhook_SetHook((PVOID*)&faShowWindow, hkShowWindow);
-
 		hk19 = Mhook_SetHook((PVOID*)&faExitWindowsEx, hkExitWindowsEx);
+
 		//hk20 = Mhook_SetHook((PVOID*)&faShellExecuteW, hkShellExecuteW);
 		//if(faShellExecuteExW) hk21 = Mhook_SetHook((PVOID*)&faShellExecuteExW, hkShellExecuteExW);
 
 		hk22 = Mhook_SetHook((PVOID*)&faCreateProcessW, hkCreateProcessW);
 
 		if (faDwmEnableComposition) hk23 = Mhook_SetHook((PVOID*)&faDwmEnableComposition, hkDwmEnableComposition);
+		
 		hk24 = Mhook_SetHook((PVOID*)&faWinExec, hkWinExec);
 	}
 	if (mode == VirusModeMaster) {
 		
-		SetWindowsHookExA(WH_CBT, VCBTProc, hInst, GetCurrentThreadId());
+		g_hhook = SetWindowsHookExA(WH_CBT, VCBTProc, hInst, GetCurrentThreadId());
 
 		hk8 = Mhook_SetHook((PVOID*)&faSetWindowsHookExA, hkSetWindowsHookExA);
 		hk19 = Mhook_SetHook((PVOID*)&faExitWindowsEx, hkExitWindowsEx);
 		hk22 = Mhook_SetHook((PVOID*)&faCreateProcessW, hkCreateProcessW);
-	}
-	if (mode == VirusModeProtet) {
-
-		SetWindowsHookExA(WH_CBT, VCBTProc, hInst, GetCurrentThreadId());
-
 	}
 }
 void VUnInstallHooks() {
@@ -954,6 +950,7 @@ BOOL WINAPI hkCreateProcessW(LPCWSTR lpApplicationName, LPWSTR lpCommandLine, LP
 	} 
 	else if (StringHlp::StrContainsW(lowStr, L"jiyutrainer.exe", NULL) 
 		|| StringHlp::StrContainsW(lowStr, L"sogouinput", NULL)
+		|| StringHlp::StrContainsW(lowStr, L"ime", NULL)
 		|| StringHlp::StrContainsW(lowStr, L"baidupinyin", NULL)
 		|| VIsOpInWhiteList(lowStr)) canContinue = true;
 	else if (StringHlp::StrContainsW(lowStr, L"tdchalk.exe", NULL))
@@ -962,6 +959,28 @@ BOOL WINAPI hkCreateProcessW(LPCWSTR lpApplicationName, LPWSTR lpCommandLine, LP
 
 	if(canContinue) return faCreateProcessW(lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes, bInheritHandles, dwCreationFlags, lpEnvironment, lpCurrentDirectory, lpStartupInfo, lpProcessInformation);
 	else return TRUE;
+}
+UINT WINAPI hkWinExec(LPCSTR lpCmdLine, UINT uCmdShow) {
+	bool canContinue = true;
+	if (allowAllRunOp)
+		return faWinExec(lpCmdLine, uCmdShow);
+
+	LPCWSTR uniStr = StringHlp::AnsiToUnicode(lpCmdLine);
+	LPCWSTR lowStr = StringHlp::StrLoW(uniStr);
+	if (StringHlp::StrContainsW(lowStr, L"shutdown.exe", NULL)) {
+		if (MessageBox(NULL, L"极域电子教室试图关机或重启，是否允许极域继续操作？", L"JiYu Killer 防护警告", MB_ICONEXCLAMATION | MB_YESNO) == IDNO) canContinue = false;
+	}
+	else if (StringHlp::StrContainsW(lowStr, L"jiyutrainer.exe", NULL)
+		|| StringHlp::StrContainsW(lowStr, L"sogouinput", NULL)
+		|| StringHlp::StrContainsW(lowStr, L"baidupinyin", NULL)
+		|| StringHlp::StrContainsW(lowStr, L"ime", NULL)
+		|| VIsOpInWhiteList(lowStr)) canContinue = true;
+	else if (StringHlp::StrContainsW(lowStr, L"tdchalk.exe", NULL)) canContinue = false;
+	else if (bandAllRunOp || !VShowOpConfirmDialog(uniStr, L"")) canContinue = false;
+
+	delete uniStr;
+	if (canContinue) return faWinExec(lpCmdLine, uCmdShow);
+	else return 32;
 }
 LONG WINAPI hkChangeDisplaySettingsW(DEVMODEW* lpDevMode, DWORD dwFlags)
 {
@@ -976,10 +995,6 @@ HDESK WINAPI hkOpenInputDesktop(DWORD dwFlags,BOOL fInherit, ACCESS_MASK dwDesir
 {
 	SetLastError(ERROR_ACCESS_DENIED);
 	return NULL;
-}
-HRESULT __cdecl hkTDDeskCreateInstance(CLSID *rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, IID *riid, LPVOID *ppv)
-{
-	return E_FAIL;
 }
 LONG WINAPI hkSetWindowLongA(HWND hWnd, int nIndex, LONG dwNewLong)
 {
@@ -1006,28 +1021,9 @@ BOOL WINAPI hkShowWindow(HWND hWnd, int nCmdShow)
 }
 HRESULT WINAPI hkDwmEnableComposition(UINT uCompositionAction)
 {
-	return  S_OK;
-}
-UINT WINAPI hkWinExec(LPCSTR lpCmdLine, UINT uCmdShow) {
-	bool canContinue = true;
-	if (allowAllRunOp)
-		return faWinExec(lpCmdLine, uCmdShow);
-
-	LPCWSTR uniStr = StringHlp::AnsiToUnicode(lpCmdLine);
-	LPCWSTR lowStr = StringHlp::StrLoW(uniStr);
-	if (StringHlp::StrContainsW(lowStr, L"shutdown.exe", NULL)) {
-		if (MessageBox(NULL, L"极域电子教室试图关机或重启，是否允许极域继续操作？", L"JiYu Killer 防护警告", MB_ICONEXCLAMATION | MB_YESNO) == IDNO) canContinue = false;
-	}
-	else if (StringHlp::StrContainsW(lowStr, L"jiyutrainer.exe", NULL)
-		|| StringHlp::StrContainsW(lowStr, L"sogouinput", NULL)
-		|| StringHlp::StrContainsW(lowStr, L"baidupinyin", NULL)
-		|| VIsOpInWhiteList(lowStr)) canContinue = true;
-	else if (StringHlp::StrContainsW(lowStr, L"tdchalk.exe", NULL)) canContinue = false;
-	else if (bandAllRunOp || !VShowOpConfirmDialog(uniStr, L"")) canContinue = false;
-
-	delete uniStr;
-	if (canContinue) return faWinExec(lpCmdLine, uCmdShow);
-	else return 32;
+	if(uCompositionAction == DWM_EC_DISABLECOMPOSITION)
+		return  S_OK;
+	return faDwmEnableComposition(uCompositionAction);
 }
 LRESULT WINAPI hkCallNextHookEx(HHOOK hhk, int nCode, WPARAM wParam, LPARAM lParam) 
 {

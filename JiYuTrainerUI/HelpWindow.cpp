@@ -11,7 +11,7 @@ HelpWindow::HelpWindow(HWND parentHWnd)
 
 	if (!initClass()) return;
 
-	_hWnd = CreateWindowExW(0, L"sciter-jytrainer-help-window", L"JiYu Trainer Help Window", WS_OVERLAPPEDWINDOW ^ (WS_SIZEBOX | WS_MAXIMIZEBOX), CW_USEDEFAULT, CW_USEDEFAULT, 430, 520, nullptr, nullptr, hInst, this);
+	_hWnd = CreateWindowExW(0, L"sciter-jytrainer-help-window", L"JiYu Trainer Help Window", WS_OVERLAPPEDWINDOW ^ (WS_SIZEBOX | WS_MAXIMIZEBOX), CW_USEDEFAULT, CW_USEDEFAULT, 470, 520, nullptr, nullptr, hInst, this);
 	if (!_hWnd) return;
 	
 	init();
