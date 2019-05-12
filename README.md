@@ -4,7 +4,7 @@
   </a>
 </p>
 <p align="center">
-  <img alt="JiYu Trainer Title" src="https://raw.githubusercontent.com/717021/JiYuTrainer/master/JiYuTrainerTitle.png" width="128">
+  <img alt="JiYu Trainer Title" src="https://raw.githubusercontent.com/717021/JiYuTrainer/master/JiYuTrainerTitle.png">
 </p>
 <p align="center">不再被极域电子教室控制</p>
 
