@@ -587,7 +587,7 @@
                         <input type="checkbox" id="check_allow_monitor" />
                         <label for="check_allow_monitor">允许教师监视你的电脑</label>
                     </div>
-                    <span style="font-size: 11px; color: #8e8e8e; margin-left: 20px;">（测试功能，不一定可以禁止监视）</span>
+                    <div style="font-size: 11px; color: #8e8e8e; padding-left: 20px;">（测试功能，不一定可以禁止监视）</div>
                     <div class="form-check">
                         <input type="checkbox" id="check_allow_control" />
                         <label for="check_allow_control">允许教师控制你的电脑</label>
@@ -596,11 +596,14 @@
                         <input type="checkbox" id="check_auto_update">
                         <label for="check_auto_update">自动更新软件</label>
                     </div>
+                    <a href="#" id="link_read_jiyu_password2" style="float: right" class="text-info" title="本软件可尝试破解极域电子教室的卸载和解锁密码">破解极域解锁、卸载密码</a>
                 </div>
                 <div class="from-group" style="margin-top:10px; margin-left: 5px;">
                     <label for="input_ckinterval">监控时间间隔(毫秒)</label><br />
                     <input style="width: 50px;margin-top: 5px;" type="text" id="input_ckinterval" /><br />
+                    
                 </div>
+                
                 <div class="text-center" style="margin-top:10px;">
                     <a href="#" id="link_save_setting" class="btn-common">保存设置</a>&nbsp;
                     <a href="#" id="link_setto_default" class="btn-common">恢复默认</a>&nbsp;
@@ -611,8 +614,9 @@
                 <div id="status_area">
                 </div>
                 <div style="margin-top:5px;">
-                    <input id="input_cmd" style="width:260px;" />&nbsp;
+                    <input id="input_cmd" style="width:200px;" />&nbsp;
                     <a href="#" class="btn-common" id="link_runcmd">执行</a>
+                    <a href="#" class="btn-common" id="link_more_cmd" title="测试命令">▲</a>
                 </div>
             </div>
             <div class="window-page" id="page_about">
@@ -630,7 +634,6 @@
             </div>
         </div>
         <!--扩展区域结束-->
-
         <!--普通提示框-->
         <div class="window-extend-area" id="common_message">
             <a href="#" class="title-close black" id="common_message_close"></a>
@@ -638,6 +641,22 @@
             <p id="common_message_text">测试消息文字，尝试 DEBUG</p>
             <div class="text-right" style="position: absolute;bottom: 0; left: 15px; right: 15px; height :45px;">
                 <a href="#" class="btn-common btn-primary" id="common_message_close2">我知道了</a>
+            </div>
+        </div>
+        <!--更多命令提示框-->
+        <div class="window-extend-area" id="cmds_message" style="bottom: 100px; top :135px; left: -15px; right: -15px; padding: 10px 20px; ">
+            <a href="#" class="title-close black" id="cmds_message_close"></a>
+            <h3>测试命令</h3>
+            <p class="text-danger">以下命令仅供测试使用，可能存在危险</p>
+
+            <a href="#" id="link_read_jiyu_password" class="text-info">破解极域密码</a><br /><br />
+            <a href="#" id="link_uj">强制从极域卸载已注入的病毒</a><br />
+            <a href="#" id="link_ckend">分离极域</a><br />
+            <a href="#" id="link_fuljydrv">强制卸载极域的保护驱动 TDProcHook <span class="text-danger">(有蓝屏风险，慎用)</span></a><br />
+            <a href="#" id="link_fuldrv">卸载本软件的驱动</a><br />
+
+            <div class="text-right" style="position: absolute;bottom: 0; left: 15px; right: 15px; height :45px;">
+                <a href="#" class="btn-common btn-primary" id="cmds_message_close2">关闭</a>
             </div>
         </div>
         <!--初次提示框-->
@@ -710,12 +729,9 @@
                 });
             }
         }
-        $(#status_icon).onClick = function(){
-            //view.test1();
-        }
-        $(#link_github).onClick = function (){
-            view.toGithub();
-        }
+        $(#status_icon).onClick = function(){ /*view.test1();*/ }
+        $(#link_github).onClick = function (){ view.toGithub();  }
+        $(#link_more_cmd).onClick = function (){ $(#cmds_message).attributes.addClass("shown");  }
 
         function common_close_extend_area(area){
             if(area.attributes.hasClass("shown")) {
@@ -732,6 +748,8 @@
         $(#update_message_update).onClick =  function (){ common_close_extend_area($(#update_message)); }
         $(#exit_message_close).onClick =  function (){ common_close_extend_area($(#exit_message)); }
         $(#exit_message_close2).onClick =  function (){ common_close_extend_area($(#exit_message)); }
+        $(#cmds_message_close).onClick =  function (){ common_close_extend_area($(#cmds_message)); }
+        $(#cmds_message_close2).onClick =  function (){ common_close_extend_area($(#cmds_message)); }
 
         //Tooltips
         $(#btn_kill).on("mouseenter", function () { $(.tooltip.tooltip-jiyu-pid).attributes.addClass("shown"); });

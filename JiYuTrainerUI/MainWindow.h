@@ -98,6 +98,7 @@ private:
 	sciter::dom::element tooltip_top;
 	sciter::dom::element tooltip_fast;
 	sciter::dom::element body;
+	sciter::dom::element link_read_jiyu_password2;
 
 	sciter::dom::element check_auto_fkill;
 	sciter::dom::element check_auto_fck;
@@ -107,6 +108,7 @@ private:
 	sciter::dom::element check_auto_update;
 	sciter::dom::element input_ckinterval;
 
+	sciter::dom::element cmds_message;
 	sciter::dom::element common_message;
 	sciter::dom::element common_message_title;
 	sciter::dom::element common_message_text;
@@ -132,6 +134,7 @@ private:
 
 	void ShowFastTip(LPCWSTR text);
 	void ShowFastMessage(LPCWSTR title, LPCWSTR text);
+	void CloseCmdsTip();
 
 	void LoadSettings();
 	void LoadSettingsToUi();

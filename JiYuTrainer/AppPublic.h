@@ -4,6 +4,8 @@
 #include "SettingHlp.h"
 #include "TrainerWorker.h" 
 
+#define FAST_STR_BINDER(str, fstr, size, ...) WCHAR str[size]; swprintf_s(str, fstr, __VA_ARGS__)
+
 #define PART_INI -1
 #define PART_MAIN 0
 #define PART_RUN 1

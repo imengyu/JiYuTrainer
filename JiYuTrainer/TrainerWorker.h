@@ -7,6 +7,7 @@ enum TrainerWorkerOp {
 	TrainerWorkerOpVirusQuit,
 	TrainerWorkerOp1,
 	TrainerWorkerOpForceUnLoadVirus,
+	TrainerWorkerOp2,
 };
 
 class TrainerWorkerCallback
@@ -43,7 +44,7 @@ public:
 	virtual void Start() {}
 	virtual void Stop() {}
 	virtual bool Running() { return false; }
-	virtual bool RunOperation(TrainerWorkerOp op) { return false; }
+	virtual void* RunOperation(TrainerWorkerOp op) { return nullptr; }
 	virtual void SwitchFakeFull() {}
 	virtual bool FindProcess(LPCWSTR processName, DWORD*outPid) { return false; }
 	virtual bool KillProcess(DWORD pid, bool force){ return false; }
@@ -73,7 +74,7 @@ public:
 	void Stop();
 	void StopInternal();
 	bool Running() { return _Running; }
-	bool RunOperation(TrainerWorkerOp op);
+	void* RunOperation(TrainerWorkerOp op);
 
 	void SetUpdateInfoCallback(TrainerWorkerCallback *callback);
 	void HandleMessageFromVirus(LPCWSTR buf);
@@ -95,6 +96,7 @@ private:
 	bool _StudentMainControlled = false;
 	std::wstring _StatusTextMain;
 	std::wstring _StatusTextMore;
+	std::wstring _TopDomainPassword;
 
 	HWND hWndMain;
 
@@ -121,6 +123,7 @@ private:
 	bool FindProcess(LPCWSTR processName, DWORD*outPid);
 	bool KillProcess(DWORD pid, bool force);
 
+	bool ReadTopDomanPassword();
 	bool LocateStudentMainLocation();
 	bool LocateStudentMain(DWORD *outFirstPid);
 	bool LocateMasterHelper(DWORD *outFirstPid);
@@ -154,3 +157,4 @@ private:
 
 #endif
 
+bool UnDecryptJiyuKnock(BYTE * Data, DWORD cbData, WCHAR *ss);

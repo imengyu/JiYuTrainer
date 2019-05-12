@@ -140,7 +140,7 @@ BeforeLeave:
 //    szSvrName£º·þÎñÃû
 BOOL UnLoadKernelDriver(const wchar_t* szSvrName)
 {
-	if (hKDrv && wcscmp(szSvrName, L"JiYuKillerDriver") == 0) {
+	if (hKDrv && wcscmp(szSvrName, L"JiYuTrainerDriver") == 0) {
 		CloseHandle(hKDrv);
 		hKDrv = NULL;
 	}

@@ -7,7 +7,7 @@
 #include "PartsMD5.h"
 #endif
 
-#define FAST_STR_BINDER(str, fstr, size, ...) WCHAR str[size]; swprintf_s(str, fstr, __VA_ARGS__)
+
 #define APP_TITLE L"JiYuTrainer"
 
 #ifdef JTEXPORT

@@ -148,10 +148,18 @@ bool TrainerWorkerInternal::Kill(bool autoWork)
 		JTLogError(L"未找到极域主进程");
 		return false;
 	}
-	if (_StudentMainControlled && (autoWork || MessageBox(hWndMain, L"您是否希望使用病毒进行爆破？", L"JiYuTrainer - 提示", MB_ICONASTERISK | MB_YESNO) == IDYES)) {
-		//Stop sginal
-		SendMessageToVirus(L"ss2:0");
-		return true;
+	if (_StudentMainControlled){
+		bool vkill = autoWork;
+		if(!vkill){
+			int drs = MessageBox(hWndMain, L"您是否希望使用病毒进行爆破？", L"JiYuTrainer - 提示", MB_ICONASTERISK | MB_YESNOCANCEL);
+			if (drs == IDCANCEL) return false;
+			else if (drs == IDYES) vkill = true;
+		}
+		if (vkill) {
+			//Stop sginal
+			SendMessageToVirus(L"ss2:0");
+			return true;
+		}
 	}
 
 	HANDLE hProcess;
@@ -223,27 +231,39 @@ bool TrainerWorkerInternal::Rerun(bool autoWork)
 	}
 	return SysHlp::RunApplication(_StudentMainPath.c_str(), NULL);
 }
-bool TrainerWorkerInternal::RunOperation(TrainerWorkerOp op) {
+void* TrainerWorkerInternal::RunOperation(TrainerWorkerOp op) 
+{
 	switch (op)
 	{
-	case TrainerWorkerOpVirusBoom:
+	case TrainerWorkerOpVirusBoom: {
 		MsgCenterSendToVirus(L"ss:0", hWndMain);
-		return true;
-	case TrainerWorkerOpVirusQuit:
+		return nullptr;
+	}
+	case TrainerWorkerOpVirusQuit: {
 		MsgCenterSendToVirus((LPWSTR)L"hk:ckend", hWndMain);
-		return true;
-	case TrainerWorkerOp1:
+		return nullptr;
+	}
+	case TrainerWorkerOp1: {
 		WCHAR s[300]; swprintf_s(s, L"hk:path:%s", currentApp->GetFullPath());
 		MsgCenterSendToVirus(s, hWndMain);
 		swprintf_s(s, L"hk:inipath:%s", currentApp->GetPartFullPath(PART_INI));
 		MsgCenterSendToVirus(s, hWndMain);
 		break;
+	}
 	case TrainerWorkerOpForceUnLoadVirus: {
 		UnLoadAllVirus();
 		break;
 	}
+	case TrainerWorkerOp2: {
+		if (ReadTopDomanPassword()) {
+			//mythware_super_password
+			//155
+			return (LPVOID)_TopDomainPassword.c_str();
+		}
+		return nullptr;
 	}
-	return false;
+	}
+	return nullptr;
 }
 
 bool TrainerWorkerInternal::RunCk()
@@ -401,18 +421,68 @@ FORCEKILL:
 	CloseHandle(hProcess);
 	return false;
 }
+bool TrainerWorkerInternal::ReadTopDomanPassword()
+{
+	_TopDomainPassword.clear();
+	//普通注册表读取，适用于4.0版本
+
+	HKEY hKey;
+	LRESULT lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\TopDomain\\e-Learning Class Standard\\1.00", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
+	if (lastError == ERROR_SUCCESS) {
+		DWORD dwType = REG_SZ;
+		WCHAR Data[32];
+		DWORD cbData = 32;
+		lastError = RegQueryValueEx(hKey, L"UninstallPasswd", 0, &dwType, (LPBYTE)Data, &cbData);
+		RegCloseKey(hKey);
+
+		if (lastError == ERROR_SUCCESS) {
+			if (StrEqual(Data, L"Passwd[123456]")) goto READ_EX; //6.0以后读取不了了，都显示Passwd[123456]，用新的方法读取
+			else {
+				_TopDomainPassword = Data;
+				_TopDomainPassword = _TopDomainPassword.substr(6, _TopDomainPassword.size() - 6);
+				return true;
+			}
+		}
+	}
+
+	//HKEY_LOCAL_MACHINE\SOFTWARE\TopDomain\e-Learning Class\Student Knock1
+READ_EX:
+	lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\TopDomain\\e-Learning Class\\Student", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
+	if (lastError == ERROR_SUCCESS) {
+
+		DWORD dwType = REG_BINARY;
+		BYTE Data[120];
+		DWORD cbData = 120;
+		lastError = RegQueryValueEx(hKey, L"Knock1", 0, &dwType, (LPBYTE)Data, &cbData);
+		if (lastError == ERROR_SUCCESS) {
+
+			RegCloseKey(hKey);
+
+			WCHAR ss[34] = { 0 };
+			if (UnDecryptJiyuKnock(Data, cbData, ss)) {
+				_TopDomainPassword = ss;
+				return true;
+			}
+			else return false;
+		}
+		else JTLogWarn(L"RegQueryValueEx Failed : %d [in %s]", lastError, L"ReadTopDomanUnInstallPassword RegQueryValueEx(hKey, L\"Knock1\", 0, &dwType, (LPBYTE)szData, &dwSize);");
+		RegCloseKey(hKey);
+	}
+	else JTLogWarn(L"RegOpenKeyEx Failed : %d [in %s]", lastError, L"ReadTopDomanUnInstallPassword");
+	return false;
+}
 bool TrainerWorkerInternal::LocateStudentMainLocation()
 {
 	//注册表查找 极域 路径
 	HKEY hKey;
-	LRESULT lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learing Class V6.0", 0, KEY_READ, &hKey);
+	LRESULT lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learing Class V6.0", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
 	if (lastError == ERROR_SUCCESS) {
 
 		DWORD dwType = REG_SZ;
 		WCHAR szData[MAX_PATH];
 		DWORD dwSize = MAX_PATH * sizeof(WCHAR);
 		lastError = RegQueryValueEx(hKey, L"DisplayIcon", 0, &dwType, (LPBYTE)szData, &dwSize);
-		if (lastError = ERROR_SUCCESS) {
+		if (lastError == ERROR_SUCCESS) {
 			if (Path::Exists(szData)) {
 				_StudentMainPath = szData;
 				_StudentMainFileLocated = true;
@@ -506,22 +576,16 @@ void TrainerWorkerInternal::UpdateState()
 			if (_StudentMainControlled) {
 				_StatusTextMain = L"已控制极域电子教室";
 
-				if (_LastResoveBroadcastWindow)
-				{
-					_StatusTextMore = L"已调整极域电子教室广播窗口";
-					status = TrainerWorkerCallback::TrainerStatus::TrainerStatusControlledAndUnLocked;
-				}
-				else if (_LastResoveBlackScreenWindow)
-				{
-					_StatusTextMore = L"已处理极域电子教室黑屏窗口";
-					status = TrainerWorkerCallback::TrainerStatus::TrainerStatusControlledAndUnLocked;
-				}
-
 				if (!_Running) {
 					_StatusTextMain += L" 但控制器未启动";
 					status = TrainerWorkerCallback::TrainerStatus::TrainerStatusStopped;
 				}
-				else if (!_LastResoveBlackScreenWindow && !_LastResoveBroadcastWindow) {
+				else if (_LastResoveBlackScreenWindow)
+				{
+					_StatusTextMore = L"已关闭极域电子教室黑屏窗口<br/>您可以放心继续您的工作";
+					status = TrainerWorkerCallback::TrainerStatus::TrainerStatusControlledAndUnLocked;
+				}
+				else {
 					_StatusTextMore = L"您可以放心继续您的工作";
 					status = TrainerWorkerCallback::TrainerStatus::TrainerStatusControlled;
 				}
@@ -809,5 +873,59 @@ VOID TrainerWorkerInternal::TimerProc(HWND hWnd, UINT message, UINT_PTR iTimerID
 		if (iTimerID == TIMER_CK) {
 			currentTrainerWorker->RunCk();
 		}
+	}
+}
+
+bool UnDecryptJiyuKnock(BYTE* Data, DWORD cbData, WCHAR* ss)
+{
+	//反编译的代码
+	__try {
+		DWORD v5; // esi
+		DWORD v6; // ecx
+		BYTE *v7; // eax
+		DWORD v8; // edx
+		BYTE *i;
+		v5 = cbData;
+		v6 = cbData >> 2;
+		v7 = Data;
+		if (cbData >> 2)
+		{
+			v8 = cbData >> 2;
+			do
+			{
+				*(DWORD *)v7 ^= 0x50434C45u;
+				v7 += 4;
+				--v8;
+			} while (v8);
+		}
+		for (i = Data; v6; --v6)
+		{
+			*(DWORD *)i ^= 0x454C4350u;
+			i += 4;
+		}
+		WORD v4[34];
+		v4[0] = 0;
+		memset(&v4[1], 0, 0x40u);
+
+		int a1 = (int)&v4;
+
+		int v13; // edi
+		BYTE *v14; // eax
+		__int16 v15; // cx
+		v13 = a1 - Data[0];
+		v14 = &Data[Data[0]];
+		do
+		{
+			v15 = *(WORD *)v14;
+			*(WORD *)&v14[v13 - (DWORD)Data] = *(WORD *)v14;
+			v14 += 2;
+		} while (v15);
+
+
+		for (int i = 0; i < 32; i++) ss[i] = v4[i];
+		return true;
+	}
+	__except (1) {
+		return false;
 	}
 }

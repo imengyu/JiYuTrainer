@@ -134,7 +134,9 @@ sciter::value MainWindow::docunmentComplete()
 	input_ckinterval = root.get_element_by_id(L"input_ckinterval");
 	check_allow_control = root.get_element_by_id(L"check_allow_control");
 	check_allow_monitor = root.get_element_by_id(L"check_allow_monitor");
+	link_read_jiyu_password2 = root.get_element_by_id(L"link_read_jiyu_password2");
 
+	cmds_message = root.get_element_by_id(L"cmds_message");
 	common_message = root.get_element_by_id(L"common_message");
 	common_message_title = root.get_element_by_id(L"common_message_title");
 	common_message_text = root.get_element_by_id(L"common_message_text");
@@ -290,9 +292,6 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 		else if (cmd == L"ssss") KFShutdown();
 		else if (cmd == L"sssr") KFReboot();
 		else if (cmd == L"ckend") { currentWorker->RunOperation(TrainerWorkerOpVirusQuit); JTLog(L"已与极域分离"); }
-		else if (cmd == L"fuldrv") {
-			UnLoadKernelDriver(L"JiYuKillerDriver");
-		}
 		else if (cmd == L"fuljydrv") {
 			UnLoadKernelDriver(L"TDProcHook");
 		}
@@ -319,6 +318,14 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 		else if (cmd == L"unloaddrv") {
 			if (XUnLoadDriver())
 				JTLog(L"驱动卸载成功");
+		}
+		else if (cmd == L"jypasswd") { 
+			LPCWSTR passwd = (LPCWSTR)currentWorker->RunOperation(TrainerWorkerOp2);
+			if (passwd) {
+				FAST_STR_BINDER(str, L"已成功读取极域密码，\n密码是：%s", 128, passwd);
+				MessageBox(_hWnd, str, L"JiYuTrainer - 提示", MB_ICONINFORMATION);
+			}
+			else MessageBox(_hWnd, L"极域电子教室密码读取失败！或许你可以用 mythware_super_password 试试", L"JiYuTrainer - 提示", MB_ICONEXCLAMATION);
 		}
 		else if (cmd == L"uj") {
 			if (currentWorker) {
@@ -457,6 +464,11 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 				TerminateProcess(GetCurrentProcess(), 0);
 			}
 		}
+		else if (ele.get_attribute("id") == L"link_read_jiyu_password" || ele.get_attribute("id") == L"link_read_jiyu_password2") { OnRunCmd(L"jypasswd"); CloseCmdsTip(); }
+		else if (ele.get_attribute("id") == L"link_uj") { OnRunCmd(L"uj"); CloseCmdsTip(); }
+		else if (ele.get_attribute("id") == L"link_ckend") { OnRunCmd(L"ckend"); CloseCmdsTip();  }
+		else if (ele.get_attribute("id") == L"link_fuljydrv") { OnRunCmd(L"fuljydrv"); CloseCmdsTip(); }
+		else if (ele.get_attribute("id") == L"link_fuldrv") { OnRunCmd(L"unloaddrv"); CloseCmdsTip();  }
 	}
 	else if (type == BUTTON_CLICK)
 	{
@@ -478,7 +490,8 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 
 void MainWindow::OnUpdateStudentMainInfo(bool running, LPCWSTR fullPath, DWORD pid, bool byuser)
 {
-	if (!domComplete) return;
+	if (!domComplete) 
+		return;
 
 	if (running) {
 		btn_kill.set_attribute("style", L"");
@@ -492,8 +505,12 @@ void MainWindow::OnUpdateStudentMainInfo(bool running, LPCWSTR fullPath, DWORD p
 		btn_kill.set_attribute("style", L"display: none;");
 	}
 
-	if (StringHlp::StrEmeptyW(fullPath)) status_jiyu_path.set_text(L"未找到极域电子教室");
+	if (StringHlp::StrEmeptyW(fullPath)) {
+		link_read_jiyu_password2.set_attribute("style", L"display: none;");
+		status_jiyu_path.set_text(L"未找到极域电子教室");
+	}
 	else {
+		link_read_jiyu_password2.set_attribute("style", L"float: right;");
 		std::wstring s1(fullPath);
 		s1 += L"<br/><small>点击运行极域电子教室</small>";
 		LPCSTR textMore2 = StringHlp::UnicodeToUtf8(s1.c_str());
@@ -558,6 +575,10 @@ void MainWindow::ShowFastMessage(LPCWSTR title, LPCWSTR text)
 	common_message_title.set_text(title);
 	common_message_text.set_text(text);
 	common_message.set_attribute("class", L"window-extend-area shown");
+}
+void MainWindow::CloseCmdsTip() {
+	sciter::dom::element root(get_root());
+	root.call_function("common_close_extend_area", sciter::value(cmds_message));
 }
 
 void MainWindow::LoadSettings()
