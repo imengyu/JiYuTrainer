@@ -3,7 +3,9 @@
     <img alt="JiYu Trainer" src="https://raw.githubusercontent.com/717021/JiYuTrainer/master/JiYuTrainerLogo256.png" width="128">
   </a>
 </p>
-<h1 align="center">JiYu Trainer</h1>
+<p align="center">
+  <img alt="JiYu Trainer Title" src="https://raw.githubusercontent.com/717021/JiYuTrainer/master/JiYuTrainerTitle.png" width="128">
+</p>
 <p align="center">不再被极域电子教室控制</p>
 
 <p align="center">
