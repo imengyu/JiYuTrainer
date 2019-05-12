@@ -32,7 +32,7 @@
 # 直接下载：
 
 * [下载软件最新版已编译版本](https://raw.githubusercontent.com/717021/JiYuTrainer/master/Release/JiYuTrainer.exe) 
-* [备用地址（如果上面的地址下载缓慢，请使用这个）](http://update.imyzc.com/JiYuTrainer/files/JiYuTrainer.exe) 
+* [备用地址（如果上面的地址下载缓慢，请使用这个）](http://jiyutrainer.imyzc.com/JiYuTrainer.exe) 
 
 ---
 
