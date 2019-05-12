@@ -3,35 +3,34 @@
 
 #include "stdafx.h"
 #include "MainWindow.h"
+#include "UpdaterWindow.h"
 #include "../JiYuTrainer/AppPublic.h"
 #include "../JiYuTrainer/JiYuTrainer.h"
 #include "JiYuTrainerUI.h"
 
-JTApp* appCurrent = nullptr;
-MainWindow *appCurrentMainWindow = nullptr;
+JTApp* currentApp = nullptr;
+MainWindow *currentMainWindow = nullptr;
 
 UIEXPORT_CFUNC(void*) JTUI_GetMainWindow()
 {
-	return appCurrentMainWindow;
+	return currentMainWindow;
 }
 UIEXPORT_CFUNC(int) JTUI_RunMain()
 {
-	appCurrent = (JTApp*)JTGetCurrentApp();
+	currentApp = (JTApp*)JTGetCurrentApp();
 
 	SciterSetOption(NULL, SCITER_SET_SCRIPT_RUNTIME_FEATURES, ALLOW_FILE_IO | ALLOW_SOCKET_IO | ALLOW_EVAL | ALLOW_SYSINFO);
 	SciterSetOption(NULL, SCITER_SET_DEBUG_MODE, TRUE);
 	SciterClassName();
 
-	appCurrentMainWindow = new MainWindow();
-	int result = appCurrentMainWindow->RunLoop();
-	delete appCurrentMainWindow;
+	currentMainWindow = new MainWindow();
+	int result = currentMainWindow->RunLoop();
+	delete currentMainWindow;
 	return result;
 }
 UIEXPORT_CFUNC(int) JTUI_RunUpdate() 
 {
-	appCurrent = (JTApp*)JTGetCurrentApp();
-
-
-
-	return 0;
+	currentApp = (JTApp*)JTGetCurrentApp();
+	UpdaterWindow updaterWindow(NULL);
+	return updaterWindow.RunLoop();
 }

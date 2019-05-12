@@ -26,6 +26,13 @@ enum APP_INSTALL_MODE {
 	AppInstallCheck,
 	AppInstallNew,
 };
+enum AppOperation {
+	AppOperation1,
+	AppOperation2,
+	AppOperationKShutdown,
+	AppOperationKReboot,
+	AppOperationUnLoadDriver,
+};
 
 class JTApp
 {
@@ -72,6 +79,8 @@ public:
 	virtual int Run() { return 0; }
 	virtual int GetResult() { return 0; }
 	virtual void Exit(int code) {  }
+
+	virtual LPVOID RunOperation(AppOperation op) { return nullptr; }
 
 	/*
 		获取当前程序 HINSTANCE

@@ -413,6 +413,25 @@ LPCWSTR JTAppInternal::GetPartFullPath(int partId)
 	return NULL;
 }
 
+LPVOID JTAppInternal::RunOperation(AppOperation op)
+{
+	switch (op)
+	{
+	case AppOperation1: LoadDriver(); break;
+	case AppOperation2: UnLoadKernelDriver(L"TDProcHook"); break;
+	case AppOperationUnLoadDriver: {
+		if (XUnLoadDriver())
+			JTLog(L"Çý¶¯Ð¶ÔØ³É¹¦");
+		break;
+	}
+	case AppOperationKReboot:  KFReboot(); break;
+	case AppOperationKShutdown: KFShutdown();  break;
+	default:
+		break;
+	}
+	return nullptr;
+}
+
 void JTAppInternal::LoadDriver()
 {
 	if (!appForceNoDriver && XLoadDriver())

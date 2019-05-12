@@ -28,6 +28,10 @@ public:
 	virtual void LogWarn(const wchar_t *str, ...) {}
 	virtual void LogError(const wchar_t *str, ...) {}
 	virtual void LogInfo(const wchar_t *str, ...) {}
+	virtual void Log(const wchar_t *str, va_list arg) {}
+	virtual void LogWarn(const wchar_t *str, va_list arg) {}
+	virtual void LogError(const wchar_t *str, va_list arg) {}
+	virtual void LogInfo(const wchar_t *str, va_list arg) {}
 
 	virtual void SetLogLevel(LogLevel level) {}
 	virtual void SetLogOutPut(LogOutPut output) {}
@@ -54,6 +58,10 @@ public:
 	void LogWarn(const wchar_t *str, ...) override;
 	void LogError(const wchar_t *str, ...) override;
 	void LogInfo(const wchar_t *str, ...) override;
+	void Log(const wchar_t *str, va_list arg) override;
+	void LogWarn(const wchar_t *str, va_list arg) override;
+	void LogError(const wchar_t *str, va_list arg) override;
+	void LogInfo(const wchar_t *str, va_list arg) override;
 
 	void SetLogLevel(LogLevel level) override;
 	void SetLogOutPut(LogOutPut output) override;

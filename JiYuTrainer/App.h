@@ -54,6 +54,7 @@ public:
 	bool GetSelfProtect() { return !appForceNoSelfProtect; }
 	TrainerWorker* GetTrainerWorker() { return appWorker; };
 
+	LPVOID RunOperation(AppOperation op);
 private:
 
 	std::wstring fullPath;

@@ -21,7 +21,7 @@ NtCloseFun NtClose;
 HMODULE hNtdll = NULL;
 HICON HIconDef = NULL;
 
-EXPORT_CFUNC(void) MLoadNt()
+void MLoadNt()
 {
 	hNtdll = GetModuleHandle(L"ntdll.dll");
 	NtSuspendThread = (NtSuspendThreadFun)GetProcAddress(hNtdll, "NtSuspendThread");
@@ -44,7 +44,7 @@ EXPORT_CFUNC(void) MLoadNt()
 	}
 }
 
-EXPORT_CFUNC(NTSTATUS) MQueryProcessVariableSize(_In_ HANDLE ProcessHandle, _In_ PROCESSINFOCLASS ProcessInformationClass, _Out_ PVOID *Buffer)
+NTSTATUS MQueryProcessVariableSize(_In_ HANDLE ProcessHandle, _In_ PROCESSINFOCLASS ProcessInformationClass, _Out_ PVOID *Buffer)
 {
 	NTSTATUS status;
 	PVOID buffer;
@@ -81,32 +81,7 @@ EXPORT_CFUNC(NTSTATUS) MQueryProcessVariableSize(_In_ HANDLE ProcessHandle, _In_
 
 	return status;
 }
-EXPORT_CFUNC(HICON) MGetExeIcon(LPWSTR pszFullPath)
-{
-	HICON hIcon = NULL;
-	if (pszFullPath != NULL)
-	{
-		if (StrEqual(pszFullPath, L"")) {
-			if (HIconDef == NULL) HIconDef = LoadIcon(NULL, IDI_APPLICATION);
-			hIcon = HIconDef;
-			return hIcon;
-		}
-		else {
-			SHFILEINFO FileInfo;
-			DWORD_PTR dwRet = SHGetFileInfoW(pszFullPath, FILE_ATTRIBUTE_NORMAL, &FileInfo, sizeof(SHFILEINFO), SHGFI_SYSICONINDEX | SHGFI_ICON | SHGFI_SMALLICON);
-			if (dwRet) {
-				hIcon = FileInfo.hIcon;
-			}
-		}
-		//ExtractIconEx(pszFullPath, 0, NULL, &hIcon, 1);
-	}
-	if (hIcon == NULL) {
-		if (HIconDef == NULL) HIconDef = LoadIcon(NULL, IDI_APPLICATION);
-		hIcon = HIconDef;
-	}
-	return hIcon;
-}
-EXPORT_CFUNC(BOOL) MGetProcessFullPathEx(HANDLE hProcess, LPWSTR outPath)
+BOOL MGetProcessFullPathEx(HANDLE hProcess, LPWSTR outPath)
 {
 	TCHAR szImagePath[MAX_PATH];
 	if (!hProcess) return FALSE;
@@ -115,7 +90,7 @@ EXPORT_CFUNC(BOOL) MGetProcessFullPathEx(HANDLE hProcess, LPWSTR outPath)
 	wcscpy_s(outPath, 260, szImagePath);
 	return TRUE;
 }
-EXPORT_CFUNC(NTSTATUS) MGetProcessImageFileNameWin32(HANDLE ProcessHandle, LPWSTR FileNameBuffer, ULONG FileNameBufferSize)
+NTSTATUS MGetProcessImageFileNameWin32(HANDLE ProcessHandle, LPWSTR FileNameBuffer, ULONG FileNameBufferSize)
 {
 	NTSTATUS status;
 	PUNICODE_STRING fileName;
@@ -131,7 +106,7 @@ EXPORT_CFUNC(NTSTATUS) MGetProcessImageFileNameWin32(HANDLE ProcessHandle, LPWST
 
 	return status;
 }
-EXPORT_CFUNC(NTSTATUS) MSuspendProcessNt(DWORD dwPId, HANDLE handle)
+NTSTATUS MSuspendProcessNt(DWORD dwPId, HANDLE handle)
 {
 	if (dwPId != 0 && dwPId != 4 && dwPId > 0) {
 		HANDLE hProcess;
@@ -162,7 +137,7 @@ EXPORT_CFUNC(NTSTATUS) MSuspendProcessNt(DWORD dwPId, HANDLE handle)
 	}
 	return STATUS_UNSUCCESSFUL;
 }
-EXPORT_CFUNC(NTSTATUS) MResumeProcessNt(DWORD dwPId, HANDLE handle)
+NTSTATUS MResumeProcessNt(DWORD dwPId, HANDLE handle)
 {
 	if (dwPId != 0 && dwPId != 4 && dwPId > 0) {
 		HANDLE hProcess;
@@ -194,7 +169,7 @@ EXPORT_CFUNC(NTSTATUS) MResumeProcessNt(DWORD dwPId, HANDLE handle)
 	}
 	return STATUS_UNSUCCESSFUL;
 }
-EXPORT_CFUNC(NTSTATUS) MOpenProcessNt(DWORD dwId, PHANDLE pLandle)
+NTSTATUS MOpenProcessNt(DWORD dwId, PHANDLE pLandle)
 {
 	HANDLE hProcess;
 	OBJECT_ATTRIBUTES ObjectAttributes;
@@ -222,7 +197,7 @@ EXPORT_CFUNC(NTSTATUS) MOpenProcessNt(DWORD dwId, PHANDLE pLandle)
 	}
 	else return NtStatus;
 }
-EXPORT_CFUNC(NTSTATUS) MTerminateProcessNt(DWORD dwId, HANDLE handle)
+NTSTATUS MTerminateProcessNt(DWORD dwId, HANDLE handle)
 {
 	if (handle) {
 		NTSTATUS rs = NtTerminateProcess(handle, 0);
@@ -252,7 +227,7 @@ EXPORT_CFUNC(NTSTATUS) MTerminateProcessNt(DWORD dwId, HANDLE handle)
 		else return STATUS_ACCESS_DENIED;
 	}
 }
-EXPORT_CFUNC(NTSTATUS) MOpenThreadNt(DWORD dwId, PHANDLE pLandle, DWORD dwPId)
+NTSTATUS MOpenThreadNt(DWORD dwId, PHANDLE pLandle, DWORD dwPId)
 {
 	HANDLE hThread;
 	OBJECT_ATTRIBUTES ObjectAttributes;
@@ -282,7 +257,7 @@ EXPORT_CFUNC(NTSTATUS) MOpenThreadNt(DWORD dwId, PHANDLE pLandle, DWORD dwPId)
 		return 0;
 	}
 }
-EXPORT_CFUNC(NTSTATUS) MTerminateThreadNt(DWORD dwTid, HANDLE handle, DWORD dwPid)
+NTSTATUS MTerminateThreadNt(DWORD dwTid, HANDLE handle, DWORD dwPid)
 {
 	if(handle) return NtTerminateThread(handle, 0);
 	else if (dwTid) {
@@ -295,12 +270,12 @@ EXPORT_CFUNC(NTSTATUS) MTerminateThreadNt(DWORD dwTid, HANDLE handle, DWORD dwPi
 	}
 	return 0;
 }
-EXPORT_CFUNC(NTSTATUS) MResumeThreadNt(HANDLE handle)
+NTSTATUS MResumeThreadNt(HANDLE handle)
 {
 	ULONG count = 0;
 	return NtResumeThread(handle, &count);
 }
-EXPORT_CFUNC(NTSTATUS) MSuspendThreadNt(HANDLE handle)
+NTSTATUS MSuspendThreadNt(HANDLE handle)
 {
 	ULONG count = 0;
 	return NtSuspendThread(handle, &count);

@@ -1,5 +1,4 @@
 #include "DriverLoader.h"
-#include "DriverLoader.h"
 #include "stdafx.h"
 #include "DriverLoader.h"
 #include "JiYuTrainer.h"

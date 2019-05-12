@@ -434,16 +434,15 @@ typedef struct _SYSTEM_PROCESSES { // Information Class 5 (Latest win10)(After w
 } SYSTEM_PROCESSES, *PSYSTEM_PROCESSES;
 
 
-EXPORT_CFUNC(void) MLoadNt();
-EXPORT_CFUNC(NTSTATUS) MQueryProcessVariableSize(_In_ HANDLE ProcessHandle, _In_ PROCESSINFOCLASS ProcessInformationClass, _Out_ PVOID *Buffer);
-EXPORT_CFUNC(BOOL) MGetProcessFullPathEx(HANDLE hProcess, LPWSTR outPath);
-EXPORT_CFUNC(HICON) MGetExeIcon(LPWSTR pszFullPath);
-EXPORT_CFUNC(NTSTATUS) MGetProcessImageFileNameWin32(HANDLE ProcessHandle, LPWSTR FileNameBuffer, ULONG FileNameBufferSize);
-EXPORT_CFUNC(NTSTATUS) MSuspendProcessNt(DWORD dwPId, HANDLE handle);
-EXPORT_CFUNC(NTSTATUS) MResumeProcessNt(DWORD dwPId, HANDLE handle);
-EXPORT_CFUNC(NTSTATUS) MOpenProcessNt(DWORD dwId, PHANDLE pLandle);
-EXPORT_CFUNC(NTSTATUS) MTerminateProcessNt(DWORD dwId, HANDLE handle);
-EXPORT_CFUNC(NTSTATUS) MOpenThreadNt(DWORD dwId, PHANDLE pLandle, DWORD dwPId);
-EXPORT_CFUNC(NTSTATUS) MTerminateThreadNt(DWORD dwTid, HANDLE handle, DWORD dwPid = 0);
-EXPORT_CFUNC(NTSTATUS) MResumeThreadNt(HANDLE handle);
-EXPORT_CFUNC(NTSTATUS) MSuspendThreadNt(HANDLE handle);
+void MLoadNt();
+NTSTATUS MQueryProcessVariableSize(_In_ HANDLE ProcessHandle, _In_ PROCESSINFOCLASS ProcessInformationClass, _Out_ PVOID *Buffer);
+BOOL MGetProcessFullPathEx(HANDLE hProcess, LPWSTR outPath);
+NTSTATUS MGetProcessImageFileNameWin32(HANDLE ProcessHandle, LPWSTR FileNameBuffer, ULONG FileNameBufferSize);
+NTSTATUS MSuspendProcessNt(DWORD dwPId, HANDLE handle);
+NTSTATUS MResumeProcessNt(DWORD dwPId, HANDLE handle);
+NTSTATUS MOpenProcessNt(DWORD dwId, PHANDLE pLandle);
+NTSTATUS MTerminateProcessNt(DWORD dwId, HANDLE handle);
+NTSTATUS MOpenThreadNt(DWORD dwId, PHANDLE pLandle, DWORD dwPId);
+NTSTATUS MTerminateThreadNt(DWORD dwTid, HANDLE handle, DWORD dwPid = 0);
+NTSTATUS MResumeThreadNt(HANDLE handle);
+NTSTATUS MSuspendThreadNt(HANDLE handle);

@@ -21,7 +21,7 @@ using namespace std;
 #define TIMER_AOP 2
 #define TIMER_RB_DELAY 3
 
-extern JTApp* appCurrent;
+extern JTApp* currentApp;
 
 HWND hWndMain = NULL;
 int screenWidth, screenHeight;
@@ -79,14 +79,14 @@ bool MainWindow::init()
 	attach_dom_event_handler(_hWnd, this); // to receive DOM events
 
 	//Init worker
-	currentLogger = appCurrent->GetLogger();
+	currentLogger = currentApp->GetLogger();
 	currentLogger->SetLogOutPut(LogOutPutCallback);
 	currentLogger->SetLogOutPutCallback(LogCallBack, (LPARAM)this);
 
-	currentWorker = appCurrent->GetTrainerWorker();
+	currentWorker = currentApp->GetTrainerWorker();
 	currentWorker->SetUpdateInfoCallback(this);
 
-	appCurrent->LoadDriver();
+	currentApp->LoadDriver();
 	
 	BOOL result = FALSE;
 	HRSRC hResource = FindResource(hInst, MAKEINTRESOURCE(IDR_HTML_MAIN), RT_HTML);
@@ -213,7 +213,7 @@ BOOL MainWindow::OnWmCreate()
 void MainWindow::OnWmDestroy()
 {
 	if (!isUserCancel && currentControlled)
-		SysHlp::RunApplicationPriviledge(appCurrent->GetFullPath(), L"-r1");
+		SysHlp::RunApplicationPriviledge(currentApp->GetFullPath(), L"-r1");
 
 	UnregisterHotKey(_hWnd, hotkeyShowHide);
 	UnregisterHotKey(_hWnd, hotkeySwFull);
@@ -289,11 +289,11 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 		else if (cmd == L"ss") { currentWorker->RunOperation(TrainerWorkerOpVirusBoom); JTLog(L"已发送 ss 命令"); }
 		else if (cmd == L"sss") ExitWindowsEx(EWX_SHUTDOWN | EWX_FORCE, 0);
 		else if (cmd == L"ssr") ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0);
-		else if (cmd == L"ssss") KFShutdown();
-		else if (cmd == L"sssr") KFReboot();
+		else if (cmd == L"ssss") currentApp->RunOperation(AppOperationKShutdown);
+		else if (cmd == L"sssr") currentApp->RunOperation(AppOperationKReboot);
 		else if (cmd == L"ckend") { currentWorker->RunOperation(TrainerWorkerOpVirusQuit); JTLog(L"已与极域分离"); }
 		else if (cmd == L"fuljydrv") {
-			UnLoadKernelDriver(L"TDProcHook");
+			currentApp->RunOperation(AppOperation2);
 		}
 		else if (cmd == L"inspector") sciter::dom::element(get_root()).call_function("runInspector");
 		else if (cmd == L"md5") {
@@ -309,15 +309,14 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 			else JTLogError(L"缺少参数 (filePath)");
 		}
 		else if (cmd == L"whereisi") {
-			JTLog(L"本程序路径是：%s", appCurrent->GetFullPath());
+			JTLog(L"本程序路径是：%s", currentApp->GetFullPath());
 		}
 		else if (cmd == L"testupdate") {
 			UpdaterWindow u(_hWnd);
 			u.RunLoop();
 		}
 		else if (cmd == L"unloaddrv") {
-			if (XUnLoadDriver())
-				JTLog(L"驱动卸载成功");
+			currentApp->RunOperation(AppOperationUnLoadDriver);
 		}
 		else if (cmd == L"jypasswd") { 
 			LPCWSTR passwd = (LPCWSTR)currentWorker->RunOperation(TrainerWorkerOp2);
@@ -364,14 +363,14 @@ void MainWindow::OnFirstShow()
 	currentWorker->Start();
 
 	//显示重启提示
-	if (appCurrent->IsCommandExists(L"-r1"))
+	if (currentApp->IsCommandExists(L"-r1"))
 		ShowFastMessage(L"刚才进程意外退出", L"极域可能试图结束本进程，或是其他软件（比如任务管理器）结束了本进程，为了安全，我们已经重启了软件进程，您如果要退出本软件的话，请手动点击托盘图标>退出软件。");
-	else if (appCurrent->IsCommandExists(L"-r2")) 
+	else if (currentApp->IsCommandExists(L"-r2")) 
 		ShowFastTip(L"刚才意外与病毒失去联系，现已杀死极域并重启软件主进程");
-	else if (appCurrent->IsCommandExists(L"-r3"))
+	else if (currentApp->IsCommandExists(L"-r3"))
 		ShowFastTip(L"软件已重启");
 
-	if (appCurrent->IsCommandExists(L"-ia"))
+	if (currentApp->IsCommandExists(L"-ia"))
 		ShowFastMessage(L"更新完成！", L"您已经更新到软件最新版本，我们努力保证您的最佳使用体验，时常更新是非常好的做法。");
 
 	//运行更新
@@ -460,7 +459,7 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 					currentWorker->RunOperation(TrainerWorkerOpForceUnLoadVirus);
 				}
 				Sleep(1000);
-				SysHlp::RunApplicationPriviledge(appCurrent->GetPartFullPath(PART_UNINSTALL), NULL);
+				SysHlp::RunApplicationPriviledge(currentApp->GetPartFullPath(PART_UNINSTALL), NULL);
 				TerminateProcess(GetCurrentProcess(), 0);
 			}
 		}
@@ -583,7 +582,7 @@ void MainWindow::CloseCmdsTip() {
 
 void MainWindow::LoadSettings()
 {
-	SettingHlp *settings = appCurrent->GetSettings();
+	SettingHlp *settings = currentApp->GetSettings();
 	setTopMost = settings->GetSettingBool(L"TopMost");
 	setAutoUpdate = settings->GetSettingBool(L"AutoUpdate ", true);
 	setAutoIncludeFullWindow = settings->GetSettingBool(L"AutoIncludeFullWindow");
@@ -620,7 +619,7 @@ void MainWindow::SaveSettings()
 	setAllowControl = check_allow_control.get_value().get(false);
 	setAllowMonitor = check_allow_monitor.get_value().get(false);
 
-	SettingHlp *settings = appCurrent->GetSettings();
+	SettingHlp *settings = currentApp->GetSettings();
 	settings->SetSettingBool(L"TopMost", setTopMost);
 	settings->SetSettingBool(L"AutoIncludeFullWindow", setAutoIncludeFullWindow);
 	settings->SetSettingBool(L"AllowAllRunOp", setAllowAllRunOp);

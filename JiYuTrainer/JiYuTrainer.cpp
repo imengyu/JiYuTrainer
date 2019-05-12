@@ -24,7 +24,7 @@ EXPORT_CFUNC(void) JTLog(const wchar_t *str, ...) {
 	if (currentLogger) {
 		va_list arg;
 		va_start(arg, str);
-		currentLogger->LogInternal(LogLevelText, str, arg);
+		currentLogger->Log(str, arg);
 		va_end(arg);
 	}
 }
@@ -32,7 +32,7 @@ EXPORT_CFUNC(void) JTLogInfo(const wchar_t *str, ...) {
 	if (currentLogger) {
 		va_list arg;
 		va_start(arg, str);
-		currentLogger->LogInternal(LogLevelInfo, str, arg);
+		currentLogger->LogInfo(str, arg);
 		va_end(arg);
 	}
 }
@@ -40,7 +40,7 @@ EXPORT_CFUNC(void) JTLogWarn(const wchar_t *str, ...) {
 	if (currentLogger) {
 		va_list arg;
 		va_start(arg, str);
-		currentLogger->LogInternal(LogLevelWarn, str, arg);
+		currentLogger->LogWarn(str, arg);
 		va_end(arg);
 	}
 }
@@ -48,7 +48,7 @@ EXPORT_CFUNC(void) JTLogError(const wchar_t *str, ...) {
 	if (currentLogger) {
 		va_list arg;
 		va_start(arg, str);
-		currentLogger->LogInternal(LogLevelError, str, arg);
+		currentLogger->LogError(str, arg);
 		va_end(arg);
 	}
 }
