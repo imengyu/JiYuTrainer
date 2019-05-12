@@ -1,11 +1,18 @@
-# JiYuTrainer
-极域电子教室防控制软件
+<p align="center">
+  <a href="#">
+    <img alt="JiYu Trainer" src="https://raw.githubusercontent.com/717021/JiYuTrainer/master/JiYuTrainerLogo256.png" width="128">
+  </a>
+</p>
+<h1 align="center">JiYu Trainer</h1>
+<p align="center">不再被极域电子教室控制</p>
+
+<p align="center">
+  <a href="#"><img src="https://img.shields.io/badge/language-C++-blue.svg"></a>
+  <a href="https://github.com/717021/JiYuTrainer/releases"><img src="https://img.shields.io/badge/version-1.6-greeb.svg"></a>
+  <a href="https://github.com/717021/JiYuTrainer/blob/master/LICENSE"><img src="https://img.shields.io/badge/liscence-MIT-orange.svg"></a>
+</p>
 
 ---
-
-[![Language](https://img.shields.io/badge/language-C++-blue.svg)](JiYuKiller)
-[![Version](https://img.shields.io/badge/version-1.6-greeb.svg)](JiYuKiller)
-[![Liscence](https://img.shields.io/badge/liscence-MIT-orange.svg)](JiYuKiller)
 
 简介
 ---
