@@ -105,5 +105,14 @@
     <Image Include="..\..\..\..\图片\编程素材\图标\ico161.ico">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="..\..\..\..\图片\编程素材\icoGreen.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\..\..\..\图片\编程素材\icoGrey.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\..\..\..\图片\编程素材\icoRed.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>

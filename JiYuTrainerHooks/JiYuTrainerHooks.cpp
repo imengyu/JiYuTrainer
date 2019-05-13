@@ -25,6 +25,11 @@
 #define AltDirectorySeparatorChar  L'/'
 #define VolumeSeparatorChar  L':'
 
+#define IDC_SW_STATUS_FAKEFULL 20001
+#define IDC_SW_STATUS_LOCKED 20002
+#define IDC_SW_STATUS_MAIN 20003
+#define IDC_SW_STATUS_MAIN_OUT 20004
+
 using namespace std;
 
 extern HINSTANCE hInst;
@@ -39,14 +44,15 @@ HWND jiYuGBDeskRdWnd = NULL;
 HWND hWndMsgCenter = NULL;
 HWND hListBoxStatus = NULL;
 
+HANDLE hThreadMain = NULL;
 LRESULT hWndOpConformRs = 0;
 LRESULT hWndOutOfControlConformRs = 0;
 INT screenWidth, screenHeight;
 bool outlineEndJiy = false;
 HWND hWndOpConformNoBtn = NULL;
 bool bandAllRunOp = false, allowNextRunOp = false, allowAllRunOp  = false;
-bool allowMonitor = false;
-bool allowControl = false;
+bool allowMonitor = false, allowControl = false, fakeFull = false;
+bool isLocked = false;
 std::list<std::wstring> runOPWhiteList;
 bool forceKill = false;
 int wdCount = 0;
@@ -55,6 +61,7 @@ WCHAR mainFullPath[MAX_PATH];
 WCHAR mainDir[MAX_PATH];
 WCHAR currOpCfPath[MAX_PATH];
 WCHAR currOpCfPararm[MAX_PATH];
+HWND gbWindow = NULL;
 
 fnTDAjustCreateInstance faTDAjustCreateInstance = NULL;
 
@@ -184,6 +191,8 @@ DWORD WINAPI VMsgCenterRunThread(LPVOID lpThreadParameter) {
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
+
+	hThreadMain = NULL;
 	return 0;
 }
 
@@ -220,29 +229,33 @@ void VLaterInit() {
 	}
 }
 void VCreateMsgCenter() {
-	CreateThread(NULL, NULL, VMsgCenterRunThread, NULL, NULL, NULL);
+	hThreadMain = CreateThread(NULL, NULL, VMsgCenterRunThread, NULL, NULL, NULL);
 }
 void VCloseMsgCenter() {
 	DestroyWindow(hWndMsgCenter);
+	if (hThreadMain) {
+		TerminateThread(hThreadMain, 0);
+		hThreadMain = NULL;
+	}
 }
 void VHandleMsg(LPWSTR buff) {
-	VOutPutStatus(L"Receive message : %s", buff);
 	wstring act(buff);
 	vector<wstring> arr;
 	SplitString(act, arr, L":");
 	if (arr.size() >= 2) {
-		if (arr[0] == L"hw") 
-			VHookWindow(arr[1].c_str());
-		else if (arr[0] == L"hwf")
-			VHookFWindow(arr[1].c_str());
-		else if (arr[0] == L"ss")
-			VBoom();
+		if (arr[0] == L"hw")  VHookWindow(arr[1].c_str());
+		else if (arr[0] == L"hwf") VHookFWindow(arr[1].c_str());
+		else if (arr[0] == L"ss") VBoom();
 		else if (arr[0] == L"ss2") {
 			PostQuitMessage(0);
 			ExitProcess(0);
 		}
 		else if (arr[0] == L"hk") {
-			if(arr[1]==L"ckstat") VSendMessageBack(L"hkb:succ", hWndMsgCenter);
+			VOutPutStatus(L"[V] %s", buff);
+			if (arr[1] == L"ckstat") {
+				VSendMessageBack(L"hkb:succ", hWndMsgCenter);
+				SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_MAIN, NULL);
+			}
 			else if (arr[1] == L"ckend") VManualQuit();
 			else if (arr[1] == L"path" && arr.size() >= 4) {
 				wcscpy_s(mainFullPath, arr[2].c_str());
@@ -259,14 +272,18 @@ void VHandleMsg(LPWSTR buff) {
 				VInitSettings();
 				VSendMessageBack(L"hkb:succ", hWndMsgCenter);
 			}
-
-			
+			else if (arr[1] == L"fkfull" && arr.size() >= 3) {
+				fakeFull = arr[2] == L"true";
+				SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_FAKEFULL, NULL);
+			}
 		}
 		else if (arr[0] == L"ukt") {
+			VOutPutStatus(L"[T] %s", buff);
 			if (UnHookLocalInput) { UnHookLocalInput(); VSendMessageBack(L"ukt:succ", hWndMsgCenter); }
 			else VSendMessageBack(L"ukt:fail", hWndMsgCenter);
 		}
 		else if (arr[0] == L"test") {
+			VOutPutStatus(L"[T] %s", buff);
 			VShowOpConfirmDialog(L"test", L"test");
 		}
 	}
@@ -319,7 +336,12 @@ void VHookWindow(const wchar_t* hWndStr) {
 		}
 	}
 }
-void VFixGuangBoWindow(HWND hWnd) {
+void VFixGuangBoWindow(HWND hWnd) 
+{
+	if (gbWindow != hWnd) {
+		gbWindow = hWnd;
+		VOutPutStatus(L"[H] Guang Bo Window : %d", hWnd);
+	}
 	WNDPROC oldWndProc = (WNDPROC)GetWindowLong(hWnd, GWL_WNDPROC);
 	if (oldWndProc != (WNDPROC)JiYuWndProc) {
 		jiYuWndProc = (WNDPROC)oldWndProc;
@@ -333,6 +355,8 @@ void VFixGuangBoWindow(HWND hWnd) {
 		style |= WS_OVERLAPPEDWINDOW;
 		SetWindowLong(hWnd, GWL_STYLE, style);
 	}
+
+
 }
 bool VIsInIllegalWindows(HWND hWnd) {
 	list<HWND>::iterator testiterator;
@@ -362,9 +386,6 @@ void VBoom() {
 	*P = 0;
 	*/
 }
-bool VCheckIsTargetWindow(LPWSTR text) {
-	return (StrEqual(text, L"屏幕广播") || StrEqual(text, L"屏幕演播室窗口") || StrEqual(text, L"BlackScreen Window"));
-}
 void VSendMessageBack(LPCWSTR buff, HWND hDlg) {
 	HWND receiveWindow = FindWindow(NULL, L"JiYu Trainer Main Window");
 	if (receiveWindow) {
@@ -374,6 +395,7 @@ void VSendMessageBack(LPCWSTR buff, HWND hDlg) {
 		SendMessageTimeout(receiveWindow, WM_COPYDATA, (WPARAM)hDlg, (LPARAM)&copyData, SMTO_NORMAL, 500, 0);
 	}
 	else if(!outlineEndJiy) {
+		SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_MAIN_OUT, NULL);
 		outlineEndJiy = true;
 		if (forceKill) {
 			if (_waccess_s(mainFullPath, 0) == 0)
@@ -401,6 +423,34 @@ void VManualQuit()
 	VCloseMsgCenter();
 	jiYuWnds.clear();
 	loaded = false;
+}
+bool VIsWindowGbOrHp(HWND hWnd) {
+	WCHAR text[32];
+	GetWindowText(hWnd, text, 32);
+	return StrEqual(text, L"屏幕广播") || StrEqual(text, L"屏幕演播室窗口") || StrEqual(text, L"BlackScreen Window");
+}
+bool VIsWindowHp(HWND hWnd) {
+	WCHAR text[32];
+	GetWindowText(hWnd, text, 32);
+	return StrEqual(text, L"BlackScreen Window");
+}
+void VSwitchLockState(bool l) {
+	if (isLocked != l) {
+		isLocked = l;
+		SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_LOCKED, NULL);
+		WCHAR str[32]; swprintf_s(str, L"hkb:jyk:%s", l ? L"1" : L"0");
+		VSendMessageBack(str, hWndMsgCenter);
+	}
+}
+void VSwitchLockState(HWND hWnd, bool l) {
+	if (l) {
+		if (!isLocked && VIsWindowGbOrHp(hWnd))
+			VSwitchLockState(l);
+	}
+	else {
+		if (isLocked && VIsWindowGbOrHp(hWnd))
+			VSwitchLockState(l);
+	}
 }
 
 INT_PTR CALLBACK VShowOpConfirmWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -788,17 +838,29 @@ BOOL WINAPI hkSetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int y, int cx
 {
 	if (loaded) 
 	{
-		if (x == 0 && y == 0 && cx == screenWidth && cy == screenHeight) 
+		if ((uFlags & SWP_NOSIZE) == 0)
 		{
-			if (VIsInIllegalCanSizeWindows(hWnd))
+			if ((x == 0 && y == 0 && cx == screenWidth && cy == screenHeight))
 			{
-				jiYuWndCanSize.remove(hWnd);
-				raSetWindowPos(hWnd, hWndInsertAfter, x, y, cx, cy, uFlags | SWP_NOZORDER);
-				SendMessage(hWnd, WM_SIZE, NULL, NULL);
+				VSwitchLockState(hWnd, TRUE);
+				if (fakeFull && VIsWindowGbOrHp(hWnd))
+					return raSetWindowPos(hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
+				if (VIsInIllegalCanSizeWindows(hWnd))
+				{
+					jiYuWndCanSize.remove(hWnd);
+					raSetWindowPos(hWnd, hWndInsertAfter, x, y, cx, cy, uFlags | SWP_NOZORDER);
+					SendMessage(hWnd, WM_SIZE, NULL, NULL);
+					return TRUE;
+				}
 				return TRUE;
 			}
-			return TRUE;
+			else {
+				VSwitchLockState(hWnd, FALSE);
+				if (fakeFull)
+					return raSetWindowPos(hWnd, HWND_NOTOPMOST, x, y, cx, cy, uFlags);
+			}
 		}
+
 		if (VIsInIllegalWindows(hWnd)) 
 			return TRUE;
 	}
@@ -808,15 +870,29 @@ HDWP WINAPI hkDeferWindowPos(HDWP hWinPosInfo, HWND hWnd, HWND hWndInsertAfter, 
 {
 	if (loaded)
 	{
-		if (x == 0 && y == 0 && cx == screenWidth && cy == screenHeight) {
-			if (VIsInIllegalCanSizeWindows(hWnd)) {
-				jiYuWndCanSize.remove(hWnd);
-				HDWP rs = faDeferWindowPos(hWinPosInfo, hWnd, hWndInsertAfter, x, y, cx, cy, uFlags | SWP_NOZORDER);
-				SendMessage(hWnd, WM_SIZE, NULL, NULL);
-				return rs;
+		if ((uFlags & SWP_NOSIZE) == 0)
+		{
+			if (x == 0 && y == 0 && cx == screenWidth && cy == screenHeight) {
+				VSwitchLockState(hWnd, TRUE);
+				if (fakeFull && VIsWindowGbOrHp(hWnd))
+					return faDeferWindowPos(hWinPosInfo, hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
+				if (VIsInIllegalCanSizeWindows(hWnd)) {
+					jiYuWndCanSize.remove(hWnd);
+					HDWP rs = faDeferWindowPos(hWinPosInfo, hWnd, hWndInsertAfter, x, y, cx, cy, uFlags | SWP_NOZORDER);
+					SendMessage(hWnd, WM_SIZE, NULL, NULL);
+					return rs;
+				}
+				return NULL;
 			}
-			return NULL;
+			else {
+				VSwitchLockState(hWnd, FALSE);
+				if (fakeFull) {
+					return faDeferWindowPos(hWinPosInfo, hWnd, HWND_NOTOPMOST, x, y, cx, cy, uFlags);
+				}
+
+			}
 		}
+
 		if (VIsInIllegalWindows(hWnd))
 			return NULL;
 	}
@@ -827,11 +903,19 @@ BOOL WINAPI hkMoveWindow(HWND hWnd, int x, int y, int cx, int cy, BOOL bRepaint)
 	if (loaded)
 	{
 		if (x == 0 && y == 0 && cx == screenWidth && cy == screenHeight) {
+			VSwitchLockState(hWnd, TRUE);
+			if (fakeFull && VIsWindowGbOrHp(hWnd))
+				return raMoveWindow(hWnd, x, y, cx, cy, bRepaint);
 			if (VIsInIllegalCanSizeWindows(hWnd)) {
 				jiYuWndCanSize.remove(hWnd);
 				return raMoveWindow(hWnd,  x, y, cx, cy, bRepaint);
 			}
 			return TRUE;
+		}
+		else {
+			VSwitchLockState(hWnd, FALSE);
+			if (fakeFull) 
+				return raMoveWindow(hWnd, x, y, cx, cy, bRepaint);
 		}
 		if (VIsInIllegalWindows(hWnd))
 			return TRUE;
@@ -1010,23 +1094,35 @@ HDESK WINAPI hkOpenInputDesktop(DWORD dwFlags,BOOL fInherit, ACCESS_MASK dwDesir
 }
 LONG WINAPI hkSetWindowLongA(HWND hWnd, int nIndex, LONG dwNewLong)
 {
-	if (loaded && VIsInIllegalWindows(hWnd))
-		return GetWindowLongA(hWnd, nIndex);
+	if (loaded) {
+		if (fakeFull && VIsWindowGbOrHp(hWnd))
+			return faSetWindowLongA(hWnd, nIndex, dwNewLong);
+		if (VIsInIllegalWindows(hWnd))
+			return GetWindowLongA(hWnd, nIndex);
+	}
 	return faSetWindowLongA(hWnd, nIndex, dwNewLong);
 }
 LONG WINAPI hkSetWindowLongW(HWND hWnd, int nIndex, LONG dwNewLong)
 {
-	if (loaded && VIsInIllegalWindows(hWnd))
-		return GetWindowLongW(hWnd, nIndex);
+	if (loaded) {
+		if(fakeFull && VIsWindowGbOrHp(hWnd))
+			return faSetWindowLongW(hWnd, nIndex, dwNewLong);
+		if (VIsInIllegalWindows(hWnd))
+			return GetWindowLongW(hWnd, nIndex);
+	}
 	return faSetWindowLongW(hWnd, nIndex, dwNewLong);
 }
 BOOL WINAPI hkShowWindow(HWND hWnd, int nCmdShow)
 {
-	if (nCmdShow == SW_SHOW || nCmdShow == SW_SHOWNORMAL) {
-		WCHAR text[32];
-		GetWindowText(hWnd, text, 32);
-		if (VCheckIsTargetWindow(text)) {
+	if (VIsWindowGbOrHp(hWnd)) {
+		if (nCmdShow == SW_SHOW || nCmdShow == SW_SHOWNORMAL 
+			|| nCmdShow ==  SW_SHOWMAXIMIZED || nCmdShow == SW_SHOWNOACTIVATE || nCmdShow == SW_SHOWDEFAULT) {
+			if(VIsWindowHp(hWnd))
+				VSwitchLockState(hWnd, TRUE);
 			VSendMessageBack(L"hkb:immck", hWndMsgCenter);
+		}
+		else if (nCmdShow == SW_HIDE) {
+			VSwitchLockState(hWnd, FALSE);
 		}
 	}
 	return faShowWindow(hWnd, nCmdShow);
@@ -1048,18 +1144,34 @@ EXTERN_C HRESULT __declspec(dllexport) __cdecl TDAjustCreateInstance(CLSID *rcls
 	return faTDAjustCreateInstance(rclsid, pUnkOuter, dwClsContext, riid, ppv);
 }
 
+HBITMAP hIconRed, hIconGreen, hIconGrey;
+HWND hStatusFakeFull, hStatusMain, hStatusLock;
+
 INT_PTR CALLBACK MainWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)
 	{
 	case WM_INITDIALOG: {
 		SetWindowText(hDlg, L"JiYu Trainer Virus Window");
-		SetTimer(hDlg, TIMER_WATCH_DOG_SRV, 5000, NULL);
-		SetTimer(hDlg, TIMER_AUTO_HIDE, 3000, NULL);
+
+		hIconRed = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_BITMAP_RED));
+		hIconGreen = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_BITMAP_GRRY));
+		hIconGrey = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_BITMAP_GRRY));
+
+		hStatusMain = GetDlgItem(hDlg, IDC_STATUS_RUNNING);
+		hStatusLock = GetDlgItem(hDlg, IDC_STATUS_LOCK);
+		hStatusFakeFull = GetDlgItem(hDlg, IDC_STATUS_FAKEFULL);
+
+		SetTimer(hDlg, TIMER_WATCH_DOG_SRV, 6666, NULL);
+		SetTimer(hDlg, TIMER_AUTO_HIDE, 2600, NULL);
 		break;
 	}
 	case WM_DESTROY: {
+		DeleteBitmap(hIconRed);
+		DeleteBitmap(hIconGreen);
+		DeleteBitmap(hIconGrey);
 		KillTimer(hDlg, TIMER_WATCH_DOG_SRV);
+		PostQuitMessage(0);
 		break;
 	}
 	case WM_SYSCOMMAND: {
@@ -1072,16 +1184,42 @@ INT_PTR CALLBACK MainWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 		break;
 	}
 	case WM_COMMAND: {
-		if (wParam == IDC_KILL) {
+		switch (wParam)
+		{
+		case IDC_KILL: {
 			PostQuitMessage(0);
 			ExitProcess(0);
+			break;
 		}
-		if (wParam == IDC_SMINSIZE) {
+		case IDC_SMINSIZE: {
 			ShowWindow(hDlg, SW_MINIMIZE);
+			break;
 		}
-		if (wParam == IDC_SHIDE) {
+		case IDC_SHIDE: {
 			RECT rc; GetWindowRect(hDlg, &rc);
-			SetWindowPos(hDlg, 0, rc.left, -56, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE);
+			SetWindowPos(hDlg, 0, rc.left, -(rc.bottom - rc.top - 8), 0, 0, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE);
+			break;
+		}
+		case IDC_SW_STATUS_FAKEFULL: {
+			if (fakeFull) SendMessage(hStatusFakeFull, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconGreen);
+			else SendMessage(hStatusFakeFull, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconGrey);
+			break;
+		}
+		case IDC_SW_STATUS_LOCKED: {
+			if (isLocked) SendMessage(hStatusLock, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconRed);
+			else SendMessage(hStatusLock, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconGreen);
+			break;
+		}
+		case IDC_SW_STATUS_MAIN: {
+			SendMessage(hStatusMain, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconGreen);
+			break;
+		}
+		case IDC_SW_STATUS_MAIN_OUT: {
+			SendMessage(hStatusMain, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconRed);
+			break;
+		}
+		default:
+			break;
 		}
 		break;
 	}
@@ -1097,7 +1235,7 @@ INT_PTR CALLBACK MainWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 	}
 	case WM_LBUTTONDOWN: {
 		RECT rc; GetWindowRect(hDlg, &rc);
-		if (rc.top == -56) {
+		if (rc.top < 0) {
 			SetWindowPos(hDlg, 0, rc.left, 0, 0, 0, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE);
 		}
 		else {
@@ -1118,6 +1256,10 @@ INT_PTR CALLBACK MainWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			swprintf_s(str, L"wcd:%d", wdCount);
 			VSendMessageBack(str, hDlg);
 		}
+		break;
+	}
+	case WM_QUERYENDSESSION: {
+		VCloseMsgCenter();
 		break;
 	}
 	default:

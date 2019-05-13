@@ -185,6 +185,9 @@
     <ResourceCompile Include="JiYuTrainerHooks.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\..\..\..\图片\编程素材\icoGreen.bmp" />
+    <Image Include="..\..\..\..\图片\编程素材\icoGrey.bmp" />
+    <Image Include="..\..\..\..\图片\编程素材\icoRed.bmp" />
     <Image Include="..\..\..\..\图片\编程素材\图标\ico161.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

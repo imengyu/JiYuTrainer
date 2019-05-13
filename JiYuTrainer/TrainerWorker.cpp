@@ -127,6 +127,13 @@ void TrainerWorkerInternal::HandleMessageFromVirus(LPCWSTR buf)
 				RunCk();
 				JTLogInfo(L"Receive  immck message ");
 			}
+			else if (arr[1] == L"jyk") {
+				if (arr.size() >= 3) {
+					_StudentMainRunningLock = arr[2] == L"1";
+					UpdateState();
+				}
+			}
+			
 		}
 		else if (arr[0] == L"wcd")
 		{
@@ -475,7 +482,7 @@ bool TrainerWorkerInternal::LocateStudentMainLocation()
 {
 	//注册表查找 极域 路径
 	HKEY hKey;
-	LRESULT lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learing Class V6.0", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
+	LRESULT lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learning Class V6.0", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
 	if (lastError == ERROR_SUCCESS) {
 
 		DWORD dwType = REG_SZ;
@@ -580,9 +587,9 @@ void TrainerWorkerInternal::UpdateState()
 					_StatusTextMain += L" 但控制器未启动";
 					status = TrainerWorkerCallback::TrainerStatus::TrainerStatusStopped;
 				}
-				else if (_LastResoveBlackScreenWindow)
+				else if (_StudentMainRunningLock)
 				{
-					_StatusTextMore = L"已关闭极域电子教室黑屏窗口<br/>您可以放心继续您的工作";
+					_StatusTextMore = L"已为您解锁极域电子教室<br/>您可以放心继续您的工作";
 					status = TrainerWorkerCallback::TrainerStatus::TrainerStatusControlledAndUnLocked;
 				}
 				else {
@@ -737,9 +744,16 @@ bool TrainerWorkerInternal::UnLoadAllVirus()
 
 void TrainerWorkerInternal::SwitchFakeFull()
 {
-	if (_FakeFull)_FakeFull = false;
-	else _FakeFull = true;
-	FakeFull(_FakeFull);
+	if (_FakeFull) { 
+		_FakeFull = false; 
+		SendMessageToVirus(L"hk:fkfull:false");
+		FakeFull(_FakeFull);
+	}
+	else if(_StudentMainRunningLock) { 
+		_FakeFull = true; 
+		SendMessageToVirus(L"hk:fkfull:true");
+		FakeFull(_FakeFull);
+	}
 }
 void TrainerWorkerInternal::FakeFull(bool fk) {
 	if (_CurrentBroadcastWnd) {

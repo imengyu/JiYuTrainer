@@ -29,6 +29,7 @@ public:
 	virtual void OnResolveBlackScreenWindow() {}
 	virtual void OnSimpleMessageCallback(LPCWSTR text) {}
 	virtual void OnBeforeSendStartConf() {}
+	virtual void OnSwitchLockStatus(bool locked) {}
 	virtual HWND GetMainHWND() { return NULL; }
 };
 class TrainerWorker
@@ -94,6 +95,7 @@ private:
 	std::wstring _StudentMainPath;
 	bool _StudentMainFileLocated = false;
 	bool _StudentMainControlled = false;
+	bool _StudentMainRunningLock = false;
 	std::wstring _StatusTextMain;
 	std::wstring _StatusTextMore;
 	std::wstring _TopDomainPassword;
