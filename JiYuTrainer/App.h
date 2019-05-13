@@ -156,6 +156,9 @@ private:
 
 	static INT_PTR CALLBACK ArgeementWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 	static INT_PTR CALLBACK Md5ShowWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
+
+	static LONG WINAPI UnhandledExceptionFilter(PEXCEPTION_POINTERS pExInfo);
+	static LONG GenerateMiniDump(PEXCEPTION_POINTERS pExInfo);
 };
 
 #endif

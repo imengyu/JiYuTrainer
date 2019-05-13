@@ -13,6 +13,7 @@
 #include <winioctl.h>
 #include <CommCtrl.h>
 #include <ShellAPI.h>
+#include <dbghelp.h>
 
 extern LoggerInternal * currentLogger;
 extern JTApp * currentApp;
@@ -182,7 +183,7 @@ int JTAppInternal::CheckInstall(APP_INSTALL_MODE mode)
 		if (Path::Exists(fullSourceInstallerPath)) {
 
 			if (!DeleteFile(fullSourceInstallerPath.c_str()) || !CopyFile(fullPath.c_str(), fullSourceInstallerPath.c_str(), TRUE))
-				JTLogError(L"更新源安装包 %s 时发生错误：%d", fullSourceInstallerPath.c_str(), GetLastError());
+				currentLogger->LogError(L"更新源安装包 %s 时发生错误：%d", fullSourceInstallerPath.c_str(), GetLastError());
 		}
 
 		//新安装完成以后启动主程序，并删除本体
@@ -289,6 +290,7 @@ bool JTAppInternal::RunMd5ShowDialog()
 int JTAppInternal::RunInternal()
 {
 	setlocale(LC_ALL, "chs");
+	SetUnhandledExceptionFilter(UnhandledExceptionFilter);
 
 	if (SysHlp::GetSystemVersion() == SystemVersionNotSupport) {
 		MessageBox(NULL, L"运行本程序最低要求 Windows XP，请使用更高版本的系统", L"JiYuTrainer - 错误", MB_ICONERROR);
@@ -319,7 +321,7 @@ int JTAppInternal::RunInternal()
 	if (appArgRemoveUpdater) {
 		Sleep(1000);//Sleep for a while
 		if (!DeleteFileW(updaterPath.c_str()))
-			JTLogError(L"Remove updater file %s failed : %d", updaterPath.c_str(), GetLastError());
+			currentLogger->LogError(L"Remove updater file %s failed : %d", updaterPath.c_str(), GetLastError());
 	}
 	if (appArgInstallMode)
 		return CheckInstall(AppInstallNew);
@@ -339,7 +341,7 @@ int JTAppInternal::RunInternal()
 
 	appWorker = new TrainerWorkerInternal();
 
-	JTLog(L"初始化正常");
+	appLogger->Log(L"初始化正常");
 
 	if (appArgForceTemp || appStartType == AppStartTypeInTemp) {
 		SysHlp::RunApplication(parts[0].c_str(), (L"-f " + fullPath).c_str());
@@ -356,7 +358,7 @@ int JTAppInternal::RunInternal()
 			typedef int(*fnJTUI_RunMain)();
 			fnJTUI_RunMain JTUI_RunMain = (fnJTUI_RunMain)GetProcAddress(hMain, "JTUI_RunMain");
 			if (JTUI_RunMain) {
-				JTLog(L"程序已启动");
+				appLogger->Log(L"程序已启动");
 				return JTUI_RunMain();
 			}
 			else MessageBox(NULL, L"加载主部件发生错误。主部件损坏", APP_TITLE, MB_ICONERROR);
@@ -421,7 +423,7 @@ LPVOID JTAppInternal::RunOperation(AppOperation op)
 	case AppOperation2: UnLoadKernelDriver(L"TDProcHook"); break;
 	case AppOperationUnLoadDriver: {
 		if (XUnLoadDriver())
-			JTLog(L"驱动卸载成功");
+			currentLogger->Log(L"驱动卸载成功");
 		break;
 	}
 	case AppOperationKReboot:  KFReboot(); break;
@@ -436,7 +438,7 @@ void JTAppInternal::LoadDriver()
 {
 	if (!appForceNoDriver && XLoadDriver())
 		if (SysHlp::GetSystemVersion() == SystemVersionWindows7OrLater && !appForceNoSelfProtect && !XinitSelfProtect())
-			JTLogWarn(L"驱动自我保护失败！");
+			currentLogger->LogWarn(L"驱动自我保护失败！");
 }
 
 void JTAppInternal::MergePathString(LPCWSTR path)
@@ -505,7 +507,6 @@ void JTAppInternal::InitArgs()
 }
 void JTAppInternal::InitLogger()
 {
-	currentLogger = new LoggerInternal();
 	appLogger = currentLogger;
 	appLogger->SetLogOutPut(LogOutPutConsolne);
 }
@@ -598,6 +599,56 @@ INT_PTR CALLBACK JTAppInternal::Md5ShowWndProc(HWND hDlg, UINT message, WPARAM w
 	default: return DefWindowProc(hDlg, message, wParam, lParam);
 	}
 	return lResult;
+}
+
+LONG WINAPI JTAppInternal::UnhandledExceptionFilter(PEXCEPTION_POINTERS pExInfo)
+{
+	// 这里做一些异常的过滤或提示
+	if (IsDebuggerPresent())
+		return EXCEPTION_CONTINUE_SEARCH;
+	return GenerateMiniDump(pExInfo);
+}
+LONG JTAppInternal::GenerateMiniDump(PEXCEPTION_POINTERS pExInfo)
+{
+	TCHAR dmp_path[MAX_PATH];
+	wcscpy_s(dmp_path, currentApp->GetCurrentDir());
+
+	SYSTEMTIME tm;
+	GetLocalTime(&tm);//获取时间
+	TCHAR file_name[128];
+	swprintf_s(file_name, L"%s\\JiYuTrainerCrashDump%d%02d%02d-%02d%02d%02d.dmp", dmp_path,
+		tm.wYear, tm.wMonth, tm.wDay, tm.wHour, tm.wMinute, tm.wSecond);//设置dmp文件名称
+	HANDLE hFile = CreateFile(file_name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
+		FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile != INVALID_HANDLE_VALUE)
+	{
+		MINIDUMP_EXCEPTION_INFORMATION expParam;
+		expParam.ThreadId = GetCurrentThreadId();
+		expParam.ExceptionPointers = pExInfo;
+		expParam.ClientPointers = FALSE;
+
+		MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, MiniDumpWithDataSegs, (pExInfo ? &expParam : NULL), NULL, NULL);
+
+		CloseHandle(hFile);
+
+		const TCHAR *fmt =
+		{
+			L"软件遇到问题需要关闭,您的数据有可能丢失,\n\n"
+			L"我们对此引起的不便表示抱歉;请将\n\n"
+			L"\"%s\"\n\n"
+			L"发送给我们以便快速查找问题之所在,谢谢。\n\n"
+		};
+		TCHAR msg[400];
+		swprintf_s(msg, fmt, file_name);
+		MessageBox(NULL, msg, L"程序异常报告", MB_ICONERROR | MB_SYSTEMMODAL);
+	}
+	else
+	{
+		TCHAR info[300] = { L"fail to create dump file:" };
+		wcscat_s(info, file_name);
+		MessageBox(NULL, info, L"程序异常报告", MB_ICONERROR | MB_SYSTEMMODAL);
+	}
+	return EXCEPTION_EXECUTE_HANDLER;
 }
 
 

@@ -51,27 +51,6 @@ void LoggerInternal::LogInfo(const wchar_t * str, ...)
 	}
 }
 
-void LoggerInternal::Log(const wchar_t * str, va_list arg)
-{
-	if (level <= LogLevelText)
-		LogInternal(LogLevelText, str, arg);
-}
-void LoggerInternal::LogWarn(const wchar_t * str, va_list arg)
-{
-	if (level <= LogLevelWarn)
-		LogInternal(LogLevelWarn, str, arg);
-}
-void LoggerInternal::LogError(const wchar_t * str, va_list arg)
-{
-	if (level <= LogLevelError) 
-		LogInternal(LogLevelError, str, arg);
-}
-void LoggerInternal::LogInfo(const wchar_t * str, va_list arg)
-{
-	if (level <= LogLevelInfo)
-		LogInternal(LogLevelInfo, str, arg);
-}
-
 void LoggerInternal::SetLogLevel(LogLevel level)
 {
 	this->level = level;

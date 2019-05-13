@@ -21,8 +21,8 @@ public:
 
 	static bool EnableDebugPriv(const wchar_t * name);
 
-	static bool IsRunasAdmin();
-	static bool Is64BitOS();
+	static BOOL IsRunasAdmin();
+	static BOOL Is64BitOS();
 
 	static bool RunApplication(LPCWSTR path, LPCWSTR cmd);
 	static bool RunApplicationPriviledge(LPCWSTR path, LPCWSTR cmd);

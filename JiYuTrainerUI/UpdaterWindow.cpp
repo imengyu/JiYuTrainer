@@ -179,10 +179,10 @@ bool UpdaterWindow::init()
 void UpdaterWindow::OnCancel()
 {
 	if (JUpdater_Updatering()) {
-		if (MessageBox(0, L"正在下载更新，您是否确定要取消升级？", L"提示", MB_ICONINFORMATION | MB_YESNO) == IDYES)
+		if (MessageBox(_hWnd, L"正在下载更新，您是否确定要取消升级？", L"提示", MB_ICONINFORMATION | MB_YESNO) == IDYES)
 		{
 			if (JUpdater_CancelDownLoadUpdateFile())
-				JTLog(L"更新已取消");
+				MessageBox(_hWnd, L"更新已取消", L"提示", MB_ICONINFORMATION);
 			Close();
 		}
 	}

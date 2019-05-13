@@ -22,12 +22,15 @@ using namespace std;
 #define TIMER_RB_DELAY 3
 
 extern JTApp* currentApp;
+Logger * currentLogger;
 
 HWND hWndMain = NULL;
 int screenWidth, screenHeight;
 
 MainWindow::MainWindow()
 {
+	currentLogger = currentApp->GetLogger();
+
 	swprintf_s(wndClassName, L"sciter-jytrainer-main-window");
 
 	if (!initClass()) return;
@@ -234,7 +237,7 @@ void MainWindow::OnWmTimer(WPARAM wParam)
 	}
 	if (wParam == TIMER_RB_DELAY) {
 		KillTimer(_hWnd, TIMER_RB_DELAY);
-		JTLog(L"Send main path message ");
+		currentLogger->Log(L"Send main path message ");
 		currentWorker->RunOperation(TrainerWorkerOp1);
 	}
 }
@@ -263,11 +266,11 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 		wstring cmd = (cmds)[0];
 		if (cmd == L"killst") {
 			if (currentWorker->Kill())
-				JTLog(L"已成功结束极域进程");
+				currentLogger->Log(L"已成功结束极域进程");
 		}
 		else if (cmd == L"rerunst") {
 			if (currentWorker->Rerun())
-				JTLog(L"已成功运行极域进程");
+				currentLogger->Log(L"已成功运行极域进程");
 		}
 		else if (cmd == L"kill") {
 			if (len >= 2) {
@@ -275,23 +278,23 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 				if (len >= 3)  force = ((cmds)[2] == L"true");
 				currentWorker->KillProcess(_wtoi((cmds)[1].c_str()), force);
 			}
-			else JTLogError(L"缺少参数 (pid)");
+			else currentLogger->LogError(L"缺少参数 (pid)");
 		}
 		else if (cmd == L"findps") {
 			if (len >= 2) {
 				DWORD pid = 0;
 				LPCWSTR procName = (cmds)[1].c_str();
-				if (currentWorker->FindProcess(procName, &pid)) JTLogError(L"进程名为：%s 的第一个进程PID 为：%d", procName, pid);
-				else JTLogError(L"未找到进程：%s", procName);
+				if (currentWorker->FindProcess(procName, &pid)) currentLogger->LogError(L"进程名为：%s 的第一个进程PID 为：%d", procName, pid);
+				else currentLogger->LogError(L"未找到进程：%s", procName);
 			}
-			else JTLogError(L"缺少参数 (pid)");
+			else currentLogger->LogError(L"缺少参数 (pid)");
 		}
-		else if (cmd == L"ss") { currentWorker->RunOperation(TrainerWorkerOpVirusBoom); JTLog(L"已发送 ss 命令"); }
+		else if (cmd == L"ss") { currentWorker->RunOperation(TrainerWorkerOpVirusBoom); currentLogger->Log(L"已发送 ss 命令"); }
 		else if (cmd == L"sss") ExitWindowsEx(EWX_SHUTDOWN | EWX_FORCE, 0);
 		else if (cmd == L"ssr") ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0);
 		else if (cmd == L"ssss") currentApp->RunOperation(AppOperationKShutdown);
 		else if (cmd == L"sssr") currentApp->RunOperation(AppOperationKReboot);
-		else if (cmd == L"ckend") { currentWorker->RunOperation(TrainerWorkerOpVirusQuit); JTLog(L"已与极域分离"); }
+		else if (cmd == L"ckend") { currentWorker->RunOperation(TrainerWorkerOpVirusQuit); currentLogger->Log(L"已与极域分离"); }
 		else if (cmd == L"fuljydrv") {
 			currentApp->RunOperation(AppOperation2);
 		}
@@ -301,15 +304,15 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 				LPCWSTR filePath = (cmds)[1].c_str();
 				if (Path::Exists(filePath)) {
 					std::wstring *md5Sting = MD5Utils::GetFileMD5(filePath);
-					JTLog(L"MD5 : %s", md5Sting->c_str());
+					currentLogger->Log(L"MD5 : %s", md5Sting->c_str());
 					FreeStringPtr(md5Sting);
 				}
-				else JTLogError(L"文件不存在");
+				else currentLogger->LogError(L"文件不存在");
 			}
-			else JTLogError(L"缺少参数 (filePath)");
+			else currentLogger->LogError(L"缺少参数 (filePath)");
 		}
 		else if (cmd == L"whereisi") {
-			JTLog(L"本程序路径是：%s", currentApp->GetFullPath());
+			currentLogger->Log(L"本程序路径是：%s", currentApp->GetFullPath());
 		}
 		else if (cmd == L"testupdate") {
 			UpdaterWindow u(_hWnd);
@@ -321,8 +324,13 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 		else if (cmd == L"jypasswd") { 
 			LPCWSTR passwd = (LPCWSTR)currentWorker->RunOperation(TrainerWorkerOp2);
 			if (passwd) {
-				FAST_STR_BINDER(str, L"已成功读取极域密码，\n密码是：%s", 128, passwd);
-				MessageBox(_hWnd, str, L"JiYuTrainer - 提示", MB_ICONINFORMATION);
+				if (StrEmepty(passwd)) {
+					MessageBox(_hWnd, L"已成功读取极域密码，密码为空。", L"JiYuTrainer - 提示", MB_ICONINFORMATION);
+				}
+				else {
+					FAST_STR_BINDER(str, L"已成功读取极域密码，\n密码是：%s", 128, passwd);
+					MessageBox(_hWnd, str, L"JiYuTrainer - 提示", MB_ICONINFORMATION);
+				}
 			}
 			else MessageBox(_hWnd, L"极域电子教室密码读取失败！或许你可以用 mythware_super_password 试试", L"JiYuTrainer - 提示", MB_ICONEXCLAMATION);
 		}
@@ -348,9 +356,9 @@ void MainWindow::OnFirstShow()
 	hotkeyShowHide = GlobalAddAtom(L"HotKeyShowHide");
 	hotkeySwFull = GlobalAddAtom(L"HotKeySwFull");
 	if (!RegisterHotKey(_hWnd, hotkeyShowHide, MOD_ALT | MOD_CONTROL, 'J'))
-		JTLogWarn(L"热键 Ctrl+Alt+J 注册失败，请检查是否有程序占用，错误：%d", GetLastError());
+		currentLogger->LogWarn(L"热键 Ctrl+Alt+J 注册失败，请检查是否有程序占用，错误：%d", GetLastError());
 	if (!RegisterHotKey(_hWnd, hotkeySwFull, MOD_ALT | MOD_CONTROL, 'F'))
-		JTLogWarn(L"热键 Ctrl+Alt+F 注册失败，请检查是否有程序占用，错误：%d", GetLastError());
+		currentLogger->LogWarn(L"热键 Ctrl+Alt+F 注册失败，请检查是否有程序占用，错误：%d", GetLastError());
 
 	//托盘图标
 	WM_TASKBARCREATED = RegisterWindowMessage(TEXT("TaskbarCreated"));
@@ -379,7 +387,7 @@ void MainWindow::OnFirstShow()
 			update_message.set_attribute("class", L"window-extend-area shown");
 
 
-	JTLogInfo(L"控制器已启动");
+	currentLogger->LogInfo(L"控制器已启动");
 }
 
 bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UINT_PTR reason)
@@ -475,12 +483,12 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 			if (currentWorker->Running()) {
 				ele.set_value(sciter::value(false));
 				currentWorker->Stop();
-				JTLogInfo(L"控制器已停止");
+				currentLogger->LogInfo(L"控制器已停止");
 			}
 			else {
 				currentWorker->Start();
 				ele.set_value(sciter::value(true));
-				JTLogInfo(L"控制器正在运行");
+				currentLogger->LogInfo(L"控制器正在运行");
 			}
 		}
 	}

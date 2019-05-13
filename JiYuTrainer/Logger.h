@@ -24,15 +24,12 @@ class Logger
 {
 public:
 
-	virtual void Log(const wchar_t *str, ...) {}
-	virtual void LogWarn(const wchar_t *str, ...) {}
-	virtual void LogError(const wchar_t *str, ...) {}
-	virtual void LogInfo(const wchar_t *str, ...) {}
-	virtual void Log(const wchar_t *str, va_list arg) {}
-	virtual void LogWarn(const wchar_t *str, va_list arg) {}
-	virtual void LogError(const wchar_t *str, va_list arg) {}
-	virtual void LogInfo(const wchar_t *str, va_list arg) {}
+	virtual void Log(const wchar_t * str, ...) {}
+	virtual void LogWarn(const wchar_t * str, ...) {}
+	virtual void LogError(const wchar_t * str, ...) {}
+	virtual void LogInfo(const wchar_t * str, ...) {}
 
+	virtual LogLevel GetLogLevel() { return LogLevel::LogLevelDisabled; }
 	virtual void SetLogLevel(LogLevel level) {}
 	virtual void SetLogOutPut(LogOutPut output) {}
 	virtual void SetLogOutPutCallback(LogCallBack callback, LPARAM lparam) {}
@@ -40,6 +37,9 @@ public:
 
 	virtual void ResentNotCaputureLog(){}
 	virtual void WritePendingLog(const wchar_t *str, LogLevel level) {}
+
+private:
+	virtual void LogInternal(LogLevel level, const wchar_t *str, va_list arg) { }
 };
 
 class LoggerInternal : public Logger
@@ -58,11 +58,8 @@ public:
 	void LogWarn(const wchar_t *str, ...) override;
 	void LogError(const wchar_t *str, ...) override;
 	void LogInfo(const wchar_t *str, ...) override;
-	void Log(const wchar_t *str, va_list arg) override;
-	void LogWarn(const wchar_t *str, va_list arg) override;
-	void LogError(const wchar_t *str, va_list arg) override;
-	void LogInfo(const wchar_t *str, va_list arg) override;
 
+	LogLevel GetLogLevel() { return level; }
 	void SetLogLevel(LogLevel level) override;
 	void SetLogOutPut(LogOutPut output) override;
 	void SetLogOutPutFile(const wchar_t *filePath) override;

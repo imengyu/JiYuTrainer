@@ -18,6 +18,8 @@ void VLoadRealVirus();
 void VLoadMainProtect();
 void VParamInit();
 
+void VCreateFakeDesktop();
+
 void VCreateMsgCenter();
 DWORD WINAPI VMsgCenterRunThread(LPVOID lpThreadParameter);
 void VCloseMsgCenter();
@@ -48,6 +50,7 @@ void VUnInstallHooks();
 void VOpenFuckDrivers();
 void VCloseFuckDrivers();
 
+INT_PTR CALLBACK FakeDesktopWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK MainWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK JiYuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK JiYuTDDeskWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
@@ -150,6 +153,8 @@ typedef BOOL (WINAPI* fnCreateProcessW)(
 typedef HRESULT (WINAPI *fnDwmEnableComposition)(UINT uCompositionAction);
 typedef UINT (WINAPI*fnWinExec)(LPCSTR lpCmdLine,	UINT uCmdShow);
 typedef LRESULT (WINAPI *fnCallNextHookEx)( HHOOK hhk, int nCode, WPARAM wParam, LPARAM lParam);
+typedef HWND (WINAPI* fnGetDesktopWindow)(VOID);
+typedef HDC (WINAPI *fnGetWindowDC)(__in_opt HWND hWnd);
 
 //Hooks
 
@@ -246,10 +251,10 @@ BOOL WINAPI hkCreateProcessW(
 HRESULT WINAPI hkDwmEnableComposition(UINT uCompositionAction);
 UINT WINAPI hkWinExec(__in LPCSTR lpCmdLine,	 __in UINT uCmdShow);
 LRESULT WINAPI hkCallNextHookEx(HHOOK hhk, int nCode, WPARAM wParam, LPARAM lParam);
+HWND WINAPI hkGetDesktopWindow(VOID);
+HDC WINAPI hkGetWindowDC(__in_opt HWND hWnd);
 
 INT_PTR CALLBACK VShowOpConfirmWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-
-HRESULT __cdecl hkTDDeskCreateInstance(CLSID *rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, IID *riid, LPVOID *ppv);
 
 typedef struct tag_WNDCOUNTDOWN {
 	int count;

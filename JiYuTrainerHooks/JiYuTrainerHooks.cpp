@@ -44,6 +44,8 @@ HWND jiYuGBDeskRdWnd = NULL;
 HWND hWndMsgCenter = NULL;
 HWND hListBoxStatus = NULL;
 
+HWND desktopWindow, fakeDesktopWindow;
+
 HANDLE hThreadMain = NULL;
 LRESULT hWndOpConformRs = 0;
 LRESULT hWndOutOfControlConformRs = 0;
@@ -92,6 +94,8 @@ fnCreateProcessW faCreateProcessW = NULL;
 fnDwmEnableComposition faDwmEnableComposition = NULL;
 fnWinExec faWinExec = NULL;
 fnCallNextHookEx faCallNextHookEx = NULL;
+fnGetDesktopWindow faGetDesktopWindow = NULL;
+fnGetWindowDC faGetWindowDC = NULL;
 
 bool loaded = false;
 
@@ -148,7 +152,8 @@ void VLoad() {
 	loaded = true;
 }
 void VRunMain() {
-	
+	desktopWindow = GetDesktopWindow();
+
 	VCreateMsgCenter();
 	VOpenFuckDrivers();
 	VInstallHooks(VirusModeHook);
@@ -179,9 +184,13 @@ void VLoadMainProtect() {
 }
 
 DWORD WINAPI VMsgCenterRunThread(LPVOID lpThreadParameter) {
-	hWndMsgCenter = CreateDialog(hInst, MAKEINTRESOURCE(IDD_MSGCT), NULL, MainWndProc);
+
+	fakeDesktopWindow = CreateDialog(hInst, MAKEINTRESOURCE(IDD_FAKEDESKTOP), desktopWindow, FakeDesktopWndProc);
+	hWndMsgCenter = CreateDialog(hInst, MAKEINTRESOURCE(IDD_MSGCT), desktopWindow, MainWndProc);
 	ShowWindow(hWndMsgCenter, SW_SHOW);
 	UpdateWindow(hWndMsgCenter);
+	ShowWindow(fakeDesktopWindow, SW_SHOW);
+	UpdateWindow(fakeDesktopWindow);
 
 	hListBoxStatus = GetDlgItem(hWndMsgCenter, IDC_STATUS_LIST);
 
@@ -692,7 +701,8 @@ hk9 = 0, hk10 = 0, hk11 = 0, hk12 = 0,
 hk13 = 0, hk14 = 0, hk15 = 0, hk16 = 0,
 hk17 = 0, hk18 = 0, hk19= 0, hk20 = 0,
 hk21 = 0, hk22 = 0, hk23 = 0, hk24 = 0,
-hk25 = 0, hk26 = 0, hk27 = 0, hk28 = 0;
+hk25 = 0, hk26 = 0, hk27 = 0, hk28 = 0,
+hk29 = 0, hk30 = 0, hk31 = 0, hk32 = 0;
 
 void VInstallHooks(VirusMode mode) {
 
@@ -715,6 +725,8 @@ void VInstallHooks(VirusMode mode) {
 	faSetWindowLongW = (fnSetWindowLongW)GetProcAddress(hUser32, "SetWindowLongW");
 	faShowWindow = (fnShowWindow)GetProcAddress(hUser32, "ShowWindow");
 	faCallNextHookEx = (fnCallNextHookEx)GetProcAddress(hUser32, "CallNextHookEx");
+	faGetDesktopWindow = (fnGetDesktopWindow)GetProcAddress(hUser32, "GetDesktopWindow");
+	faGetWindowDC = (fnGetWindowDC)GetProcAddress(hUser32, "GetDesktopWindow");
 
 	raDeviceIoControl = (fnDeviceIoControl)GetProcAddress(hKernel32, "DeviceIoControl");
 	faCreateFileA = (fnCreateFileA)GetProcAddress(hKernel32, "CreateFileA");
@@ -727,6 +739,8 @@ void VInstallHooks(VirusMode mode) {
 	faShellExecuteExW = (fnShellExecuteExW)GetProcAddress(hShell32, "ShellExecuteExW");
 
 	if(hDwmApi) faDwmEnableComposition = (fnDwmEnableComposition)GetProcAddress(hDwmApi, "DwmEnableComposition");
+
+	
 
 	//HMODULE hTDDesk2 = GetModuleHandle(L"libtddesk2.dll");
 	//if (hTDDesk2) {
@@ -767,6 +781,9 @@ void VInstallHooks(VirusMode mode) {
 		if (faDwmEnableComposition) hk23 = Mhook_SetHook((PVOID*)&faDwmEnableComposition, hkDwmEnableComposition);
 		
 		hk24 = Mhook_SetHook((PVOID*)&faWinExec, hkWinExec);
+		
+		hk26 = Mhook_SetHook((PVOID*)&faGetWindowDC, hkGetWindowDC);
+		hk27 = Mhook_SetHook((PVOID*)&faGetDesktopWindow, hkGetDesktopWindow);
 	}
 	if (mode == VirusModeMaster) {
 		
@@ -805,6 +822,8 @@ void VUnInstallHooks() {
 	if (hk23) Mhook_Unhook((PVOID*)&faDwmEnableComposition);
 	if (hk24) Mhook_Unhook((PVOID*)&faWinExec);
 	if (hk25) Mhook_Unhook((PVOID*)&faCallNextHookEx);
+	if (hk26) Mhook_Unhook((PVOID*)&faGetWindowDC);
+	if (hk27) Mhook_Unhook((PVOID*)&faGetDesktopWindow);
 
 	if (g_hhook) {
 		UnhookWindowsHookEx(g_hhook);
@@ -1137,6 +1156,17 @@ LRESULT WINAPI hkCallNextHookEx(HHOOK hhk, int nCode, WPARAM wParam, LPARAM lPar
 {
 	return faCallNextHookEx(hhk, nCode, wParam, lParam);
 }
+HWND WINAPI hkGetDesktopWindow(VOID)
+{
+	if (loaded)
+		return allowMonitor ? desktopWindow : fakeDesktopWindow;
+	return desktopWindow;
+}
+HDC WINAPI hkGetWindowDC(__in_opt HWND hWnd) {
+	if (loaded && hWnd == desktopWindow && !allowMonitor)
+		return faGetWindowDC(fakeDesktopWindow);
+	return faGetWindowDC(hWnd);
+}
 
 //HOOK Virus stub
 EXTERN_C HRESULT __declspec(dllexport) __cdecl TDAjustCreateInstance(CLSID *rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, IID *riid, LPVOID *ppv)
@@ -1147,6 +1177,32 @@ EXTERN_C HRESULT __declspec(dllexport) __cdecl TDAjustCreateInstance(CLSID *rcls
 HBITMAP hIconRed, hIconGreen, hIconGrey;
 HWND hStatusFakeFull, hStatusMain, hStatusLock;
 
+INT_PTR CALLBACK FakeDesktopWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
+	switch (message)
+	{
+	case WM_INITDIALOG: {
+		if(raSetWindowPos) raSetWindowPos(hDlg, HWND_BOTTOM, -screenWidth, -screenHeight, screenWidth, screenHeight, SWP_NOACTIVATE);
+		else SetWindowPos(hDlg, HWND_BOTTOM, -screenWidth, -screenHeight, screenWidth, screenHeight, SWP_NOACTIVATE);
+		return TRUE;
+	}
+	case WM_DESTROY: {
+
+		break;
+	}
+	case WM_DISPLAYCHANGE: {
+		VParamInit();
+		SendMessage(hDlg, WM_INITDIALOG, NULL, NULL);
+		break;
+	}
+	case WM_QUERYENDSESSION: {
+		DestroyWindow(hDlg);
+		break;
+	}
+	default:
+		break;
+	}
+	return 0;
+}
 INT_PTR CALLBACK MainWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	switch (message)

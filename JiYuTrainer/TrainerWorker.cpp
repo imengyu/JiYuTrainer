@@ -13,6 +13,8 @@
 #include "SettingHlp.h"
 
 extern JTApp *currentApp;
+extern LoggerInternal * currentLogger;
+
 TrainerWorkerInternal * TrainerWorkerInternal::currentTrainerWorker = nullptr;
 
 extern NtQuerySystemInformationFun NtQuerySystemInformation;
@@ -46,8 +48,8 @@ void TrainerWorkerInternal::Init()
 	hDesktop = OpenDesktop(L"Default", 0, FALSE, DESKTOP_ENUMERATE);
 	UpdateScreenSize();
 
-	if (LocateStudentMainLocation()) JTLog(L"已定位极域电子教室位置： %s", _StudentMainPath.c_str());
-	else JTLogWarn(L"无法定位极域电子教室位置");
+	if (LocateStudentMainLocation()) currentLogger->Log(L"已定位极域电子教室位置： %s", _StudentMainPath.c_str());
+	else currentLogger->LogWarn(L"无法定位极域电子教室位置");
 
 	UpdateState();
 	UpdateStudentMainInfo(false);
@@ -119,13 +121,13 @@ void TrainerWorkerInternal::HandleMessageFromVirus(LPCWSTR buf)
 		{
 			if (arr[1] == L"succ") {
 				_StudentMainControlled = true;
-				JTLogInfo(L"Receive ctl success message ");
+				currentLogger->LogInfo(L"Receive ctl success message ");
 				if (_Callback) _Callback->OnBeforeSendStartConf();
 				UpdateState();
 			}
 			else if (arr[1] == L"immck") {
 				RunCk();
-				JTLogInfo(L"Receive  immck message ");
+				currentLogger->LogInfo(L"Receive  immck message ");
 			}
 			else if (arr[1] == L"jyk") {
 				if (arr.size() >= 3) {
@@ -140,7 +142,7 @@ void TrainerWorkerInternal::HandleMessageFromVirus(LPCWSTR buf)
 			//wwcd
 			int wcdc = _wtoi(arr[1].c_str());
 			if (wcdc % 20 == 0)
-				JTLogInfo(L"Receive  watch dog message %d ", wcdc);
+				currentLogger->LogInfo(L"Receive  watch dog message %d ", wcdc);
 		}
 	}
 }
@@ -152,7 +154,7 @@ void TrainerWorkerInternal::SendMessageToVirus(LPCWSTR buf)
 bool TrainerWorkerInternal::Kill(bool autoWork)
 {
 	if (_StudentMainPid <= 4) {
-		JTLogError(L"未找到极域主进程");
+		currentLogger->LogError(L"未找到极域主进程");
 		return false;
 	}
 	if (_StudentMainControlled){
@@ -180,7 +182,7 @@ bool TrainerWorkerInternal::Kill(bool autoWork)
 			return true;
 		}
 		else {
-			JTLogError(L"打开进程错误：0x%08X，请手动结束", status);
+			currentLogger->LogError(L"打开进程错误：0x%08X，请手动结束", status);
 			return false;
 		}
 	}
@@ -196,7 +198,7 @@ bool TrainerWorkerInternal::Kill(bool autoWork)
 	else {
 		if (status == STATUS_ACCESS_DENIED) goto FORCEKILL;
 		else if (status != STATUS_INVALID_CID && status != STATUS_INVALID_HANDLE) {
-			JTLogError(L"结束进程错误：0x%08X，请手动结束", status);
+			currentLogger->LogError(L"结束进程错误：0x%08X，请手动结束", status);
 			if (!autoWork)
 				MessageBox(hWndMain, L"无法结束极域电子教室，您需要使用其他工具手动结束", L"JiYuTrainer - 错误", MB_ICONERROR);;
 			CloseHandle(hProcess);
@@ -231,7 +233,7 @@ FORCEKILL:
 bool TrainerWorkerInternal::Rerun(bool autoWork)
 {
 	if (!_StudentMainFileLocated) {
-		JTLogWarn(L"未找到极域电子教室");
+		currentLogger->LogWarn(L"未找到极域电子教室");
 		if (!autoWork && _Callback)
 			_Callback->OnSimpleMessageCallback(L"<h5>我们无法在此计算机上找到极域电子教室，您需要手动启动</h5>");
 		return false;
@@ -308,11 +310,11 @@ void TrainerWorkerInternal::RunResetPid()
 				_VirusInstalled = true;
 				_NextLoopGetCkStat = true;
 
-				JTLog(L"向 StudentMain.exe [%d] 注入DLL成功", newPid);
+				currentLogger->Log(L"向 StudentMain.exe [%d] 注入DLL成功", newPid);
 			}
-			else  JTLogError(L"向 StudentMain.exe [%d] 注入DLL失败", newPid);
+			else  currentLogger->LogError(L"向 StudentMain.exe [%d] 注入DLL失败", newPid);
 
-			JTLog(L"已锁定 StudentMain.exe [%d]", newPid);
+			currentLogger->Log(L"已锁定 StudentMain.exe [%d]", newPid);
 
 			UpdateState();
 			UpdateStudentMainInfo(false);
@@ -324,7 +326,7 @@ void TrainerWorkerInternal::RunResetPid()
 		{
 			_StudentMainPid = 0;
 
-			JTLog(L"极域主进程 StudentMain.exe 已退出", newPid);
+			currentLogger->Log(L"极域主进程 StudentMain.exe 已退出", newPid);
 
 			UpdateState();
 			UpdateStudentMainInfo(false);
@@ -337,8 +339,8 @@ void TrainerWorkerInternal::RunResetPid()
 		if (_MasterHelperPid != newPid)
 		{
 			_MasterHelperPid = newPid;
-			if (InstallVirusForMaster()) JTLog(L"向 MasterHelper.exe [%d] 注入DLL成功", newPid);
-			else  JTLogError(L"向 MasterHelper.exe [%d] 注入DLL失败", newPid);
+			if (InstallVirusForMaster()) currentLogger->Log(L"向 MasterHelper.exe [%d] 注入DLL成功", newPid);
+			else  currentLogger->LogError(L"向 MasterHelper.exe [%d] 注入DLL失败", newPid);
 		}
 	}
 	else {
@@ -357,7 +359,7 @@ bool TrainerWorkerInternal::FlushProcess()
 		current_system_process = (PSYSTEM_PROCESSES)malloc(dwSize);
 		status = NtQuerySystemInformation(SystemProcessInformation, current_system_process, dwSize, 0);
 		if (!NT_SUCCESS(status)) {
-			JTLogError(L"NtQuerySystemInformation failed ! 0x%08X", status);
+			currentLogger->LogError(L"NtQuerySystemInformation failed ! 0x%08X", status);
 			return false;
 		}
 	}
@@ -381,33 +383,33 @@ bool TrainerWorkerInternal::KillProcess(DWORD pid, bool force)
 	NTSTATUS status = MOpenProcessNt(_StudentMainPid, &hProcess);
 	if (!NT_SUCCESS(status)) {
 		if (status == STATUS_INVALID_CID || status == STATUS_INVALID_HANDLE) {
-			JTLogError(L"找不到进程 [%d] ", pid);
+			currentLogger->LogError(L"找不到进程 [%d] ", pid);
 			return true;
 		}
 		else {
-			JTLogError(L"打开进程 [%d] 错误：0x%08X，请手动结束", pid);
+			currentLogger->LogError(L"打开进程 [%d] 错误：0x%08X，请手动结束", pid);
 			return false;
 		}
 	}
 	status = MTerminateProcessNt(0, hProcess);
 	if (NT_SUCCESS(status)) {
-		JTLog(L"进程 [%d] 结束成功", pid);
+		currentLogger->Log(L"进程 [%d] 结束成功", pid);
 		CloseHandle(hProcess);
 		return TRUE;
 	}
 	else {
 		if (status == STATUS_ACCESS_DENIED) {
 			if (force) goto FORCEKILL;
-			else JTLogError(L"结束进程 [%d] 错误：拒绝访问。可尝试使用驱动结束", pid);
+			else currentLogger->LogError(L"结束进程 [%d] 错误：拒绝访问。可尝试使用驱动结束", pid);
 			CloseHandle(hProcess);
 		}
 		else if (status != STATUS_INVALID_CID && status != STATUS_INVALID_HANDLE) {
-			JTLogError(L"结束进程 [%d] 错误：0x%08X，请手动结束", pid);
+			currentLogger->LogError(L"结束进程 [%d] 错误：0x%08X，请手动结束", pid);
 			CloseHandle(hProcess);
 			return false;
 		}
 		else if (status == STATUS_INVALID_CID || status == STATUS_INVALID_HANDLE) {
-			JTLogError(L"找不到进程 [%d] ", pid);
+			currentLogger->LogError(L"找不到进程 [%d] ", pid);
 			CloseHandle(hProcess);
 			return true;
 		}
@@ -416,15 +418,15 @@ FORCEKILL:
 	if (DriverLoaded())
 	{
 		if (KForceKill(_StudentMainPid, &status)) {
-			JTLog(L"进程 [%d] 强制结束成功", pid);
+			currentLogger->Log(L"进程 [%d] 强制结束成功", pid);
 			CloseHandle(hProcess);
 			return true;
 		}
 		else {
-			JTLogError(L"驱动强制结束进程 [%d] 错误：0x%08X", pid);
+			currentLogger->LogError(L"驱动强制结束进程 [%d] 错误：0x%08X", pid);
 		}
 	}
-	else JTLog(L"驱动未加载，无法强制结束进程");
+	else currentLogger->Log(L"驱动未加载，无法强制结束进程");
 	CloseHandle(hProcess);
 	return false;
 }
@@ -434,7 +436,7 @@ bool TrainerWorkerInternal::ReadTopDomanPassword()
 	//普通注册表读取，适用于4.0版本
 
 	HKEY hKey;
-	LRESULT lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\TopDomain\\e-Learning Class Standard\\1.00", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
+	LRESULT lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, SysHlp::Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\TopDomain\\e-Learning Class Standard\\1.00" : L"SOFTWARE\\TopDomain\\e-Learning Class Standard\\1.00", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
 	if (lastError == ERROR_SUCCESS) {
 		DWORD dwType = REG_SZ;
 		WCHAR Data[32];
@@ -454,7 +456,7 @@ bool TrainerWorkerInternal::ReadTopDomanPassword()
 
 	//HKEY_LOCAL_MACHINE\SOFTWARE\TopDomain\e-Learning Class\Student Knock1
 READ_EX:
-	lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\TopDomain\\e-Learning Class\\Student", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
+	lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, SysHlp::Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\TopDomain\\e-Learning Class\\Student" : L"SOFTWARE\\TopDomain\\e-Learning Class\\Student", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
 	if (lastError == ERROR_SUCCESS) {
 
 		DWORD dwType = REG_BINARY;
@@ -472,17 +474,17 @@ READ_EX:
 			}
 			else return false;
 		}
-		else JTLogWarn(L"RegQueryValueEx Failed : %d [in %s]", lastError, L"ReadTopDomanUnInstallPassword RegQueryValueEx(hKey, L\"Knock1\", 0, &dwType, (LPBYTE)szData, &dwSize);");
+		else currentLogger->LogWarn(L"RegQueryValueEx Failed : %d [in %s]", lastError, L"ReadTopDomanUnInstallPassword RegQueryValueEx(hKey, L\"Knock1\", 0, &dwType, (LPBYTE)szData, &dwSize);");
 		RegCloseKey(hKey);
 	}
-	else JTLogWarn(L"RegOpenKeyEx Failed : %d [in %s]", lastError, L"ReadTopDomanUnInstallPassword");
+	else currentLogger->LogWarn(L"RegOpenKeyEx Failed : %d [in %s]", lastError, L"ReadTopDomanUnInstallPassword");
 	return false;
 }
 bool TrainerWorkerInternal::LocateStudentMainLocation()
 {
 	//注册表查找 极域 路径
 	HKEY hKey;
-	LRESULT lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learning Class V6.0", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
+	LRESULT lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, SysHlp::Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learning Class V6.0" : L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learning Class V6.0", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
 	if (lastError == ERROR_SUCCESS) {
 
 		DWORD dwType = REG_SZ;
@@ -495,22 +497,24 @@ bool TrainerWorkerInternal::LocateStudentMainLocation()
 				_StudentMainFileLocated = true;
 				return true;
 			}
-			else JTLog(L"读取注册表 [DisplayIcon] 获得了一个无效的极域电子教室路径 : %s", szData);
+			else currentLogger->Log(L"读取注册表 [DisplayIcon] 获得了一个无效的极域电子教室路径 : %s", szData);
 		}
-		else JTLogWarn(L"RegQueryValueEx Failed : %d [in %s]", lastError, L"LocateStudentMainLocation RegQueryValueEx(hKey, L\"DisplayIcon\", 0, &dwType, (LPBYTE)szData, &dwSize);");
+		else currentLogger->LogWarn(L"RegQueryValueEx Failed : %d [in %s]", lastError, L"LocateStudentMainLocation RegQueryValueEx(hKey, L\"DisplayIcon\", 0, &dwType, (LPBYTE)szData, &dwSize);");
 
 		RegCloseKey(hKey);
 	}
-	else JTLogWarn(L"RegOpenKeyEx Failed : %d [in %s]", lastError, L"LocateStudentMainLocation");
+	else currentLogger->LogWarn(L"RegOpenKeyEx Failed : %d [in %s]", lastError, L"LocateStudentMainLocation");
 
 	//直接尝试查找
-	LPCWSTR mabeInHere[4] = {
+	LPCWSTR mabeInHere[6] = {
 		L"c:\\Program Files\\Mythware\\极域课堂管理系统软件V6.0 2016 豪华版\\StudentMain.exe",
 		L"C:\\Program Files\\Mythware\\e-Learning Class\\StudentMain.exe",
+		L"C:\\Program Files (x86)\\Mythware\\极域课堂管理系统软件V6.0 2016 豪华版",
+		L"C:\\Program Files (x86)\\Mythware\\e - Learning Class\\StudentMain.exe",
 		L"C:\\e-Learning Class\\StudentMain.exe",
 		L"c:\\极域课堂管理系统软件V6.0 2016 豪华版\\StudentMain.exe",
 	};
-	for (int i = 0; i < 4; i++) {
+	for (int i = 0; i < 6; i++) {
 		if (Path::Exists(mabeInHere[i])) {
 			_StudentMainPath = mabeInHere[i];
 			_StudentMainFileLocated = true;
@@ -537,7 +541,7 @@ bool TrainerWorkerInternal::LocateStudentMain(DWORD *outFirstPid)
 						if (MGetProcessFullPathEx(hProcess, buffer)) {
 							_StudentMainPath = buffer;
 							_StudentMainFileLocated = true;
-							JTLog(L"通过进程 StudentMain.exe [%d] 定位到位置： %s", (DWORD)p->ProcessId, _StudentMainPath);
+							currentLogger->Log(L"通过进程 StudentMain.exe [%d] 定位到位置： %s", (DWORD)p->ProcessId, _StudentMainPath);
 							CloseHandle(hProcess);
 							return true;
 						}
@@ -649,7 +653,7 @@ bool TrainerWorkerInternal::InjectDll(DWORD pid, LPCWSTR dllPath)
 	//打开进程
 	NTSTATUS ntStatus = MOpenProcessNt(pid, &hRemoteProcess);
 	if (!NT_SUCCESS(ntStatus)) {
-		JTLogError(L"注入病毒失败！打开进程失败：0x%08X", ntStatus);
+		currentLogger->LogError(L"注入病毒失败！打开进程失败：0x%08X", ntStatus);
 		return FALSE;
 	}
 
@@ -670,7 +674,7 @@ bool TrainerWorkerInternal::InjectDll(DWORD pid, LPCWSTR dllPath)
 	HANDLE hRemoteThread;
 	if ((hRemoteThread = CreateRemoteThread(hRemoteProcess, NULL, 0, pfnStartAddr, pszLibFileRemote, 0, NULL)) == NULL)
 	{
-		JTLogError(L"注入线程失败! 错误：CreateRemoteThread %d", GetLastError());
+		currentLogger->LogError(L"注入线程失败! 错误：CreateRemoteThread %d", GetLastError());
 		return FALSE;
 	}
 
@@ -687,7 +691,7 @@ bool TrainerWorkerInternal::UnInjectDll(DWORD pid, LPCWSTR moduleName)
 	//打开进程
 	NTSTATUS ntStatus = MOpenProcessNt(pid, &hProcess);
 	if (!NT_SUCCESS(ntStatus)) {
-		JTLogError(L"卸载病毒失败！打开进程失败：0x%08X", ntStatus);
+		currentLogger->LogError(L"卸载病毒失败！打开进程失败：0x%08X", ntStatus);
 		return FALSE;
 	}
 	DWORD pszLibFileRemoteSize = sizeof(wchar_t) * (lstrlen(moduleName) + 1);
@@ -702,7 +706,7 @@ bool TrainerWorkerInternal::UnInjectDll(DWORD pid, LPCWSTR moduleName)
 	LPVOID pFunc = GetProcAddress(GetModuleHandle(TEXT("Kernel32")), "GetModuleHandleW");
 	HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)pFunc, pszLibFileRemote, 0, &dwID);
 	if (!hThread) {
-		JTLogError(L"卸载病毒失败！创建远程线程失败：%d", GetLastError());
+		currentLogger->LogError(L"卸载病毒失败！创建远程线程失败：%d", GetLastError());
 		return FALSE;
 	}
 
@@ -717,7 +721,7 @@ bool TrainerWorkerInternal::UnInjectDll(DWORD pid, LPCWSTR moduleName)
 	pFunc = GetProcAddress(GetModuleHandle(TEXT("Kernel32")), "FreeLibrary"); ;
 	hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)pFunc, (LPVOID)dwHandle, 0, &dwID);
 	if (!hThread) {
-		JTLogError(L"卸载病毒失败！创建远程线程失败：%d", GetLastError());
+		currentLogger->LogError(L"卸载病毒失败！创建远程线程失败：%d", GetLastError());
 		return FALSE;
 	}
 	
@@ -732,12 +736,12 @@ bool TrainerWorkerInternal::UnLoadAllVirus()
 {
 	if (_MasterHelperPid > 4) {
 		if (UnInjectDll(_MasterHelperPid, L"JiYuTrainerHooks.dll"))
-			JTLog(L"已强制卸载 MasterHelper 病毒");
+			currentLogger->Log(L"已强制卸载 MasterHelper 病毒");
 		//KillProcess(_MasterHelperPid, false);
 	}
 	if (_StudentMainPid > 4)
 		if (UnInjectDll(_StudentMainPid, L"JiYuTrainerHooks.dll"))
-			JTLog(L"已强制卸载 StudentMain 病毒");
+			currentLogger->Log(L"已强制卸载 StudentMain 病毒");
 
 	return false;
 }
@@ -767,14 +771,14 @@ void TrainerWorkerInternal::FakeFull(bool fk) {
 
 			}*/
 			_FakeBroadcastFull = true;
-			JTLog(L"调整广播窗口假装全屏状态");
+			currentLogger->Log(L"调整广播窗口假装全屏状态");
 		}
 		else {
 			_FakeBroadcastFull = false;
 			FixWindow(_CurrentBroadcastWnd, (LPWSTR)L"");
 			int w = (int)((double)screenWidth * (3.0 / 4.0)), h = (int)((double)screenHeight * (double)(4.0 / 5.0));
 			SetWindowPos(_CurrentBroadcastWnd, 0, (screenWidth - w) / 2, (screenHeight - h) / 2, w, h, SWP_NOZORDER | SWP_SHOWWINDOW);
-			JTLog(L"取消广播窗口假装全屏状态");
+			currentLogger->Log(L"取消广播窗口假装全屏状态");
 		}
 	}
 	if (_CurrentBlackScreenWnd) {
@@ -785,12 +789,12 @@ void TrainerWorkerInternal::FakeFull(bool fk) {
 			SendMessage(_CurrentBlackScreenWnd, WM_SIZE, 0, MAKEWPARAM(screenWidth, screenHeight));
 			SendMessage(_CurrentBlackScreenWnd, WM_SIZE, 0, MAKEWPARAM(screenWidth, screenHeight));
 			_FakeBlackScreenFull = true;
-			JTLog(L"调整黑屏窗口假装全屏状态");
+			currentLogger->Log(L"调整黑屏窗口假装全屏状态");
 		}
 		else {
 			_FakeBlackScreenFull = false;
 			FixWindow(_CurrentBlackScreenWnd, (LPWSTR)L"BlackScreen Window");
-			JTLog(L"取消黑屏窗口假装全屏状态");
+			currentLogger->Log(L"取消黑屏窗口假装全屏状态");
 		}
 	}
 	if (!fk && !_CurrentBlackScreenWnd && !_CurrentBroadcastWnd && (_FakeBlackScreenFull || _FakeBroadcastFull)) {

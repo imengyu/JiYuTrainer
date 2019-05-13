@@ -17,7 +17,7 @@ UIEXPORT_CFUNC(void*) JTUI_GetMainWindow()
 }
 UIEXPORT_CFUNC(int) JTUI_RunMain()
 {
-	currentApp = (JTApp*)JTGetCurrentApp();
+	currentApp = (JTApp*)JTGetApp();
 
 	SciterSetOption(NULL, SCITER_SET_SCRIPT_RUNTIME_FEATURES, ALLOW_FILE_IO | ALLOW_SOCKET_IO | ALLOW_EVAL | ALLOW_SYSINFO);
 	SciterSetOption(NULL, SCITER_SET_DEBUG_MODE, TRUE);
@@ -30,7 +30,7 @@ UIEXPORT_CFUNC(int) JTUI_RunMain()
 }
 UIEXPORT_CFUNC(int) JTUI_RunUpdate() 
 {
-	currentApp = (JTApp*)JTGetCurrentApp();
+	currentApp = (JTApp*)JTGetApp();
 	UpdaterWindow updaterWindow(NULL);
 	return updaterWindow.RunLoop();
 }

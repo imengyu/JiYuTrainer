@@ -2,7 +2,10 @@
 #include "nthlp.h"
 #include "StringHlp.h"
 #include "JiYuTrainer.h"
+#include "Logger.h"
 #include <ShellAPI.h>
+
+extern LoggerInternal * currentLogger;
 
 NtSuspendThreadFun NtSuspendThread;
 NtResumeThreadFun NtResumeThread;
@@ -36,12 +39,6 @@ void MLoadNt()
 	NtQuerySystemInformation = (NtQuerySystemInformationFun)GetProcAddress(hNtdll, "NtQuerySystemInformation");
 	NtQueryInformationProcess = (NtQueryInformationProcessFun)GetProcAddress(hNtdll, "NtQueryInformationProcess");
 	NtClose = (NtCloseFun)GetProcAddress(hNtdll, "NtClose");
-
-	HMODULE fuckModul = GetModuleHandle(L"LibTDProcHook32.dll");
-	if (fuckModul) {
-
-		FreeLibrary(fuckModul);
-	}
 }
 
 NTSTATUS MQueryProcessVariableSize(_In_ HANDLE ProcessHandle, _In_ PROCESSINFOCLASS ProcessInformationClass, _Out_ PVOID *Buffer)
@@ -118,12 +115,12 @@ NTSTATUS MSuspendProcessNt(DWORD dwPId, HANDLE handle)
 				if (rs == STATUS_SUCCESS)
 					return STATUS_SUCCESS;
 				else {
-					JTLogError(L"SuspendProcess failed (PID : %d) NTSTATUS : 0x%08X", dwPId, rs);
+					currentLogger->LogError(L"SuspendProcess failed (PID : %d) NTSTATUS : 0x%08X", dwPId, rs);
 					return rs;
 				}
 			}
 		}
-		else JTLogError(L"SuspendProcess failed in OpenProcess : (PID : %d) NTSTATUS : 0x%08X", dwPId, rs);
+		else currentLogger->LogError(L"SuspendProcess failed in OpenProcess : (PID : %d) NTSTATUS : 0x%08X", dwPId, rs);
 		return rs;
 	}
 	else if (handle)
@@ -131,7 +128,7 @@ NTSTATUS MSuspendProcessNt(DWORD dwPId, HANDLE handle)
 		NTSTATUS  rs = NtSuspendProcess(handle);
 		if (rs == 0) return STATUS_SUCCESS;
 		else {
-			JTLogError(L"SuspendProcess failed NTSTATUS : 0x%08X", rs);
+			currentLogger->LogError(L"SuspendProcess failed NTSTATUS : 0x%08X", rs);
 			return rs;
 		}
 	}
@@ -149,12 +146,12 @@ NTSTATUS MResumeProcessNt(DWORD dwPId, HANDLE handle)
 				NtClose(hProcess);
 				if (rs == STATUS_SUCCESS) return STATUS_SUCCESS;
 				else {
-					JTLogError(L"RusemeProcess failed (PID : %d) NTSTATUS : 0x%08X", dwPId, rs);
+					currentLogger->LogError(L"RusemeProcess failed (PID : %d) NTSTATUS : 0x%08X", dwPId, rs);
 					return rs;
 				}
 			}
 		}
-		else JTLogError(L"RusemeProcess failed in OpenProcess : (PID : %d) NTSTATUS : 0x%08X", dwPId, rs);
+		else currentLogger->LogError(L"RusemeProcess failed in OpenProcess : (PID : %d) NTSTATUS : 0x%08X", dwPId, rs);
 		return rs;
 	}
 	else if (handle)
@@ -163,7 +160,7 @@ NTSTATUS MResumeProcessNt(DWORD dwPId, HANDLE handle)
 		if (rs == 0)return STATUS_SUCCESS;
 		else
 		{
-			JTLogError(L"RusemeProcess failed NTSTATUS : 0x%08X", rs);
+			currentLogger->LogError(L"RusemeProcess failed NTSTATUS : 0x%08X", rs);
 			return rs;
 		}
 	}
@@ -203,7 +200,7 @@ NTSTATUS MTerminateProcessNt(DWORD dwId, HANDLE handle)
 		NTSTATUS rs = NtTerminateProcess(handle, 0);
 		if (rs == 0) return STATUS_SUCCESS;
 		else {
-			JTLogError(L"TerminateProcess failed NTSTATUS : 0x%08X", rs);
+			currentLogger->LogError(L"TerminateProcess failed NTSTATUS : 0x%08X", rs);
 			return rs;
 		}
 	}
@@ -218,7 +215,7 @@ NTSTATUS MTerminateProcessNt(DWORD dwId, HANDLE handle)
 				NtClose(hProcess);
 				if (rs == 0) return STATUS_SUCCESS;
 				else {
-					JTLogError(L"TerminateProcess failed : (PID : %d) NTSTATUS : 0x%08X", dwId, rs);
+					currentLogger->LogError(L"TerminateProcess failed : (PID : %d) NTSTATUS : 0x%08X", dwId, rs);
 					return rs;
 				}
 			}

@@ -106,7 +106,7 @@ bool SysHlp::EnableDebugPriv(const wchar_t * name)
 	//调整权限
 	return AdjustTokenPrivileges(hToken, 0, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL);
 }
-bool SysHlp::IsRunasAdmin()
+BOOL SysHlp::IsRunasAdmin()
 {
 	if (_IsRunasAdmin = -1)
 	{
@@ -134,7 +134,7 @@ bool SysHlp::IsRunasAdmin()
 	}
 	return _IsRunasAdmin;
 }
-bool SysHlp::Is64BitOS()
+BOOL SysHlp::Is64BitOS()
 {
 	if (_Is64BitOS == -1)
 	{

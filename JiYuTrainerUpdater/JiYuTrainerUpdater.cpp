@@ -37,6 +37,7 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 }
 
 JTApp* appCurrent = nullptr;
+Logger * appLogger = nullptr;
 
 UPEXPORT_CFUNC(BOOL) JUpdater_CheckInternet()
 {
@@ -44,7 +45,8 @@ UPEXPORT_CFUNC(BOOL) JUpdater_CheckInternet()
 }
 UPEXPORT_CFUNC(BOOL) JUpdater_CheckUpdate(bool byUser)
 {
-	appCurrent = (JTApp*)JTGetCurrentApp();
+	appCurrent = (JTApp*)JTGetApp();
+	appLogger = appCurrent->GetLogger();
 
 	if (!byUser && CheckLastUpdateDate(appCurrent->GetPartFullPath(PART_INI)))
 		return UPDATE_STATUS_CHECKED;
@@ -58,7 +60,7 @@ int CheckServerForUpdateInfo(bool byUser) {
 	string getResponseStr;
 	auto res = curl_get_req(getUrlStr, getResponseStr);
 	if (res != CURLE_OK) {
-		JTLogError(L"检测更新错误：curl_easy_perform() failed:  %S", curl_easy_strerror(res));
+		appLogger->LogError(L"检测更新错误：curl_easy_perform() failed:  %S", curl_easy_strerror(res));
 		return UPDATE_STATUS_COULD_NOT_CONNECT;
 	}
 	else {
@@ -68,7 +70,7 @@ int CheckServerForUpdateInfo(bool byUser) {
 			return UPDATE_STATUS_LATEST;
 		}
 		else {
-			JTLogError(L"检测更新错误：update service return bad result :  %S", getResponseStr.c_str());
+			appLogger->LogError(L"检测更新错误：update service return bad result :  %S", getResponseStr.c_str());
 			return UPDATE_STATUS_NOT_SUPPORT;
 		}
 	}
@@ -122,7 +124,7 @@ UPEXPORT_CFUNC(BOOL) JUpdater_DownLoadUpdateFile(UpdateDownloadCallback callBack
 	string getResponseStr;
 	auto res = curl_get_req(getUrlStr, getResponseStr);
 	if (res != CURLE_OK) {
-		JTLogError(L"获取更新错误 : curl_easy_perform() failed:  %S", curl_easy_strerror(res));
+		appLogger->LogError(L"获取更新错误 : curl_easy_perform() failed:  %S", curl_easy_strerror(res));
 		callBack(0, callBackLparam, UPDATE_STATUS_COULD_NOT_CONNECT);
 	}
 	else if (getResponseStr != "")
@@ -132,7 +134,7 @@ UPEXPORT_CFUNC(BOOL) JUpdater_DownLoadUpdateFile(UpdateDownloadCallback callBack
 		return true;
 	}
 	else {
-		JTLogError(L"获取更新错误，空返回值");
+		appLogger->LogError(L"获取更新错误，空返回值");
 		callBack(0, callBackLparam, UPDATE_STATUS_COULD_NOT_CONNECT);
 	}
 
@@ -197,7 +199,7 @@ DWORD WINAPI UpdateDownloadThread(LPVOID lpThreadParameter)
 
 		errno_t err = _wfopen_s(&updateFile, updateFilePath, L"wb");
 		if (!updateFile) {
-			JTLogError(L"创建更新文件错误 : fopen:  %d", err);
+			appLogger->LogError(L"创建更新文件错误 : fopen:  %d", err);
 			
 			callBack(0, callBackLparam, UPDATE_STATUS_COULD_NOT_CREATE_FILE);
 
@@ -222,7 +224,7 @@ DWORD WINAPI UpdateDownloadThread(LPVOID lpThreadParameter)
 		res = curl_easy_perform(curl);
 		if (res != CURLE_OK)
 		{
-			JTLogError(L"下载更新文件错误 %s 失败 :  %S", url, curl_easy_strerror(res));
+			appLogger->LogError(L"下载更新文件错误 %s 失败 :  %S", url, curl_easy_strerror(res));
 
 			callBack(0, callBackLparam, UPDATE_STATUS_COULD_NOT_CONNECT);
 
@@ -235,7 +237,7 @@ DWORD WINAPI UpdateDownloadThread(LPVOID lpThreadParameter)
 		fclose(updateFile);
 	}
 	else {
-		JTLogError(L"下载更新文件错误 : curl failed ");
+		appLogger->LogError(L"下载更新文件错误 : curl failed ");
 		callBack(0, callBackLparam, UPDATE_STATUS_NOT_SUPPORT);
 		updateing = false;
 	}
