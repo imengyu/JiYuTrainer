@@ -111,6 +111,9 @@
     <Image Include="..\JiYuTrainerLogo.ico">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="res\footer-mask.png">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="MainWindow.html" />

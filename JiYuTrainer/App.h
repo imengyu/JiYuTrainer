@@ -34,7 +34,7 @@ public:
 
 	LPCWSTR MakeFromSourceArg(LPCWSTR arg);
 
-	int Run();
+	int Run(int nCmdShow);
 	int GetResult() { return appResult; }
 	void Exit(int code);
 
@@ -43,6 +43,9 @@ public:
 	HINSTANCE GetInstance() {
 		return hInstance;
 	}
+
+	int GetAppShowCmd() { return appShowCmd; };
+	bool GetAppIsHiddenMode() { return appIsHiddenMode; };
 
 	LPCWSTR GetPartFullPath(int partId);
 	LPCWSTR GetFullPath() { return fullPath.c_str(); }
@@ -126,7 +129,9 @@ private:
 	bool appNeedInstallIniTemple = false;
 	bool appIsRecover = false;
 	bool appIsMd5CalcMode = false;
+	bool appIsHiddenMode = false;
 
+	int appShowCmd = 0;
 	std::wstring updaterPath;
 
 	LPWSTR *appArgList = nullptr;

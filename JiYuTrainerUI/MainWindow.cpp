@@ -20,6 +20,7 @@ using namespace std;
 
 #define TIMER_AOP 2
 #define TIMER_RB_DELAY 3
+#define TIMER_HIDE_DELAY 4
 
 extern JTApp* currentApp;
 Logger * currentLogger;
@@ -46,7 +47,10 @@ MainWindow::MainWindow()
 
 	init();
 
-	ShowWindow(_hWnd, SW_SHOW);
+	if (currentApp->GetAppIsHiddenMode()) 
+		ShowWindow(_hWnd, SW_SHOW);
+	else 
+		ShowWindow(_hWnd, currentApp->GetAppShowCmd());
 	UpdateWindow(_hWnd);
 }
 
@@ -80,6 +84,9 @@ bool MainWindow::init()
 	SetWindowLongPtr(_hWnd, GWLP_USERDATA, LONG_PTR(this));
 	setup_callback(); // to receive SC_LOAD_DATA, SC_DATA_LOADED, etc. notification
 	attach_dom_event_handler(_hWnd, this); // to receive DOM events
+
+	//Settings
+	LoadSettings();
 
 	//Init worker
 	currentLogger = currentApp->GetLogger();
@@ -133,6 +140,7 @@ sciter::value MainWindow::docunmentComplete()
 	check_auto_fkill = root.get_element_by_id(L"check_auto_fkill");
 	check_auto_fck = root.get_element_by_id(L"check_auto_fck");
 	check_allow_op = root.get_element_by_id(L"check_allow_op");
+	check_allow_top = root.get_element_by_id(L"check_allow_top");
 	check_auto_update = root.get_element_by_id(L"check_auto_update");
 	input_ckinterval = root.get_element_by_id(L"input_ckinterval");
 	check_allow_control = root.get_element_by_id(L"check_allow_control");
@@ -208,9 +216,6 @@ void MainWindow::OnWmCommand(WPARAM wParam)
 }
 BOOL MainWindow::OnWmCreate()
 {
-	//Settings
-	LoadSettings();
-
 	return TRUE;
 }
 void MainWindow::OnWmDestroy()
@@ -239,6 +244,10 @@ void MainWindow::OnWmTimer(WPARAM wParam)
 		KillTimer(_hWnd, TIMER_RB_DELAY);
 		currentLogger->Log(L"Send main path message ");
 		currentWorker->RunOperation(TrainerWorkerOp1);
+	}
+	if (wParam == TIMER_HIDE_DELAY) {
+		KillTimer(_hWnd, TIMER_HIDE_DELAY);
+		SendMessage(_hWnd, WM_SYSCOMMAND, SC_CLOSE, NULL);
 	}
 }
 void MainWindow::OnWmUser(WPARAM wParam, LPARAM lParam)
@@ -322,7 +331,11 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 			currentApp->RunOperation(AppOperationUnLoadDriver);
 		}
 		else if (cmd == L"jypasswd") { 
-			LPCWSTR passwd = (LPCWSTR)currentWorker->RunOperation(TrainerWorkerOp2);
+			LPCWSTR passwd;
+			int res = MessageBox(_hWnd, L"您是否希望使用解密模式读取极域密码？\n选择 [是]  使用解密模式读取极域密码，适用于极域6.0版本\n选择 [否]  则直接读取极域注册表密码，适用于极域老版本", L"JiYuTrainer - 提示", MB_ICONASTERISK | MB_YESNOCANCEL);
+			if (res == IDYES) passwd = (LPCWSTR)currentWorker->RunOperation(TrainerWorkerOp3);
+			else if (res == IDNO) passwd = (LPCWSTR)currentWorker->RunOperation(TrainerWorkerOp2);
+			else return;
 			if (passwd) {
 				if (StrEmepty(passwd)) {
 					MessageBox(_hWnd, L"已成功读取极域密码，密码为空。", L"JiYuTrainer - 提示", MB_ICONINFORMATION);
@@ -341,6 +354,8 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 				currentWorker->RunOperation(TrainerWorkerOpForceUnLoadVirus);
 			}
 		}
+		else if (cmd == L"test") currentLogger->Log(L"测试命令，无功能");
+		else if (cmd == L"test2") currentWorker->SendMessageToVirus(L"test2:test2");
 		else if (cmd == L"exit")  SendMessage(hWndMain, WM_COMMAND, IDM_EXIT, NULL);
 		else if (cmd == L"hide")  SendMessage(hWndMain, WM_COMMAND, IDM_SHOWMAIN, NULL);
 		else {
@@ -386,8 +401,12 @@ void MainWindow::OnFirstShow()
 		if (JUpdater_CheckInternet() && JUpdater_CheckUpdate(false) == UPDATE_STATUS_HAS_UPDATE) 
 			update_message.set_attribute("class", L"window-extend-area shown");
 
-
 	currentLogger->LogInfo(L"控制器已启动");
+
+	if (currentApp->GetAppIsHiddenMode()) {
+		hideTipShowed = true;
+		SetTimer(_hWnd, TIMER_HIDE_DELAY, 400, NULL);
+	}
 }
 
 bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UINT_PTR reason)
@@ -596,8 +615,9 @@ void MainWindow::LoadSettings()
 	setAutoIncludeFullWindow = settings->GetSettingBool(L"AutoIncludeFullWindow");
 	setAllowAllRunOp = settings->GetSettingBool(L"AllowAllRunOp");
 	setAutoForceKill = settings->GetSettingBool(L"AutoForceKill");
-	setAllowMonitor = settings->GetSettingBool(L"AllowMonitor", false);
+	setAllowMonitor = settings->GetSettingBool(L"AllowMonitor", true);
 	setAllowControl = settings->GetSettingBool(L"AllowControl", false);
+	setAllowGbTop = settings->GetSettingBool(L"AllowGbTop", false);
 	setCkInterval = settings->GetSettingInt(L"CKInterval", 3100);
 	if (setCkInterval < 1000 || setCkInterval > 10000) setCkInterval = 3000;
 }
@@ -612,6 +632,7 @@ void MainWindow::LoadSettingsToUi()
 	check_auto_update.set_value(sciter::value(setAutoUpdate));
 	check_allow_control.set_value(sciter::value(setAllowControl));
 	check_allow_monitor.set_value(sciter::value(setAllowMonitor));
+	check_allow_top.set_value(sciter::value(setAllowGbTop));
 	input_ckinterval.set_value(sciter::value(setCkInterval));
 }
 void MainWindow::SaveSettings()
@@ -626,6 +647,7 @@ void MainWindow::SaveSettings()
 	setAutoUpdate = check_auto_update.get_value().get(true);
 	setAllowControl = check_allow_control.get_value().get(false);
 	setAllowMonitor = check_allow_monitor.get_value().get(false);
+	setAllowGbTop = check_allow_top.get_value().get(false);
 
 	SettingHlp *settings = currentApp->GetSettings();
 	settings->SetSettingBool(L"TopMost", setTopMost);
@@ -635,6 +657,7 @@ void MainWindow::SaveSettings()
 	settings->SetSettingBool(L"AutoUpdate", setAutoUpdate);
 	settings->SetSettingBool(L"AllowControl", setAllowControl);
 	settings->SetSettingBool(L"AllowMonitor", setAllowMonitor);
+	settings->SetSettingBool(L"AllowGbTop", setAllowGbTop);
 	settings->SetSettingInt(L"CKInterval", setCkInterval);
 
 	currentWorker->InitSettings();
@@ -647,7 +670,8 @@ void MainWindow::ResetSettings()
 	setAutoUpdate = true;
 	setCkInterval = 3100;
 	setAllowControl = false;
-	setAllowMonitor = false;
+	setAllowMonitor = true;
+	setAllowGbTop = false;
 
 	LoadSettingsToUi();
 	SaveSettings();

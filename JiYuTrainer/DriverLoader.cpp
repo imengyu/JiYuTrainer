@@ -12,7 +12,7 @@ extern LoggerInternal * currentLogger;
 HANDLE hKDrv = NULL;
 
 //删除注册表键以及子键
-BOOL MREG_DeleteKey(HKEY hRootKey, LPWSTR path) {
+BOOL MRegDeleteKey(HKEY hRootKey, LPWSTR path) {
 
 	DWORD lastErr = SHDeleteKey(hRootKey, path);
 	if (lastErr == ERROR_SUCCESS || lastErr == ERROR_FILE_NOT_FOUND)
@@ -23,12 +23,12 @@ BOOL MREG_DeleteKey(HKEY hRootKey, LPWSTR path) {
 		return 0;
 	}
 }
-BOOL MREG_ForceDeleteServiceRegkey(LPWSTR lpszDriverName)
+BOOL MRegForceDeleteServiceRegkey(LPWSTR lpszDriverName)
 {
 	BOOL rs = FALSE;
 	wchar_t regPath[MAX_PATH];
 	wsprintf(regPath, L"SYSTEM\\CurrentControlSet\\services\\%s", lpszDriverName);
-	rs = MREG_DeleteKey(HKEY_LOCAL_MACHINE, regPath);
+	rs = MRegDeleteKey(HKEY_LOCAL_MACHINE, regPath);
 
 	if (!rs) currentLogger->LogWarn(L"RegDeleteTree failed : %d in delete key HKEY_LOCAL_MACHINE\\%s", GetLastError(), regPath);
 	else currentLogger->LogInfo(L"Service Key deleted : HKEY_LOCAL_MACHINE\\%s", regPath);
@@ -37,7 +37,7 @@ BOOL MREG_ForceDeleteServiceRegkey(LPWSTR lpszDriverName)
 	wcscpy_s(regName, lpszDriverName);
 	_wcsupr_s(regName);
 	wsprintf(regPath, L"SYSTEM\\CurrentControlSet\\Enum\\Root\\LEGACY_%s", regName);
-	rs = MREG_DeleteKey(HKEY_LOCAL_MACHINE, regPath);
+	rs = MRegDeleteKey(HKEY_LOCAL_MACHINE, regPath);
 
 	if (!rs) {
 		currentLogger->LogWarn(L"RegDeleteTree failed : %d in delete key HKEY_LOCAL_MACHINE\\%s", GetLastError(), regPath);
@@ -51,7 +51,7 @@ BOOL MREG_ForceDeleteServiceRegkey(LPWSTR lpszDriverName)
 //    lpszDriverName：驱动的服务名
 //    driverPath：驱动的完整路径
 //    lpszDisplayName：nullptr
-BOOL LoadKernelDriver(const wchar_t* lpszDriverName, const wchar_t* driverPath, const wchar_t* lpszDisplayName)
+BOOL MLoadKernelDriver(const wchar_t* lpszDriverName, const wchar_t* driverPath, const wchar_t* lpszDisplayName)
 {
 	//MessageBox(0, driverPath, L"driverPath", 0);
 	wchar_t sDriverName[32];
@@ -86,7 +86,7 @@ RECREATE:
 				recreatee = true;
 				if (hServiceDDK) CloseServiceHandle(hServiceDDK);
 				if (hServiceMgr) CloseServiceHandle(hServiceMgr);
-				if (MREG_ForceDeleteServiceRegkey(sDriverName)) goto RECREATE;
+				if (MRegForceDeleteServiceRegkey(sDriverName)) goto RECREATE;
 			}
 		}
 		if (dwRtn != ERROR_IO_PENDING && dwRtn != ERROR_SERVICE_EXISTS)
@@ -137,7 +137,7 @@ BeforeLeave:
 }
 //卸载驱动
 //    szSvrName：服务名
-BOOL UnLoadKernelDriver(const wchar_t* szSvrName)
+BOOL MUnLoadKernelDriver(const wchar_t* szSvrName)
 {
 	if (hKDrv && wcscmp(szSvrName, L"JiYuTrainerDriver") == 0) {
 		CloseHandle(hKDrv);
@@ -182,12 +182,12 @@ BeforeLeave:
 	if (hServiceDDK) CloseServiceHandle(hServiceDDK);
 	if (hServiceMgr) CloseServiceHandle(hServiceMgr);
 
-	if (bDeleted) bRet = MREG_ForceDeleteServiceRegkey((LPWSTR)szSvrName);
+	if (bDeleted) bRet = MRegForceDeleteServiceRegkey((LPWSTR)szSvrName);
 
 	return bRet;
 }
 //打开驱动
-BOOL OpenDriver()
+BOOL XOpenDriver()
 {
 	hKDrv = CreateFile(L"\\\\.\\JKRK",
 		GENERIC_READ | GENERIC_WRITE,
@@ -203,11 +203,11 @@ BOOL OpenDriver()
 	}
 	return TRUE;
 }
-BOOL DriverLoaded() {
+BOOL XDriverLoaded() {
 	return hKDrv != NULL;
 }
 
-BOOL XinitSelfProtect()
+BOOL XInitSelfProtect()
 {
 	return KFInstallSelfProtect();
 }
@@ -221,9 +221,9 @@ BOOL XLoadDriver() {
 	if (!SysHlp::IsRunasAdmin() && !isXp)
 		return FALSE;
 
-	if (LoadKernelDriver(L"JiYuTrainerDriver", currentApp->GetPartFullPath(PART_DRIVER), NULL))
+	if (MLoadKernelDriver(L"JiYuTrainerDriver", currentApp->GetPartFullPath(PART_DRIVER), NULL))
 	{
-		if (OpenDriver()) {
+		if (XOpenDriver()) {
 			currentLogger->LogInfo(L"驱动加载成功");
 			KFSendDriverinitParam(isXp, isWin7);
 			return TRUE;
@@ -242,7 +242,7 @@ BOOL XCloseDriverHandle() {
 	return FALSE;
 }
 BOOL XUnLoadDriver() {
-	if (DriverLoaded())
-		return UnLoadKernelDriver(L"JiYuTrainerDriver");
+	if (XDriverLoaded())
+		return MUnLoadKernelDriver(L"JiYuTrainerDriver");
 	return TRUE;
 }

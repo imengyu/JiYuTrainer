@@ -20,7 +20,9 @@ UIEXPORT_CFUNC(int) JTUI_RunMain()
 	currentApp = (JTApp*)JTGetApp();
 
 	SciterSetOption(NULL, SCITER_SET_SCRIPT_RUNTIME_FEATURES, ALLOW_FILE_IO | ALLOW_SOCKET_IO | ALLOW_EVAL | ALLOW_SYSINFO);
+#if _DEBUG
 	SciterSetOption(NULL, SCITER_SET_DEBUG_MODE, TRUE);
+#endif
 	SciterClassName();
 
 	currentMainWindow = new MainWindow();

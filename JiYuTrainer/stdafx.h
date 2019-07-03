@@ -18,5 +18,6 @@
 #endif
 
 #define EXPORT_CFUNC(x) EXTERN_C EXPORT x 
+#define FAST_STR_BINDER(str, fstr, size, ...) WCHAR str[size]; swprintf_s(str, fstr, __VA_ARGS__)
 
 // 在此处引用程序需要的其他标头

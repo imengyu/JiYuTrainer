@@ -13,7 +13,7 @@ extern LoggerInternal * currentLogger;
 
 BOOL KFShutdown()
 {
-	if (DriverLoaded())
+	if (XDriverLoaded())
 	{
 		DWORD ReturnLength = 0;
 		BOOL rs = DeviceIoControl(hKDrv, CTL_SHUTDOWN, NULL, 0, NULL, 0, &ReturnLength, NULL);
@@ -27,7 +27,7 @@ BOOL KFShutdown()
 }
 BOOL KFReboot()
 {
-	if (DriverLoaded())
+	if (XDriverLoaded())
 	{
 		DWORD ReturnLength = 0;
 		BOOL rs = DeviceIoControl(hKDrv, CTL_REBOOT, NULL, 0, NULL, 0, &ReturnLength, NULL);
@@ -41,7 +41,7 @@ BOOL KFReboot()
 }
 BOOL KForceKill(DWORD pid, NTSTATUS *pStatus)
 {
-	if (DriverLoaded())
+	if (XDriverLoaded())
 	{
 		NTSTATUS status = STATUS_UNSUCCESSFUL;
 		DWORD ReturnLength = 0;
@@ -59,7 +59,7 @@ BOOL KForceKill(DWORD pid, NTSTATUS *pStatus)
 	return false;
 }
 BOOL KFSendDriverinitParam(bool isXp, bool isWin7) {
-	if (DriverLoaded())
+	if (XDriverLoaded())
 	{
 		DWORD ReturnLength = 0;
 
@@ -74,7 +74,7 @@ BOOL KFSendDriverinitParam(bool isXp, bool isWin7) {
 }
 BOOL KFInstallSelfProtect()
 {
-	if (DriverLoaded())
+	if (XDriverLoaded())
 	{
 		DWORD ReturnLength = 0;
 		ULONG_PTR pidb = GetCurrentProcessId();
@@ -85,7 +85,7 @@ BOOL KFInstallSelfProtect()
 	return false;
 }
 BOOL KFInjectDll(DWORD pid, LPWSTR dllPath) {
-	if (DriverLoaded())
+	if (XDriverLoaded())
 	{
 
 	}

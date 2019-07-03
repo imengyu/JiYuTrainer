@@ -4,13 +4,13 @@
     <RemoteDebuggerCommand>C:\Users\a\Desktop\新建文件夹\JiYuTrainer.exe</RemoteDebuggerCommand>
     <RemoteDebuggerWorkingDirectory>C:\Users\a\Desktop\新建文件夹</RemoteDebuggerWorkingDirectory>
     <RemoteDebuggerServerName>192.168.11.43</RemoteDebuggerServerName>
-    <DebuggerFlavor>WindowsRemoteDebugger</DebuggerFlavor>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <RemoteDebuggerConnection>RemoteWithoutAuthentication</RemoteDebuggerConnection>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LocalDebuggerCommandArguments>
     </LocalDebuggerCommandArguments>
-    <DebuggerFlavor>WindowsRemoteDebugger</DebuggerFlavor>
+    <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <RemoteDebuggerCommand>C:\Users\Administrator\Desktop\JyTrainer\JiYuTrainer.exe</RemoteDebuggerCommand>
     <RemoteDebuggerWorkingDirectory>C:\Users\Administrator\Desktop\JyTrainer</RemoteDebuggerWorkingDirectory>
     <RemoteDebuggerServerName>192.168.11.160</RemoteDebuggerServerName>

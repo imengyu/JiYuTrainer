@@ -11,12 +11,10 @@
 
         body {
             font-family: "Microsoft YaHei", Tahoma, sans-serif;
-            transform: scale(0.6);
             transition: transform linear 150ms, opacity linear 150ms;
             opacity: .3;
         }
         body.shown {
-            transform: scale(1);
             opacity: 1;
         }
         body.minize {
@@ -31,7 +29,7 @@
             display: block;
             position: relative;
             margin: 20px;
-            border-radius: 15px;
+            border-radius: 10px;
             box-shadow: 0 0 13px rgba(0,0,0,.5);
             background-color: #fff;
             height: 480px;
@@ -94,8 +92,10 @@
             display: block;
             position: relative;
             width: 100%;
-            height: 380px;
-            border-radius: 15px;
+            height: 390px;
+            border-radius: 10px;
+            border-bottom-left-radius: 0;
+            border-bottom-right-radius: 0;
         }
         .state-ok .window-area {
             background: linear-gradient(to bottom, rgb(46,164,240) 0%,rgb(46,140,240) 100%);
@@ -110,17 +110,19 @@
             background: linear-gradient(to bottom, rgba(255, 153, 0, 0.77) 0%,rgb(228, 126, 0) 100%);
         }
 
+
         .window-footer-area {
             position: absolute;
             width: 374px;
             height: 180px;
-            bottom: 50px;
+            bottom: 55px;
             left: 0;
             right: 0;
-            background-image: url(res:footer-x2.png);
             background-repeat: no-repeat;
             background-size: 374px 180px;
+            background-image: url(res:footer-mask.png);
         }
+        /*
         .state-ok .window-footer-area {
             background-image: url(res:footer-xok.png);
         }
@@ -133,6 +135,8 @@
         .state-work .window-footer-area {
             background-image: url(res:footer-xwork.png);
         }
+        */
+
 
         /* Window extend area */
         .window-extend-area {
@@ -143,9 +147,9 @@
             left: -5px;
             right: -5px;
             top: 60px;
-            bottom: 80px;
+            bottom: 90px;
             transform: scale(0.8);
-            border-radius: 15px;
+            border-radius: 19px;
             box-shadow: 0px 0px 10px 0px rgba(0,0,0,.3);
             background-color: #fff;
             opacity: 0;
@@ -313,15 +317,21 @@
         }
 
         /*Tab*/
-        .window-tab {
-            display: block;
-            position: absolute;
+        .window-tab-con {
+            text-align: center;
             height: 40px;
+            position: absolute;
             left: 0;
             right: 0;
-            bottom: -20px;
-            padding-top: 8px;
-            text-align: center;
+            bottom: -23px;
+        }
+        .window-tab {
+            display: inline-block;
+            position: relative;
+            padding: 0;
+            width: 306px;
+            box-shadow: 0 0 7px rgba(0,0,0,.5);
+            border-radius: 20px;
         }
         .window-page {
             display: none;
@@ -337,7 +347,6 @@
             color: #fff;
             text-decoration: none;
             margin: 0;
-            box-shadow: 0 0 7px rgba(0,0,0,.5);
         }
         .btn-tab.active{
             background-color: #0083c6;
@@ -363,7 +372,7 @@
         }
         .btn-about {
             position: absolute;
-            bottom: 55px;
+            bottom: 36px;
             left: -15px;
         }
 
@@ -498,23 +507,31 @@
             padding: 12px 20px;
             margin-bottom: 1rem;
             border: 1px solid transparent;
-            border-radius: 4px;
+            border-radius: 6px;
         }
         .alert-success {
             color: #155724;
             background-color: #d4edda;
-            border-color: #c3e6cb;
+            /*border-color: #c3e6cb;*/
+        }
+
+        /* Tooltip */
+        * popup[role="tooltip"] {
+            display: inline-block;
+            word-break: break-word;
+            background: #000;
+            color: #fff;
+            border-radius: 6px;
+            padding: 8px;
+            max-width: 300px;
         }
     </style>
-
 </head>
-
 <body class="window-shadow">
     <div class="window-box" id="wnd">
 
         <!--窗口-->
         <div class="window-area">
-
             <!--标题栏-->
             <div class="window-title-area" id="title-area">
                 <img src="res:icon-main-small.png" id="title-icon" />
@@ -522,7 +539,6 @@
                 <a class="title-min" id="btn_min" href="#"></a>
                 <a class="title-close" id="btn_close" href="#"></a>
             </div>
-
             <!--主状态图标-->
             <div class="main-state">
                 <div class="inner">
@@ -531,18 +547,17 @@
                 <br /><span class="status-text" id="status_text_main">正在初始化</span>
                 <br /><span class="status-text2" id="status_text_more">...</span>
             </div>
-
         </div>
         <!--工具提示弹出层-->
         <div class="window-tooltips-top">
             <div class="tooltip" id="tooltip_fast" style="top: 100px; left: 30px; right: 30px"></div>
         </div>
         <div class="window-tooltips-bottom">
-            <div class="tooltip tooltip-vesion" style="bottom: 103px; left: 70px; width: 150px">当前版本 ：V1.6<br /><small>点击查看帮助</small></div>
-            <div class="tooltip tooltip-jiyu-pid" style="bottom: 68px; left: 30px; width: 300px">StudentMain.exe PID : <span id="status_jiyu_pid">未知</span><br /><small>点击杀死极域电子教室</small></div>
-            <div class="tooltip tooltip-jiyu-restart" style="bottom: 69px; left: 30px; width: 300px"><h4 class="m-0">极域位置</h4><span id="status_jiyu_path" style="color: #cecece">未找到极域电子教室</span></div>
-            <div class="tooltip tooltip-topmost" id="tooltip_top" style="bottom: 65px; left: 60px; width: 80px">本窗口置顶</div>
-            <div class="tooltip tooltip-sets" style="bottom: 65px; left: 218px; width: 80px">控制台和设置</div>
+            <div class="tooltip tooltip-vesion" style="bottom: 90px; left: 70px; width: 150px">当前版本 ：V1.6<br /><small>点击查看帮助</small></div>
+            <div class="tooltip tooltip-jiyu-pid" style="bottom: 80px; left: 30px; width: 300px;padding-top:8px;padding-bottom:8px">StudentMain.exe PID : <span id="status_jiyu_pid">未知</span><br /><small>点击杀死极域电子教室</small></div>
+            <div class="tooltip tooltip-jiyu-restart" style="bottom: 80px; left: 30px; width: 300px;padding-top:8px;padding-bottom:8px"><h4 class="m-0">极域位置</h4><span id="status_jiyu_path" style="color: #cecece">未找到极域电子教室</span></div>
+            <div class="tooltip tooltip-topmost" id="tooltip_top" style="bottom: 72px; left: 60px; width: 80px">本窗口置顶</div>
+            <div class="tooltip tooltip-sets" style="bottom: 72px; left: 218px; width: 80px">控制台和设置</div>
             <div class="tooltip tooltip-close-debug" style="right: 90px; bottom: 110px; width: 80px">关闭控制台</div>
         </div>
         <!--底栏-->
@@ -560,35 +575,40 @@
         <!--扩展区域-->
         <div class="window-extend-area" id="extend_area">
             <!--Tab 按钮-->
-            <div class="window-tab">
-                <a class="btn-tab active" href="#" id="btn_tab_setting" style="width: 30px; border-top-left-radius: 20px; border-bottom-left-radius: 20px;">设置</a><a class="btn-tab" href="#" id="btn_tab_debug" style="width: 30px;">调试</a><a class="btn-tab" href="#" id="btn_tab_about" style="width: 30px;">关于</a><a href="#" id="link_exit" class="btn-tab btn-dager">退出软件</a><a href="#" id="link_close_extend_area" class="btn-tab" style="border-top-right-radius: 20px; border-bottom-right-radius: 20px;"><i>&nbsp;</i></a>
+            <div class="window-tab-con">
+                <div class="window-tab">
+                    <a class="btn-tab active" href="#" id="btn_tab_setting" style="width: 30px; border-top-left-radius: 20px; border-bottom-left-radius: 20px;">设置</a><a class="btn-tab" href="#" id="btn_tab_debug" style="width: 30px;">调试</a><a class="btn-tab" href="#" id="btn_tab_about" style="width: 30px;">关于</a><a href="#" id="link_exit" class="btn-tab btn-dager">退出软件</a><a href="#" id="link_close_extend_area" class="btn-tab" style="border-top-right-radius: 20px; border-bottom-right-radius: 20px;"><i>&nbsp;</i></a>
+                </div>
             </div>
             <!--Tab 区域-->
             <div class="window-page active" id="page_setting">
                 <h4 class="mb-0">程序配置</h4>
                 <div class="from-group">
-                    <div style="display: inline-block; width: 180px;">
+                    <div class="form-check" style="display: inline-block; width: 180px;" title="勾选该选项可严格控制极域窗口，不仅仅是屏幕广播窗口和黑屏窗口，极域的其他窗口也会被控制">
                         <input type="checkbox" id="check_auto_fck">
                         <label for="check_auto_fck">启用严格窗口控制模式</label>
                     </div>
-                    <div style="display: inline-block; width: 120px;" title=" 是否启用自动强制清除模式，该模式会在操作失败时直接清除极域有关进程">
+                    <div class="form-check"  style="display: inline-block; width: 120px;" title="是否启用自动强制清除模式，勾选该模式会在操作失败时直接清除极域有关进程，不建议使用">
                         <input type="checkbox" id="check_auto_fkill" />
                         <label for="check_auto_fkill">不客气模式</label>
                     </div>
-                    <div class="form-check" title=" （重要）控制器和检测器负责检查和控制极域，&#10;&#13;如果关闭将导致极域脱离控制或无法检测到极域的操作">
+                    <div style="display: inline-block; width: 180px;"  class="form-check" title=" （重要）控制器和检测器负责检查和控制极域，如果关闭将导致极域脱离控制或无法检测到极域的操作。不建议关闭，仅调试时使用">
                         <input type="checkbox" id="check_ck" checked="checked" />
                         <label for="check_ck" style="color: #007bff">是否启用控制器</label>
                     </div>
-                    <div class="form-check" title=" 是否监控极域运行进程，通常教师可以通过极域远程执行应用程序，&#10;&#13;如果你勾选此项则会监控极域运行进程，你可以选择允许或阻止">
+                    <div style="display: inline-block; width: 160px;" class="form-check" title=" 是否监控极域运行进程，通常教师可以通过极域远程执行应用程序，如果你勾选此项则会监控极域运行进程，你可以选择允许或阻止教师在此电脑上运行程序">
                         <input type="checkbox" id="check_allow_op" checked="checked" />
                         <label for="check_allow_op">监控极域运行进程</label>
                     </div>
-                    <div class="form-check">
+                    <div class="form-check" title="如果你需要将屏幕广播窗口置顶，请勾选此选项，然后在屏幕广播中选择置顶。本软件默认不允许屏幕广播窗口置顶">
+                        <input type="checkbox" id="check_allow_top" />
+                        <label for="check_allow_top">允许屏幕广播窗口置顶</label>
+                    </div>
+                    <div class="form-check" title="取消勾选此选项后教师将无法通过极域查看你的电脑屏幕。本软件默认允许此选项">
                         <input type="checkbox" id="check_allow_monitor" />
                         <label for="check_allow_monitor">允许教师监视你的电脑</label>
                     </div>
-                    <div style="font-size: 11px; color: #8e8e8e; padding-left: 20px;">（测试功能，不一定可以禁止监视）</div>
-                    <div class="form-check">
+                    <div class="form-check" title="勾选此选项后教师可通过极域控制您的电脑。本软件默认不允许此选项">
                         <input type="checkbox" id="check_allow_control" />
                         <label for="check_allow_control">允许教师控制你的电脑</label>
                     </div>
@@ -601,9 +621,7 @@
                 <div class="from-group" style="margin-top:10px; margin-left: 5px;">
                     <label for="input_ckinterval">监控时间间隔(毫秒)</label><br />
                     <input style="width: 50px;margin-top: 5px;" type="text" id="input_ckinterval" /><br />
-                    
-                </div>
-                
+                </div>            
                 <div class="text-center" style="margin-top:10px;">
                     <a href="#" id="link_save_setting" class="btn-common">保存设置</a>&nbsp;
                     <a href="#" id="link_setto_default" class="btn-common">恢复默认</a>&nbsp;
@@ -623,13 +641,14 @@
                 <div style="position: absolute; display: block; left: 0px; top: -20px; right: 0;">
                     <img src="res:logo128.png" style="width:100px; height:100px;border-radius: 30px; box-shadow: 0 0 13px rgba(0,0,0,.5); background-color: #fff;" />
                 </div>
-                <h2 style="margin-top: 100px">JiYu Trainer</h2>
-                <span>V 1.6 2019/5/11</span><br />
+                <h2 style="margin-top: 90px">JiYu Trainer</h2>
+                <span>V 1.6 2019/7/3</span><br />
+                <span>&copy; 2019 DreamFish</span> <br />
                 <br />
-                <a href="#" id="link_help" class="link">软件帮助</a>&nbsp;|&nbsp;<a href="#" id="link_checkupdate" class="link">检查更新</a>&nbsp;<!--|&nbsp;<a href="#" id="link_github" class="link">Github</a>&nbsp;-->|&nbsp;<a href="#" id="link_uninstall" class="link" style="color: rgb(228, 126, 0);font-size: 12px;">卸载软件</a><br />
+                <a href="#" id="link_help" class="link">软件帮助</a>&nbsp;|&nbsp;<a href="#" id="link_checkupdate" class="link">检查更新</a>&nbsp;<!--|&nbsp;<a href="#" id="link_github" class="link">Github</a>&nbsp;-->|&nbsp;<a href="#" id="link_uninstall" class="link" style="color: rgb(228, 126, 0);font-size: 12px;" title="从此计算机上卸载 JiYu Trainer ">卸载软件</a><br />
                 <br />
                 <div class="alert alert-success">
-                    你喜欢 JiYu Trainer 吗？如果你喜欢，不妨向你的好友推荐这个软件吧！
+                    你喜欢 JiYu Trainer 吗？如果你喜欢，不妨向你的好友推荐一下这个软件吧！
                 </div>
             </div>
         </div>
@@ -688,7 +707,6 @@
         </div>
 
     </div>
-
     <script type="text/tiscript">
 
         const body = $(body);
@@ -888,6 +906,5 @@
         });
 
     </script>
-
 </body>
 </html>

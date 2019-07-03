@@ -70,10 +70,12 @@ private:
 	bool setTopMost = false;
 	bool setAutoIncludeFullWindow = false;
 	bool setAllowAllRunOp = false;
+	bool setAllowGbTop = false;
 	bool setAllowMonitor = false;
 	bool setAllowControl = false;
 	bool setAutoForceKill = false;
 	bool setAutoUpdate = true;
+
 	int setCkInterval = 3100;
 
 	Logger* currentLogger = nullptr;
@@ -106,6 +108,7 @@ private:
 	sciter::dom::element check_allow_control;
 	sciter::dom::element check_allow_monitor;
 	sciter::dom::element check_auto_update;
+	sciter::dom::element check_allow_top;
 	sciter::dom::element input_ckinterval;
 
 	sciter::dom::element cmds_message;

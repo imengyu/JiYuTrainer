@@ -61,6 +61,7 @@ void TrainerWorkerInternal::InitSettings()
 	SettingHlp*settings = currentApp->GetSettings();
 	setAutoIncludeFullWindow = settings->GetSettingBool(L"AutoIncludeFullWindow");
 	setCkInterval = currentApp->GetSettings()->GetSettingInt(L"CKInterval", 3100);
+	setAllowGbTop = settings->GetSettingBool(L"AllowGbTop", false);
 	if (setCkInterval < 1000 || setCkInterval > 10000) setCkInterval = 3000;
 
 	if (_StudentMainControlled)
@@ -144,6 +145,14 @@ void TrainerWorkerInternal::HandleMessageFromVirus(LPCWSTR buf)
 			if (wcdc % 20 == 0)
 				currentLogger->LogInfo(L"Receive  watch dog message %d ", wcdc);
 		}
+		else if (arr[0] == L"vback") {
+			wstring strBuff = arr[1];
+			if (arr.size() > 2) {
+				for (int i = 2; i < arr.size(); i++)
+					strBuff += L":" + arr[i];
+			}
+			currentLogger->Log(L"Receive virus echo : %s", strBuff.c_str());
+		}
 	}
 }
 void TrainerWorkerInternal::SendMessageToVirus(LPCWSTR buf)
@@ -215,7 +224,7 @@ bool TrainerWorkerInternal::Kill(bool autoWork)
 	}
 
 FORCEKILL:
-	if (DriverLoaded() && MessageBox(hWndMain, L"普通无法结束极域，是否调用驱动结束极域？\n（驱动可能不稳定，请慎用。您也可以使用 PCHunter 等安全软件进行强杀）", L"JiYuTrainer - 提示", MB_ICONEXCLAMATION | MB_YESNO) == IDYES)
+	if (XDriverLoaded() && MessageBox(hWndMain, L"普通无法结束极域，是否调用驱动结束极域？\n（驱动可能不稳定，请慎用。您也可以使用 PCHunter 等安全软件进行强杀）", L"JiYuTrainer - 提示", MB_ICONEXCLAMATION | MB_YESNO) == IDYES)
 	{
 		if (KForceKill(_StudentMainPid, &status)) {
 			_StudentMainPid = 0;
@@ -264,11 +273,13 @@ void* TrainerWorkerInternal::RunOperation(TrainerWorkerOp op)
 		break;
 	}
 	case TrainerWorkerOp2: {
-		if (ReadTopDomanPassword()) {
-			//mythware_super_password
-			//155
+		if (ReadTopDomanPassword(false))
 			return (LPVOID)_TopDomainPassword.c_str();
-		}
+		return nullptr;
+	}
+	case TrainerWorkerOp3: {
+		if (ReadTopDomanPassword(true)) 
+			return (LPVOID)_TopDomainPassword.c_str();
 		return nullptr;
 	}
 	}
@@ -415,7 +426,7 @@ bool TrainerWorkerInternal::KillProcess(DWORD pid, bool force)
 		}
 	}
 FORCEKILL:
-	if (DriverLoaded())
+	if (XDriverLoaded())
 	{
 		if (KForceKill(_StudentMainPid, &status)) {
 			currentLogger->Log(L"进程 [%d] 强制结束成功", pid);
@@ -430,13 +441,17 @@ FORCEKILL:
 	CloseHandle(hProcess);
 	return false;
 }
-bool TrainerWorkerInternal::ReadTopDomanPassword()
+bool TrainerWorkerInternal::ReadTopDomanPassword(BOOL forceKnock)
 {
 	_TopDomainPassword.clear();
-	//普通注册表读取，适用于4.0版本
 
 	HKEY hKey;
-	LRESULT lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, SysHlp::Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\TopDomain\\e-Learning Class Standard\\1.00" : L"SOFTWARE\\TopDomain\\e-Learning Class Standard\\1.00", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
+	LRESULT lastError;
+
+	if (forceKnock) goto READ_EX;
+	//普通注册表读取，适用于4.0版本
+	
+	lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, SysHlp::Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\TopDomain\\e-Learning Class Standard\\1.00" : L"SOFTWARE\\TopDomain\\e-Learning Class Standard\\1.00", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
 	if (lastError == ERROR_SUCCESS) {
 		DWORD dwType = REG_SZ;
 		WCHAR Data[32];
@@ -833,21 +848,35 @@ bool TrainerWorkerInternal::CheckIsTargetWindow(LPWSTR text, HWND hWnd) {
 void TrainerWorkerInternal::FixWindow(HWND hWnd, LPWSTR text)
 {
 	_LastResolveWindowCount++;
-	//Un top
+
 	LONG oldLong = GetWindowLong(hWnd, GWL_EXSTYLE);
-	if ((oldLong & WS_EX_TOPMOST) == WS_EX_TOPMOST)
-	{
-		SetWindowLong(hWnd, GWL_EXSTYLE, oldLong ^ WS_EX_TOPMOST);
-		SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-	}
 
 	//Set border and sizeable
 	SetWindowLong(hWnd, GWL_STYLE, GetWindowLong(hWnd, GWL_STYLE) | (WS_BORDER | WS_OVERLAPPEDWINDOW));
 
+	//Un top
+	if (StrEqual(text, L"屏幕广播") || StrEqual(text, L"屏幕演播室窗口")) 
+	{
+		if (!setAllowGbTop) 
+		{
+			if ((oldLong & WS_EX_TOPMOST) == WS_EX_TOPMOST)
+			{
+				SetWindowLong(hWnd, GWL_EXSTYLE, oldLong ^ WS_EX_TOPMOST);
+				SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+			}
+		}
+	}
+	else if(setAutoIncludeFullWindow)
+	{
+		if ((oldLong & WS_EX_TOPMOST) == WS_EX_TOPMOST)
+		{
+			SetWindowLong(hWnd, GWL_EXSTYLE, oldLong ^ WS_EX_TOPMOST);
+			SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+		}
+	}
 	if (StrEqual(text, L"BlackScreen Window"))
 	{
 		oldLong = GetWindowLong(hWnd, GWL_EXSTYLE);
-
 		{
 			SetWindowLong(hWnd, GWL_EXSTYLE, oldLong ^ WS_EX_APPWINDOW | WS_EX_NOACTIVATE);
 			SetWindowPos(hWnd, 0, 20, 20, 90, 150, SWP_NOZORDER | SWP_DRAWFRAME | SWP_NOACTIVATE);

@@ -108,7 +108,6 @@ sciter::value HelpWindow::goToGithub()
 }
 sciter::value HelpWindow::goToFullHelp()
 {
-	SysHlp::RunApplication(L"https://github.com/717021/JiYuTrainer/docfull.md", NULL);
 	return sciter::value::null();
 }
 bool HelpWindow::init()

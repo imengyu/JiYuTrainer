@@ -1,6 +1,6 @@
 ﻿<html>
 <head>
-    <title>JiYu Trainer 帮助</title>
+    <title>JiYu Trainer 简要帮助</title>
     <style>
         html {
             overflow: hidden;
@@ -20,25 +20,21 @@
             border: 1px solid transparent;
             border-radius: 4px;
         }
-
         .alert-danger {
             color: #721c24;
             background-color: #f8d7da;
             border-color: #f5c6cb;
         }
-
         .alert-warning {
             color: #856404;
             background-color: #fff3cd;
             border-color: #ffeeba;
         }
-
         .alert-success {
             color: #155724;
             background-color: #d4edda;
             border-color: #c3e6cb;
         }
-
         .alert-primary {
             color: #004085;
             background-color: #cce5ff;
@@ -48,13 +44,24 @@
         .mark {
             background-color: #ffd04c;
         }
-
+        .btn{
+            display: inline-block;
+            text-decoration: none;
+            color: #fff;
+            background-color: #37b0ff;
+            border-radius: 14px;
+            padding: 5px 10px;
+        }
+        .btn:hover,.btn:active {
+            background-color: #006bef;
+            text-decoration: none;
+        }
     </style>
 
 </head>
 
-<body class="window-shadow">
-
+<body>
+    <a href="#"></a>
     <h2 style="text-align: center; padding-top: 8px;">JiYu Trainer  简要帮助</h2>
     <h3 style="color:#ff8b0d">简介</h3>
     <p>
@@ -64,8 +71,11 @@
     <h3 style="color:#ff8b0d">操作方法</h3>
     <p>
         <span style="color:#006bef">本软件专为小白设计，默认情况下，您不需要修改任何参数，直接运行exe，并最小化即可，软件会自动进行操作。</span><br />
-        <!--如果您希望探索软件其他功能，请查看 <a href="#" id="link_help" class="link">完整帮助文档</a>。 -->
+        如果默认模式无法满足您的需求，可点主界面右下角的“控制台”按钮打开控制台进行配置。
     </p>
+    <!--<p>
+        此处仅仅是简要帮助，如果您希望了解完整的操作方法，请查看 <a href="#" id="link_help" class="link">完整软件操作帮助文档</a>。
+    </p>-->
     <div class="alert alert-warning">
         <b>附加说明</b>：本软件不依赖任何运行库，您只需复制一个 <b>JiYuTrainer.exe</b> 至目标电脑即可运行，本软件已将需要的DLL打包，它会自动进行安装。
     </div>
@@ -76,9 +86,6 @@
     </p>
 
     <h3 style="color:#ff8b0d">其他</h3>
-    <p>
-        极域并没有使用驱动保护进程（WinXP有保护，Win7没有），如果在旧版本极域有驱动保护进程（软件出现注入失败的问题），可选择本软件进行卸载驱动， 或直接使用本软件进行内核模式强杀。
-    </p>
     <p>
         如果您在使用软件过程中发现Bug，欢迎向我反馈！
     </p>
@@ -101,7 +108,7 @@
         <li>极域电子教室 推荐在 4.0/6.0 版本，其他版本可能无法达到最好的防御效果 </li>
     </ul>
     <div class="alert alert-primary">
-        <b>提示：</b>由于本软件需要对极域电子教室进行操作，可能会被某些杀毒软件误识别为病毒，您需要选择添加白名单。
+        <b>提示：</b>由于本软件需要对极域电子教室进行操作，可能会被某些杀毒软件误识别为病毒，您可能需要关闭杀毒软件或者添加本软件到白名单。
     </div>
     <h3 style="color:#ff0000">免责声明</h3>
     <div class="alert alert-warning">
@@ -113,7 +120,7 @@
     </div>
 
     <br />
-    <a href="#" id="link_exit" class="link" style="text-align: right; font-size: 16px;display: block;">关闭</a><br />
+    <a href="#" id="link_exit" class="btn" style="float: right;">关闭</a><br />
 
     <script type="text/tiscript">
         const body = $(body);
@@ -121,7 +128,7 @@
 
         $(#link_exit).onClick = function (){ view.close(); }
         /*$(#link_github).onClick = function (){ view.goToGithub(); }*/
-        /*$(#link_help).onClick = function (){ view.goToFullHelp(); }*/
+        $(#link_help).onClick = function (){ view.goToFullHelp(); }
     </script>
 
 </body>

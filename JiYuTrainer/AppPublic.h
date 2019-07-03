@@ -76,7 +76,7 @@ public:
 	/*
 		运行程序
 	*/
-	virtual int Run() { return 0; }
+	virtual int Run(int nCmdShow) { return 0; }
 	virtual int GetResult() { return 0; }
 	virtual void Exit(int code) {  }
 
@@ -98,6 +98,9 @@ public:
 	//获取当前程序目录
 	virtual LPCWSTR GetCurrentDir() { return nullptr; }
 	virtual LPCWSTR GetSourceInstallerPath() { return nullptr; }
+
+	virtual int GetAppShowCmd() { return 0; };
+	virtual bool GetAppIsHiddenMode() { return false; };
 
 	virtual Logger* GetLogger() { return nullptr; };
 	virtual SettingHlp* GetSettings() { return nullptr; };

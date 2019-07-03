@@ -32,7 +32,6 @@ void VHookWindow(const wchar_t * hWndStr);
 void VFixGuangBoWindow(HWND hWnd);
 bool VIsInIllegalWindows(HWND hWnd);
 void VBoom();
-bool VCheckIsTargetWindow(LPWSTR text);
 void VSendMessageBack(LPCWSTR buff, HWND hDlg);
 void VManualQuit();
 
@@ -150,11 +149,28 @@ typedef BOOL (WINAPI* fnCreateProcessW)(
 	__in        LPSTARTUPINFOW lpStartupInfo,
 	__out       LPPROCESS_INFORMATION lpProcessInformation
 );
+typedef BOOL(WINAPI* fnCreateProcessA)(
+	__in_opt    LPCSTR lpApplicationName,
+	__inout_opt LPSTR lpCommandLine,
+	__in_opt    LPSECURITY_ATTRIBUTES lpProcessAttributes,
+	__in_opt    LPSECURITY_ATTRIBUTES lpThreadAttributes,
+	__in        BOOL bInheritHandles,
+	__in        DWORD dwCreationFlags,
+	__in_opt    LPVOID lpEnvironment,
+	__in_opt    LPCSTR lpCurrentDirectory,
+	__in        LPSTARTUPINFOA lpStartupInfo,
+	__out       LPPROCESS_INFORMATION lpProcessInformation
+);
 typedef HRESULT (WINAPI *fnDwmEnableComposition)(UINT uCompositionAction);
 typedef UINT (WINAPI*fnWinExec)(LPCSTR lpCmdLine,	UINT uCmdShow);
 typedef LRESULT (WINAPI *fnCallNextHookEx)( HHOOK hhk, int nCode, WPARAM wParam, LPARAM lParam);
 typedef HWND (WINAPI* fnGetDesktopWindow)(VOID);
 typedef HDC (WINAPI *fnGetWindowDC)(__in_opt HWND hWnd);
+typedef int(__cdecl *fnEncodeToJPEGBuffer)(int a1, int a2, int a3, int a4, int a5, DWORD *a6, int a7, int a8, int a9);
+typedef int(__cdecl *fnavcodec_encode_video)(char a1, int a2, int a3, int a4);
+typedef HWND(WINAPI*fnGetForegroundWindow)(VOID);
+typedef HDC (WINAPI* fnGetDC)(__in_opt HWND hWnd);
+typedef HDC (WINAPI *fnCreateDCW)(__in_opt LPCWSTR pwszDriver, __in_opt LPCWSTR pwszDevice, __in_opt LPCWSTR pszPort, __in_opt CONST DEVMODEW * pdm);
 
 //Hooks
 
@@ -248,11 +264,28 @@ BOOL WINAPI hkCreateProcessW(
 	__in        LPSTARTUPINFOW lpStartupInfo,
 	__out       LPPROCESS_INFORMATION lpProcessInformation
 );
+BOOL WINAPI hkCreateProcessA(
+	__in_opt    LPCSTR lpApplicationName,
+	__inout_opt LPSTR lpCommandLine,
+	__in_opt    LPSECURITY_ATTRIBUTES lpProcessAttributes,
+	__in_opt    LPSECURITY_ATTRIBUTES lpThreadAttributes,
+	__in        BOOL bInheritHandles,
+	__in        DWORD dwCreationFlags,
+	__in_opt    LPVOID lpEnvironment,
+	__in_opt    LPCSTR lpCurrentDirectory,
+	__in        LPSTARTUPINFOA lpStartupInfo,
+	__out       LPPROCESS_INFORMATION lpProcessInformation
+	);
 HRESULT WINAPI hkDwmEnableComposition(UINT uCompositionAction);
 UINT WINAPI hkWinExec(__in LPCSTR lpCmdLine,	 __in UINT uCmdShow);
 LRESULT WINAPI hkCallNextHookEx(HHOOK hhk, int nCode, WPARAM wParam, LPARAM lParam);
 HWND WINAPI hkGetDesktopWindow(VOID);
 HDC WINAPI hkGetWindowDC(__in_opt HWND hWnd);
+BOOL __cdecl hkEncodeToJPEGBuffer(int a1, int a2, int a3, int a4, int a5, DWORD *a6, int a7, int a8, int a9);
+int __cdecl hkavcodec_encode_video(char a1, int a2, int a3, int a4);
+HWND WINAPI hkGetForegroundWindow(VOID);
+HDC WINAPI hkGetDC(__in_opt HWND hWnd);
+HDC WINAPI hkCreateDCW(__in_opt LPCWSTR pwszDriver, __in_opt LPCWSTR pwszDevice, __in_opt LPCWSTR pszPort, __in_opt CONST DEVMODEW * pdm);
 
 INT_PTR CALLBACK VShowOpConfirmWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 

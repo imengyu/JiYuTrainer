@@ -5,16 +5,16 @@
 //    lpszDriverName：驱动的服务名
 //    driverPath：驱动的完整路径
 //    lpszDisplayName：nullptr
-BOOL LoadKernelDriver(const wchar_t* lpszDriverName, const wchar_t* driverPath, const wchar_t* lpszDisplayName);
+BOOL MLoadKernelDriver(const wchar_t* lpszDriverName, const wchar_t* driverPath, const wchar_t* lpszDisplayName);
 //卸载驱动
 //    szSvrName：服务名
-BOOL UnLoadKernelDriver(const wchar_t* szSvrName);
+BOOL MUnLoadKernelDriver(const wchar_t* szSvrName);
 //打开驱动
-BOOL OpenDriver();
+BOOL XOpenDriver();
 //返回驱动是否加载
-BOOL DriverLoaded();
+BOOL XDriverLoaded();
 
-BOOL XinitSelfProtect();
+BOOL XInitSelfProtect();
 
 BOOL XLoadDriver();
 

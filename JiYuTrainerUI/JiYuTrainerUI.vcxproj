@@ -188,6 +188,7 @@
     <Image Include="res\btn-close.png" />
     <Image Include="res\btn-footers.png" />
     <Image Include="res\btn-min.png" />
+    <Image Include="res\footer-mask.png" />
     <Image Include="res\footer-x2.png" />
     <Image Include="res\footer-xnotwork.png" />
     <Image Include="res\footer-xok.png" />

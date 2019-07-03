@@ -13,8 +13,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR 
 {
 	currentLogger = new LoggerInternal();
 	currentLogger->SetLogOutPut(LogOutPutConsolne);
+	currentLogger->SetLogLevel(LogLevelText);
 	currentApp = new JTAppInternal(hInstance);
-	currentApp->Run();
+	currentApp->Run(nCmdShow);
 	int rs = currentApp->GetResult();
 	delete currentApp;
 	delete currentLogger;

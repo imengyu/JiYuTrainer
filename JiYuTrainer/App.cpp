@@ -72,10 +72,11 @@ int JTAppInternal::CheckInstall(APP_INSTALL_MODE mode)
 				fwprintf_s(fp, L"\n[JTSettings]");
 				fwprintf_s(fp, L"\nTopMost=FALSE");
 				fwprintf_s(fp, L"\nAutoIncludeFullWindow=FALSE");
+				fwprintf_s(fp, L"\nAutoForceKill=FALSE");
+				fwprintf_s(fp, L"\nAllowGbTop=FALSE");
 				fwprintf_s(fp, L"\nAllowAllRunOp=FALSE");
 				fwprintf_s(fp, L"\nAutoUpdate=TRUE");
 				fwprintf_s(fp, L"\nCKInterval=3100");
-				fwprintf_s(fp, L"\nAutoForceKill=FALSE");
 				fwprintf_s(fp, L"\nDisableDriver=FALSE");
 				fwprintf_s(fp, L"\nSelfProtect=TRUE");
 				fwprintf_s(fp, L"\nBandAllRunOp=FALSE");
@@ -249,8 +250,9 @@ LPCWSTR JTAppInternal::MakeFromSourceArg(LPCWSTR arg)
 	return arg;
 }
 
-int JTAppInternal::Run()
+int JTAppInternal::Run(int nCmdShow)
 {
+	this->appShowCmd = nCmdShow;
 	appResult = RunInternal();
 	this->Exit(appResult);
 	return appResult;
@@ -308,9 +310,11 @@ int JTAppInternal::RunInternal()
 
 	if (appArgBreak) {
 #ifdef _DEBUG
-		MessageBox(NULL, L"This is a _DEBUG version", L"Break", NULL);
+		if (MessageBox(NULL, L"This is a Debug version", L"JiYuTrainer - Debug Break", MB_YESNO | MB_ICONEXCLAMATION) == IDYES)
+			DebugBreak();
 #else
-		MessageBox(NULL, L"This is a Release version", L"Break", NULL);
+		if (MessageBox(NULL, L"This is a Release version", L"JiYuTrainer - Debug Break", MB_YESNO | MB_ICONEXCLAMATION) == IDYES)
+			DebugBreak();
 #endif
 	}
 
@@ -375,7 +379,7 @@ void JTAppInternal::Exit(int code)
 {
 	ExitInternal();
 	ExitClear();
-	ExitProcess(code);
+	//ExitProcess(code);
 }
 bool JTAppInternal::ExitInternal()
 {
@@ -384,7 +388,7 @@ bool JTAppInternal::ExitInternal()
 }
 void JTAppInternal::ExitClear()
 {
-	if (DriverLoaded()) {
+	if (XDriverLoaded()) {
 		XCloseDriverHandle();
 		//XUnLoadDriver();
 	}
@@ -399,10 +403,6 @@ void JTAppInternal::ExitClear()
 	if (appSetting) {
 		delete appSetting;
 		appSetting = nullptr;
-	}
-	if (appLogger) {
-		delete appLogger;
-		appLogger = nullptr;
 	}
 }
 
@@ -420,7 +420,7 @@ LPVOID JTAppInternal::RunOperation(AppOperation op)
 	switch (op)
 	{
 	case AppOperation1: LoadDriver(); break;
-	case AppOperation2: UnLoadKernelDriver(L"TDProcHook"); break;
+	case AppOperation2: MUnLoadKernelDriver(L"TDProcHook"); break;
 	case AppOperationUnLoadDriver: {
 		if (XUnLoadDriver())
 			currentLogger->Log(L"驱动卸载成功");
@@ -437,7 +437,7 @@ LPVOID JTAppInternal::RunOperation(AppOperation op)
 void JTAppInternal::LoadDriver()
 {
 	if (!appForceNoDriver && XLoadDriver())
-		if (SysHlp::GetSystemVersion() == SystemVersionWindows7OrLater && !appForceNoSelfProtect && !XinitSelfProtect())
+		if (SysHlp::GetSystemVersion() == SystemVersionWindows7OrLater && !appForceNoSelfProtect && !XInitSelfProtect())
 			currentLogger->LogWarn(L"驱动自我保护失败！");
 }
 
@@ -484,6 +484,7 @@ void JTAppInternal::InitArgs()
 	if (FindArgInCommandLine(appArgList, appArgCount, L"-b") != -1) appArgBreak = true;
 	if (FindArgInCommandLine(appArgList, appArgCount, L"-r1") != -1) appIsRecover = true;
 	if (FindArgInCommandLine(appArgList, appArgCount, L"-md5ck") != -1) appIsMd5CalcMode = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"-h") != -1) appIsHiddenMode = true;
 
 	int argFIndex = FindArgInCommandLine(appArgList, appArgCount, L"-f");
 	if (argFIndex >= 0 && (argFIndex + 1) < appArgCount) {

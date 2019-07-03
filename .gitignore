@@ -17,4 +17,6 @@
 *.log
 *.dll
 *.sys
+*.ini
+*.bat
 

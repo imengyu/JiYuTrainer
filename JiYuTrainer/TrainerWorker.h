@@ -8,6 +8,8 @@ enum TrainerWorkerOp {
 	TrainerWorkerOp1,
 	TrainerWorkerOpForceUnLoadVirus,
 	TrainerWorkerOp2,
+	TrainerWorkerOp3,
+	TrainerWorkerOp4,
 };
 
 class TrainerWorkerCallback
@@ -102,6 +104,7 @@ private:
 
 	HWND hWndMain;
 
+	bool setAllowGbTop = false;
 	bool setAutoIncludeFullWindow = false;
 	int setCkInterval = 3100;
 	int screenWidth, screenHeight;
@@ -125,7 +128,7 @@ private:
 	bool FindProcess(LPCWSTR processName, DWORD*outPid);
 	bool KillProcess(DWORD pid, bool force);
 
-	bool ReadTopDomanPassword();
+	bool ReadTopDomanPassword(BOOL forceKnock);
 	bool LocateStudentMainLocation();
 	bool LocateStudentMain(DWORD *outFirstPid);
 	bool LocateMasterHelper(DWORD *outFirstPid);

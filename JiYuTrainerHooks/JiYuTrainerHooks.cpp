@@ -11,6 +11,7 @@
 #include <list>
 #include <string>
 #include <time.h>
+#include <stdio.h>
 #include <Shlwapi.h>
 #include <ShellAPI.h>
 #include <CommCtrl.h>
@@ -90,14 +91,33 @@ fnShowWindow faShowWindow = NULL;
 fnExitWindowsEx faExitWindowsEx = NULL;
 fnShellExecuteW faShellExecuteW = NULL;
 fnShellExecuteExW faShellExecuteExW = NULL;
+fnCreateProcessA faCreateProcessA = NULL;
 fnCreateProcessW faCreateProcessW = NULL;
 fnDwmEnableComposition faDwmEnableComposition = NULL;
 fnWinExec faWinExec = NULL;
 fnCallNextHookEx faCallNextHookEx = NULL;
 fnGetDesktopWindow faGetDesktopWindow = NULL;
 fnGetWindowDC faGetWindowDC = NULL;
+fnEncodeToJPEGBuffer faEncodeToJPEGBuffer = NULL;
+fnavcodec_encode_video faavcodec_encode_video = NULL;
+fnGetForegroundWindow faGetForegroundWindow = NULL;
+fnGetDC faGetDC = NULL;
+fnCreateDCW faCreateDCW = NULL;
+
 
 bool loaded = false;
+
+HHOOK g_hhook = NULL;
+
+BOOL hk1 = 0, hk2 = 0, hk3 = 0, hk4 = 0,
+hk5 = 0, hk6 = 0, hk7 = 0, hk8 = 0,
+hk9 = 0, hk10 = 0, hk11 = 0, hk12 = 0,
+hk13 = 0, hk14 = 0, hk15 = 0, hk16 = 0,
+hk17 = 0, hk18 = 0, hk19 = 0, hk20 = 0,
+hk21 = 0, hk22 = 0, hk23 = 0, hk24 = 0,
+hk25 = 0, hk26 = 0, hk27 = 0, hk28 = 0,
+hk29 = 0, hk30 = 0, hk31 = 0, hk32 = 0,
+hk33 = 0, hk34 = 0, hk35 = 0, hk36 = 0;
 
 void VUnloadAll() {
 
@@ -113,7 +133,8 @@ void VUnloadAll() {
 		FreeLibrary(hInst);
 	}
 }
-void VLoad() {
+void VLoad()
+{
 	VParamInit();
 
 	//Get main mod name
@@ -222,7 +243,7 @@ void VInitSettings()
 	if (!StrEqual(w, L"TRUE") && !StrEqual(w, L"true") && !StrEqual(w, L"1")) bandAllRunOp = false;
 	else bandAllRunOp = true;
 
-	GetPrivateProfileString(L"JTSettings", L"AllowMonitor", L"FALSE", w, 32, mainIniPath);
+	GetPrivateProfileString(L"JTSettings", L"AllowMonitor", L"TRUE", w, 32, mainIniPath);
 	if (StrEqual(w, L"TRUE") || StrEqual(w, L"true") || StrEqual(w, L"1")) allowMonitor = true;
 	else allowMonitor = false;
 	GetPrivateProfileString(L"JTSettings", L"AllowControl", L"FALSE", w, 32, mainIniPath);
@@ -294,6 +315,11 @@ void VHandleMsg(LPWSTR buff) {
 		else if (arr[0] == L"test") {
 			VOutPutStatus(L"[T] %s", buff);
 			VShowOpConfirmDialog(L"test", L"test");
+			VSendMessageBack(L"vback:test virus", hWndMsgCenter);
+		}
+		else if (arr[0] == L"test2") {
+			//WCHAR str[300]; swprintf_s(str, L"vback:hk29 %s  faavcodec_encode_video : 0x%08X", hk29 ? L"TRUE" : L"FALSE", faavcodec_encode_video);
+			//VSendMessageBack(str, hWndMsgCenter);
 		}
 	}
 }
@@ -693,16 +719,6 @@ bool VIsOpInWhiteList(const wchar_t* cmd) {
 	return false;
 }
 
-HHOOK g_hhook = NULL;
-
-BOOL hk1 = 0, hk2 = 0, hk3 = 0, hk4 = 0,
-hk5 = 0, hk6 = 0, hk7 = 0, hk8 = 0,
-hk9 = 0, hk10 = 0, hk11 = 0, hk12 = 0,
-hk13 = 0, hk14 = 0, hk15 = 0, hk16 = 0,
-hk17 = 0, hk18 = 0, hk19= 0, hk20 = 0,
-hk21 = 0, hk22 = 0, hk23 = 0, hk24 = 0,
-hk25 = 0, hk26 = 0, hk27 = 0, hk28 = 0,
-hk29 = 0, hk30 = 0, hk31 = 0, hk32 = 0;
 
 void VInstallHooks(VirusMode mode) {
 
@@ -711,6 +727,9 @@ void VInstallHooks(VirusMode mode) {
 	HMODULE hKernel32 = GetModuleHandle(L"kernel32.dll");
 	HMODULE hShell32 = GetModuleHandle(L"shell32.dll");
 	HMODULE hDwmApi = GetModuleHandle(L"dwmapi.dll");
+	HMODULE hGdi32 = GetModuleHandle(L"gdi32.dll");
+	HMODULE hLibJPEG20 = GetModuleHandle(L"LibJPEG20.dll");
+	HMODULE hLibAVCodec52 = GetModuleHandle(L"LibAVCodec52.dll");
 
 	raSetWindowPos = (fnSetWindowPos)GetProcAddress(hUser32, "SetWindowPos");
 	raMoveWindow = (fnMoveWindow)GetProcAddress(hUser32, "MoveWindow");
@@ -727,21 +746,26 @@ void VInstallHooks(VirusMode mode) {
 	faCallNextHookEx = (fnCallNextHookEx)GetProcAddress(hUser32, "CallNextHookEx");
 	faGetDesktopWindow = (fnGetDesktopWindow)GetProcAddress(hUser32, "GetDesktopWindow");
 	faGetWindowDC = (fnGetWindowDC)GetProcAddress(hUser32, "GetDesktopWindow");
+	faGetForegroundWindow = (fnGetForegroundWindow)GetProcAddress(hUser32, "GetForegroundWindow");
+	faGetDC = (fnGetDC)GetProcAddress(hUser32, "GetDC");
 
 	raDeviceIoControl = (fnDeviceIoControl)GetProcAddress(hKernel32, "DeviceIoControl");
 	faCreateFileA = (fnCreateFileA)GetProcAddress(hKernel32, "CreateFileA");
 	faCreateFileW = (fnCreateFileW)GetProcAddress(hKernel32, "CreateFileW");
 	faCreateProcessW = (fnCreateProcessW)GetProcAddress(hKernel32, "CreateProcessW");
+	faCreateProcessA = (fnCreateProcessA)GetProcAddress(hKernel32, "CreateProcessA");
 	faWinExec = (fnWinExec)GetProcAddress(hKernel32, "WinExec");
 
 	faExitWindowsEx = (fnExitWindowsEx)GetProcAddress(hUser32, "ExitWindowsEx");
-	faShellExecuteW = (fnShellExecuteW)GetProcAddress(hShell32, "ShellExecuteW");
-	faShellExecuteExW = (fnShellExecuteExW)GetProcAddress(hShell32, "ShellExecuteExW");
+	//faShellExecuteW = (fnShellExecuteW)GetProcAddress(hShell32, "ShellExecuteW");
+	//faShellExecuteExW = (fnShellExecuteExW)GetProcAddress(hShell32, "ShellExecuteExW");
+
+	faCreateDCW = (fnCreateDCW)GetProcAddress(hGdi32, "CreateDCW");
 
 	if(hDwmApi) faDwmEnableComposition = (fnDwmEnableComposition)GetProcAddress(hDwmApi, "DwmEnableComposition");
-
+	if(hLibJPEG20) faEncodeToJPEGBuffer = (fnEncodeToJPEGBuffer)GetProcAddress(hLibJPEG20, "EncodeToJPEGBuffer");
+	//if(hLibAVCodec52) faavcodec_encode_video = (fnavcodec_encode_video)GetProcAddress(hLibAVCodec52, "avcodec_encode_video");
 	
-
 	//HMODULE hTDDesk2 = GetModuleHandle(L"libtddesk2.dll");
 	//if (hTDDesk2) {
 	//	faTDDeskCreateInstance = (fnTDDeskCreateInstance)GetProcAddress(hTDDesk2, "TDDeskCreateInstance");
@@ -784,6 +808,14 @@ void VInstallHooks(VirusMode mode) {
 		
 		hk26 = Mhook_SetHook((PVOID*)&faGetWindowDC, hkGetWindowDC);
 		hk27 = Mhook_SetHook((PVOID*)&faGetDesktopWindow, hkGetDesktopWindow);
+		
+		if(faEncodeToJPEGBuffer) hk28 = Mhook_SetHook((PVOID*)&faEncodeToJPEGBuffer, hkEncodeToJPEGBuffer);
+		//if(faavcodec_encode_video) hk29 = Mhook_SetHook((PVOID*)&faavcodec_encode_video, hkavcodec_encode_video);
+	
+		hk30 = Mhook_SetHook((PVOID*)&faCreateProcessA, hkCreateProcessA);
+		hk31 = Mhook_SetHook((PVOID*)&faGetForegroundWindow, hkGetForegroundWindow);
+		hk32 = Mhook_SetHook((PVOID*)&faGetDC, hkGetDC);
+		hk33 = Mhook_SetHook((PVOID*)&faCreateDCW, hkCreateDCW);
 	}
 	if (mode == VirusModeMaster) {
 		
@@ -824,6 +856,13 @@ void VUnInstallHooks() {
 	if (hk25) Mhook_Unhook((PVOID*)&faCallNextHookEx);
 	if (hk26) Mhook_Unhook((PVOID*)&faGetWindowDC);
 	if (hk27) Mhook_Unhook((PVOID*)&faGetDesktopWindow);
+	if (hk28) Mhook_Unhook((PVOID*)&faEncodeToJPEGBuffer);
+	if (hk29) Mhook_Unhook((PVOID*)&faavcodec_encode_video);
+	if (hk30) Mhook_Unhook((PVOID*)&faCreateProcessA);
+	if (hk31) Mhook_Unhook((PVOID*)&faGetForegroundWindow);
+	if (hk32) Mhook_Unhook((PVOID*)&faGetDC);
+	if (hk33) Mhook_Unhook((PVOID*)&faCreateDCW);
+	
 
 	if (g_hhook) {
 		UnhookWindowsHookEx(g_hhook);
@@ -1064,6 +1103,7 @@ BOOL WINAPI hkCreateProcessW(LPCWSTR lpApplicationName, LPWSTR lpCommandLine, LP
 		if (MessageBox(NULL, L"极域电子教室试图关机或重启，是否允许极域继续操作？", L"JiYu Killer 防护警告", MB_ICONEXCLAMATION | MB_YESNO) == IDNO) canContinue = false;
 	} 
 	else if (StringHlp::StrContainsW(lowStr, L"jiyutrainer.exe", NULL) 
+		|| StringHlp::StrContainsW(lowStr, L"explorer", NULL)
 		|| StringHlp::StrContainsW(lowStr, L"sogouinput", NULL)
 		|| StringHlp::StrContainsW(lowStr, L"ime", NULL)
 		|| StringHlp::StrContainsW(lowStr, L"baidupinyin", NULL)
@@ -1073,6 +1113,44 @@ BOOL WINAPI hkCreateProcessW(LPCWSTR lpApplicationName, LPWSTR lpCommandLine, LP
 	else if (bandAllRunOp || !VShowOpConfirmDialog(lpApplicationName, lpCommandLine)) canContinue = false;
 
 	if(canContinue) return faCreateProcessW(lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes, bInheritHandles, dwCreationFlags, lpEnvironment, lpCurrentDirectory, lpStartupInfo, lpProcessInformation);
+	else return TRUE;
+}
+BOOL WINAPI hkCreateProcessA(LPCSTR lpApplicationName, LPSTR lpCommandLine, LPSECURITY_ATTRIBUTES lpProcessAttributes, LPSECURITY_ATTRIBUTES lpThreadAttributes, BOOL bInheritHandles, DWORD dwCreationFlags, LPVOID lpEnvironment, LPCSTR lpCurrentDirectory, LPSTARTUPINFOA lpStartupInfo, LPPROCESS_INFORMATION lpProcessInformation)
+{
+	bool canContinue = true;
+	if (allowAllRunOp)
+		return faCreateProcessA(lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes, bInheritHandles, dwCreationFlags, lpEnvironment, lpCurrentDirectory, lpStartupInfo, lpProcessInformation);
+
+	LPCWSTR lpApplicationNameW = StringHlp::AnsiToUnicode(lpApplicationName);
+	LPCWSTR lpCommandLineW = StringHlp::AnsiToUnicode(lpCommandLine);
+
+	LPCSTR exePath = NULL;
+	if (!StringHlp::StrEmeptyA(lpApplicationName) && _waccess_s(lpApplicationNameW, 0) == 0) exePath = lpApplicationName;
+	else if (!StringHlp::StrEmeptyA(lpCommandLine) && _waccess_s(lpCommandLineW, 0) == 0) exePath = lpCommandLine;
+	else if (!StringHlp::StrEmeptyA(lpApplicationName)) exePath = lpApplicationName;
+	else if (!StringHlp::StrEmeptyA(lpCommandLine)) exePath = lpCommandLine;
+
+	LPCSTR lowStr = StringHlp::StrLoA(exePath);
+	LPCWSTR lowStrW = StringHlp::AnsiToUnicode(lowStr);
+
+	if (StringHlp::StrContainsA(lowStr, "shutdown.exe", NULL)) {
+		if (MessageBox(NULL, L"极域电子教室试图关机或重启，是否允许极域继续操作？", L"JiYu Killer 防护警告", MB_ICONEXCLAMATION | MB_YESNO) == IDNO) canContinue = false;
+	}
+	else if (StringHlp::StrContainsA(lowStr, "jiyutrainer.exe", NULL)
+		|| StringHlp::StrContainsA(lowStr, "explorer", NULL)
+		|| StringHlp::StrContainsA(lowStr, "sogouinput", NULL)
+		|| StringHlp::StrContainsA(lowStr, "ime", NULL)
+		|| StringHlp::StrContainsA(lowStr, "baidupinyin", NULL)
+		|| VIsOpInWhiteList(lowStrW)) canContinue = true;
+	else if (StringHlp::StrContainsA(lowStr, "tdchalk.exe", NULL))
+		canContinue = false;
+	else if (bandAllRunOp || !VShowOpConfirmDialog(lpApplicationNameW, lpCommandLineW)) canContinue = false;
+
+	StringHlp::FreeStringPtr(lpApplicationNameW);
+	StringHlp::FreeStringPtr(lpCommandLineW);
+	StringHlp::FreeStringPtr(lowStrW);
+
+	if (canContinue) return faCreateProcessA(lpApplicationName, lpCommandLine, lpProcessAttributes, lpThreadAttributes, bInheritHandles, dwCreationFlags, lpEnvironment, lpCurrentDirectory, lpStartupInfo, lpProcessInformation);
 	else return TRUE;
 }
 UINT WINAPI hkWinExec(LPCSTR lpCmdLine, UINT uCmdShow) {
@@ -1086,6 +1164,7 @@ UINT WINAPI hkWinExec(LPCSTR lpCmdLine, UINT uCmdShow) {
 		if (MessageBox(NULL, L"极域电子教室试图关机或重启，是否允许极域继续操作？", L"JiYu Killer 防护警告", MB_ICONEXCLAMATION | MB_YESNO) == IDNO) canContinue = false;
 	}
 	else if (StringHlp::StrContainsW(lowStr, L"jiyutrainer.exe", NULL)
+		|| StringHlp::StrContainsW(lowStr, L"explorer", NULL)
 		|| StringHlp::StrContainsW(lowStr, L"sogouinput", NULL)
 		|| StringHlp::StrContainsW(lowStr, L"baidupinyin", NULL)
 		|| StringHlp::StrContainsW(lowStr, L"ime", NULL)
@@ -1166,6 +1245,33 @@ HDC WINAPI hkGetWindowDC(__in_opt HWND hWnd) {
 	if (loaded && hWnd == desktopWindow && !allowMonitor)
 		return faGetWindowDC(fakeDesktopWindow);
 	return faGetWindowDC(hWnd);
+}
+BOOL __cdecl hkEncodeToJPEGBuffer(int a1, int a2, int a3, int a4, int a5, DWORD * a6, int a7, int a8, int a9)
+{
+	if (!allowMonitor) return FALSE;
+	return faEncodeToJPEGBuffer(a1, a2, a3, a4, a5, a6, a7, a8, a9);
+}
+int __cdecl hkavcodec_encode_video(char a1, int a2, int a3, int a4)
+{
+	return allowMonitor ? faavcodec_encode_video(a1, a2, a3, a4) : 0;
+}
+HWND WINAPI hkGetForegroundWindow(VOID)
+{
+	return allowAllRunOp ? faGetForegroundWindow() : NULL;
+}
+HDC WINAPI hkGetDC(HWND hWnd)
+{
+	if (hWnd == NULL) return allowMonitor ? faGetDC(hWnd) : GetWindowDC(fakeDesktopWindow);
+	else return faGetDC(hWnd);
+}
+HDC WINAPI hkCreateDCW(LPCWSTR pwszDriver, LPCWSTR pwszDevice, LPCWSTR pszPort, const DEVMODEW * pdm)
+{
+	if (!allowMonitor) 
+	{
+		if (StrEqual(pwszDriver, L"DISPLAY"))
+			return NULL;
+	}
+	return faCreateDCW(pwszDriver,  pwszDevice,  pszPort, pdm);
 }
 
 //HOOK Virus stub

@@ -7,6 +7,7 @@
 #define IDR_MAINMENU                    113
 #define IDR_HTML_ABOUT                  119
 #define IDR_HTML_UPDATER                121
+#define IDB_PNG1                        122
 #define IDM_HELP                        32774
 #define IDM_EXIT                        32775
 #define IDM_SHOWMAIN                    32776
@@ -15,7 +16,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        122
+#define _APS_NEXT_RESOURCE_VALUE        123
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1001
 #define _APS_NEXT_SYMED_VALUE           101
