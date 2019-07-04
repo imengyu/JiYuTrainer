@@ -1,6 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include <string>
+#include "SysHlp.h"
 
 enum TrainerWorkerOp {
 	TrainerWorkerOpVirusBoom,
@@ -31,6 +32,7 @@ public:
 	virtual void OnResolveBlackScreenWindow() {}
 	virtual void OnSimpleMessageCallback(LPCWSTR text) {}
 	virtual void OnBeforeSendStartConf() {}
+	virtual void OnAllowGbTop() {}
 	virtual void OnSwitchLockStatus(bool locked) {}
 	virtual HWND GetMainHWND() { return NULL; }
 };
@@ -90,6 +92,7 @@ private:
 	TrainerWorkerCallback *_Callback = nullptr;
 	bool _Running = false;
 	HDESK hDesktop = NULL;
+	SysHlp*appSysHlp = nullptr;
 
 	bool _VirusInstalled = false;
 	DWORD _StudentMainPid = 0;
@@ -102,12 +105,14 @@ private:
 	std::wstring _StatusTextMore;
 	std::wstring _TopDomainPassword;
 
+	HHOOK hMsgBoxHook;
 	HWND hWndMain;
 
 	bool setAllowGbTop = false;
 	bool setAutoIncludeFullWindow = false;
 	int setCkInterval = 3100;
 	int screenWidth, screenHeight;
+	bool gbFullManual = false;
 
 	bool _NextLoopGetCkStat = false;
 
@@ -150,6 +155,8 @@ private:
 
 	void SwitchFakeFull();
 	void FakeFull(bool fk);
+	void ManualFull(bool fk);
+	void ManualTop(bool fk);
 	bool ChecIsJIYuWindow(HWND hWnd, LPDWORD outPid, LPDWORD outTid);
 	bool CheckIsTargetWindow(LPWSTR text, HWND hWnd);
 	void FixWindow(HWND hWnd, LPWSTR text);
@@ -158,6 +165,8 @@ private:
 
 	static BOOL CALLBACK EnumWindowsProc(HWND hWnd, LPARAM lParam);
 	static VOID CALLBACK TimerProc(HWND, UINT, UINT_PTR, DWORD);
+	static VOID CALLBACK MsgBoxCallback(LPHELPINFO lpHelpInfo);
+	static LRESULT CALLBACK CBTProc(int nCode, WPARAM wParam, LPARAM lParam);
 };
 
 #endif

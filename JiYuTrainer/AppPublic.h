@@ -15,6 +15,9 @@
 #define PART_DRIVER 5
 #define PART_COUNT 8
 
+#define UTILS_SYSHLP 0
+#define UTILS_MD5UTILS 1
+
 enum EXTRACT_RES {
 	ExtractUnknow,
 	ExtractCreateFileError,
@@ -42,6 +45,10 @@ public:
 		检查程序完整性并开始安装
 	*/
 	virtual int CheckInstall(APP_INSTALL_MODE mode) { return 0; }
+	/*
+		卸载
+	*/
+	virtual void UnInstall() {}
 
 	/*
 		释放模块资源到文件
@@ -98,10 +105,13 @@ public:
 	//获取当前程序目录
 	virtual LPCWSTR GetCurrentDir() { return nullptr; }
 	virtual LPCWSTR GetSourceInstallerPath() { return nullptr; }
-
+	
 	virtual int GetAppShowCmd() { return 0; };
 	virtual bool GetAppIsHiddenMode() { return false; };
 
+	virtual LPCWSTR GetStartupErr() { return nullptr; }
+
+	virtual void* GetUtils(int utilsId) { return nullptr; }
 	virtual Logger* GetLogger() { return nullptr; };
 	virtual SettingHlp* GetSettings() { return nullptr; };
 	virtual bool GetSelfProtect() { return false; }

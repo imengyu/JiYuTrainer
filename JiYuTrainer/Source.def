@@ -1,0 +1,5 @@
+
+EXPORTS
+JTGetApp @1 NONAME
+JTForceExit @2 NONAME
+JTShowAppStartupFail @3 NONAME

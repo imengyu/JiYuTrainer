@@ -36,6 +36,9 @@
     <ClInclude Include="UpdaterWindow.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="ConfigWindow.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -54,6 +57,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="UpdaterWindow.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ConfigWindow.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -114,10 +120,25 @@
     <Image Include="res\footer-mask.png">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="res\logo-text.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\version-text.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\VERSION-DETAIL.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\update_bg.png">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="MainWindow.html" />
     <None Include="HelpWindow.html" />
     <None Include="UpdaterWindow.html" />
+    <None Include="Source.def">
+      <Filter>源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>

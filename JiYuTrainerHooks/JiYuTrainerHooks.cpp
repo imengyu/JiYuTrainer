@@ -21,6 +21,8 @@
 #define TIMER_WATCH_DOG_SRV 10011
 #define TIMER_AUTO_HIDE 10012
 #define TIMER_COUNTDOWN_TICK 10013
+#define TIMER_LIGNT_DELAY1 10014
+#define TIMER_LIGNT_DELAY2 10015
 
 #define DirectorySeparatorChar L'\\'
 #define AltDirectorySeparatorChar  L'/'
@@ -30,6 +32,15 @@
 #define IDC_SW_STATUS_LOCKED 20002
 #define IDC_SW_STATUS_MAIN 20003
 #define IDC_SW_STATUS_MAIN_OUT 20004
+#define IDC_SW_STATUS_MAIN_FLASH 20005
+#define IDC_SW_STATUS_RB_FLASH 20006
+#define IDC_SW_STATUS_RB 20007
+#define IDC_SW_STATUS_RB_FAIL 20008
+#define IDC_SW_STATUS_RB_FAIL_FLASH 20009
+#define IDC_SW_STATUS_RB_FLASH_FAST 20010
+
+#define IDM_TOPMOST 25600
+#define IDM_FULL 25601
 
 using namespace std;
 
@@ -54,8 +65,9 @@ INT screenWidth, screenHeight;
 bool outlineEndJiy = false;
 HWND hWndOpConformNoBtn = NULL;
 bool bandAllRunOp = false, allowNextRunOp = false, allowAllRunOp  = false;
-bool allowMonitor = false, allowControl = false, fakeFull = false;
-bool isLocked = false;
+bool allowMonitor = false, allowControl = false, allowGbTop = false, fakeFull = false, gbFullManual = false,
+doNotShowVirusWindow = false, forceDisableWatchDog = false;
+bool isLocked = false, gbCurrentIsTop = false, isGbFounded = false;
 std::list<std::wstring> runOPWhiteList;
 bool forceKill = false;
 int wdCount = 0;
@@ -99,11 +111,11 @@ fnCallNextHookEx faCallNextHookEx = NULL;
 fnGetDesktopWindow faGetDesktopWindow = NULL;
 fnGetWindowDC faGetWindowDC = NULL;
 fnEncodeToJPEGBuffer faEncodeToJPEGBuffer = NULL;
-fnavcodec_encode_video faavcodec_encode_video = NULL;
 fnGetForegroundWindow faGetForegroundWindow = NULL;
-fnGetDC faGetDC = NULL;
 fnCreateDCW faCreateDCW = NULL;
-
+fnEnableMenuItem faEnableMenuItem = NULL;
+fnSetClassLongA faSetClassLongA = NULL;
+fnSetClassLongW faSetClassLongW = NULL;
 
 bool loaded = false;
 
@@ -117,7 +129,8 @@ hk17 = 0, hk18 = 0, hk19 = 0, hk20 = 0,
 hk21 = 0, hk22 = 0, hk23 = 0, hk24 = 0,
 hk25 = 0, hk26 = 0, hk27 = 0, hk28 = 0,
 hk29 = 0, hk30 = 0, hk31 = 0, hk32 = 0,
-hk33 = 0, hk34 = 0, hk35 = 0, hk36 = 0;
+hk33 = 0, hk34 = 0, hk35 = 0, hk36 = 0,
+hk37 = 0, hk38 = 0, hk39 = 0, hk40 = 0;
 
 void VUnloadAll() {
 
@@ -243,6 +256,18 @@ void VInitSettings()
 	if (!StrEqual(w, L"TRUE") && !StrEqual(w, L"true") && !StrEqual(w, L"1")) bandAllRunOp = false;
 	else bandAllRunOp = true;
 
+	GetPrivateProfileString(L"JTSettings", L"DoNotShowVirusWindow", L"FALSE", w, 32, mainIniPath);
+	if (!StrEqual(w, L"TRUE") && !StrEqual(w, L"true") && !StrEqual(w, L"1")) doNotShowVirusWindow = false;
+	else doNotShowVirusWindow = true;
+
+	GetPrivateProfileString(L"JTSettings", L"ForceDisableWatchDog", L"FALSE", w, 32, mainIniPath);
+	if (!StrEqual(w, L"TRUE") && !StrEqual(w, L"true") && !StrEqual(w, L"1")) forceDisableWatchDog = false;
+	else forceDisableWatchDog = true;
+
+	GetPrivateProfileString(L"JTSettings", L"AllowGbTop", L"FALSE", w, 32, mainIniPath);
+	if (StrEqual(w, L"TRUE") || StrEqual(w, L"true") || StrEqual(w, L"1")) allowGbTop = true;
+	else allowGbTop = false;
+
 	GetPrivateProfileString(L"JTSettings", L"AllowMonitor", L"TRUE", w, 32, mainIniPath);
 	if (StrEqual(w, L"TRUE") || StrEqual(w, L"true") || StrEqual(w, L"1")) allowMonitor = true;
 	else allowMonitor = false;
@@ -250,8 +275,8 @@ void VInitSettings()
 	if (StrEqual(w, L"TRUE") || StrEqual(w, L"true") || StrEqual(w, L"1")) allowControl = true;
 	else allowControl = false;
 }
-void VLaterInit() {
-
+void VLaterInit()
+{
 	if (PathFileExists(mainIniPath)) 
 	{
 		VInitSettings();
@@ -285,6 +310,7 @@ void VHandleMsg(LPWSTR buff) {
 			if (arr[1] == L"ckstat") {
 				VSendMessageBack(L"hkb:succ", hWndMsgCenter);
 				SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_MAIN, NULL);
+				SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_RB_FLASH, 0);
 			}
 			else if (arr[1] == L"ckend") VManualQuit();
 			else if (arr[1] == L"path" && arr.size() >= 4) {
@@ -297,14 +323,17 @@ void VHandleMsg(LPWSTR buff) {
 				wcscat_s(mainIniPath, L":");
 				wcscat_s(mainIniPath, arr[3].c_str());
 				VLaterInit();
+				SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_RB_FLASH, 0);
 			}
 			else if (arr[1] == L"reset") {
 				VInitSettings();
 				VSendMessageBack(L"hkb:succ", hWndMsgCenter);
+				SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_RB_FAIL_FLASH, 0);
 			}
 			else if (arr[1] == L"fkfull" && arr.size() >= 3) {
 				fakeFull = arr[2] == L"true";
 				SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_FAKEFULL, NULL);
+				SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_RB_FLASH, 0);
 			}
 		}
 		else if (arr[0] == L"ukt") {
@@ -318,6 +347,10 @@ void VHandleMsg(LPWSTR buff) {
 			VSendMessageBack(L"vback:test virus", hWndMsgCenter);
 		}
 		else if (arr[0] == L"test2") {
+			if (arr[1] == L"f") {
+				VOutPutStatus(L"test2 > f");
+				SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_MAIN_FLASH, NULL);
+			}
 			//WCHAR str[300]; swprintf_s(str, L"vback:hk29 %s  faavcodec_encode_video : 0x%08X", hk29 ? L"TRUE" : L"FALSE", faavcodec_encode_video);
 			//VSendMessageBack(str, hWndMsgCenter);
 		}
@@ -377,6 +410,7 @@ void VFixGuangBoWindow(HWND hWnd)
 		gbWindow = hWnd;
 		VOutPutStatus(L"[H] Guang Bo Window : %d", hWnd);
 	}
+	//WNDPROC 接管
 	WNDPROC oldWndProc = (WNDPROC)GetWindowLong(hWnd, GWL_WNDPROC);
 	if (oldWndProc != (WNDPROC)JiYuWndProc) {
 		jiYuWndProc = (WNDPROC)oldWndProc;
@@ -386,12 +420,37 @@ void VFixGuangBoWindow(HWND hWnd)
 	}
 	LONG style = GetWindowLong(hWnd, GWL_STYLE);
 	if ((style & WS_OVERLAPPEDWINDOW) != WS_OVERLAPPEDWINDOW)
-	{
 		style |= WS_OVERLAPPEDWINDOW;
-		SetWindowLong(hWnd, GWL_STYLE, style);
+	if ((style & WS_SYSMENU) != WS_SYSMENU)
+		style |= WS_SYSMENU;
+	SetWindowLong(hWnd, GWL_STYLE, style);
+	//增加菜单
+	GetSystemMenu(gbWindow, TRUE);
+	HMENU hMenu = GetSystemMenu(gbWindow, FALSE);
+	AppendMenu(hMenu, MF_SEPARATOR, MF_SEPARATOR, L"");
+	AppendMenu(hMenu, MF_STRING, IDM_FULL, L"广播窗口全屏");
+	AppendMenu(hMenu, MF_STRING, IDM_TOPMOST, L"广播窗口置顶");
+
+	LONG oldLong = GetWindowLong(gbWindow, GWL_EXSTYLE);
+	if ((oldLong & WS_EX_TOPMOST) == WS_EX_TOPMOST) {
+		CheckMenuItem(hMenu, IDM_TOPMOST, MF_CHECKED);
+		gbCurrentIsTop = true;
 	}
+	else {
+		CheckMenuItem(hMenu, IDM_TOPMOST, MF_UNCHECKED);
+		gbCurrentIsTop = false;
+	}
+	if (gbFullManual)
+		CheckMenuItem(hMenu, IDM_FULL,  MF_CHECKED);
+	else 
+		CheckMenuItem(hMenu, IDM_FULL, MF_UNCHECKED);
 
+	//类属性
+	LONG oldWndClsLong = GetClassLong(gbWindow, GCL_STYLE);
+	oldWndClsLong ^= CS_NOCLOSE;
+	SetClassLong(gbWindow, GCL_STYLE, oldWndClsLong);
 
+	isGbFounded = true;
 }
 bool VIsInIllegalWindows(HWND hWnd) {
 	list<HWND>::iterator testiterator;
@@ -428,9 +487,11 @@ void VSendMessageBack(LPCWSTR buff, HWND hDlg) {
 		copyData.lpData = (PVOID)buff;
 		copyData.cbData = sizeof(WCHAR) * (wcslen(buff) + 1);
 		SendMessageTimeout(receiveWindow, WM_COPYDATA, (WPARAM)hDlg, (LPARAM)&copyData, SMTO_NORMAL, 500, 0);
+		SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_RB_FLASH_FAST, 0);
 	}
 	else if(!outlineEndJiy) {
 		SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_MAIN_OUT, NULL);
+		SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_RB_FAIL, 0);
 		outlineEndJiy = true;
 		if (forceKill) {
 			if (_waccess_s(mainFullPath, 0) == 0)
@@ -464,6 +525,11 @@ bool VIsWindowGbOrHp(HWND hWnd) {
 	GetWindowText(hWnd, text, 32);
 	return StrEqual(text, L"屏幕广播") || StrEqual(text, L"屏幕演播室窗口") || StrEqual(text, L"BlackScreen Window");
 }
+bool VIsWindowGb(HWND hWnd) {
+	WCHAR text[32];
+	GetWindowText(hWnd, text, 32);
+	return StrEqual(text, L"屏幕广播") || StrEqual(text, L"屏幕演播室窗口");
+}
 bool VIsWindowHp(HWND hWnd) {
 	WCHAR text[32];
 	GetWindowText(hWnd, text, 32);
@@ -479,12 +545,18 @@ void VSwitchLockState(bool l) {
 }
 void VSwitchLockState(HWND hWnd, bool l) {
 	if (l) {
-		if (!isLocked && VIsWindowGbOrHp(hWnd))
+		if (!isLocked && VIsWindowGbOrHp(hWnd)) {
+			if (VIsWindowGb(hWnd))
+				isGbFounded = true;
 			VSwitchLockState(l);
+		}
 	}
 	else {
-		if (isLocked && VIsWindowGbOrHp(hWnd))
+		if (isLocked && VIsWindowGbOrHp(hWnd)) {
+			if (VIsWindowGb(hWnd))
+				isGbFounded = false;
 			VSwitchLockState(l);
+		}
 	}
 }
 
@@ -719,7 +791,6 @@ bool VIsOpInWhiteList(const wchar_t* cmd) {
 	return false;
 }
 
-
 void VInstallHooks(VirusMode mode) {
 
 	//Mhook_SetHook
@@ -747,7 +818,9 @@ void VInstallHooks(VirusMode mode) {
 	faGetDesktopWindow = (fnGetDesktopWindow)GetProcAddress(hUser32, "GetDesktopWindow");
 	faGetWindowDC = (fnGetWindowDC)GetProcAddress(hUser32, "GetDesktopWindow");
 	faGetForegroundWindow = (fnGetForegroundWindow)GetProcAddress(hUser32, "GetForegroundWindow");
-	faGetDC = (fnGetDC)GetProcAddress(hUser32, "GetDC");
+	faEnableMenuItem = (fnEnableMenuItem)GetProcAddress(hUser32, "EnableMenuItem");
+	faSetClassLongA = (fnSetClassLongA)GetProcAddress(hUser32, "SetClassLongA");
+	faSetClassLongW = (fnSetClassLongW)GetProcAddress(hUser32, "SetClassLongW");
 
 	raDeviceIoControl = (fnDeviceIoControl)GetProcAddress(hKernel32, "DeviceIoControl");
 	faCreateFileA = (fnCreateFileA)GetProcAddress(hKernel32, "CreateFileA");
@@ -810,12 +883,16 @@ void VInstallHooks(VirusMode mode) {
 		hk27 = Mhook_SetHook((PVOID*)&faGetDesktopWindow, hkGetDesktopWindow);
 		
 		if(faEncodeToJPEGBuffer) hk28 = Mhook_SetHook((PVOID*)&faEncodeToJPEGBuffer, hkEncodeToJPEGBuffer);
-		//if(faavcodec_encode_video) hk29 = Mhook_SetHook((PVOID*)&faavcodec_encode_video, hkavcodec_encode_video);
-	
+
 		hk30 = Mhook_SetHook((PVOID*)&faCreateProcessA, hkCreateProcessA);
 		hk31 = Mhook_SetHook((PVOID*)&faGetForegroundWindow, hkGetForegroundWindow);
-		hk32 = Mhook_SetHook((PVOID*)&faGetDC, hkGetDC);
-		hk33 = Mhook_SetHook((PVOID*)&faCreateDCW, hkCreateDCW);
+
+	    hk33 = Mhook_SetHook((PVOID*)&faCreateDCW, hkCreateDCW);
+		hk34 = Mhook_SetHook((PVOID*)&faEnableMenuItem, hkEnableMenuItem);
+
+		hk35 = Mhook_SetHook((PVOID*)&faSetClassLongA, hkSetClassLongA);
+		hk36 = Mhook_SetHook((PVOID*)&faSetClassLongW, hkSetClassLongW);
+
 	}
 	if (mode == VirusModeMaster) {
 		
@@ -857,12 +934,15 @@ void VUnInstallHooks() {
 	if (hk26) Mhook_Unhook((PVOID*)&faGetWindowDC);
 	if (hk27) Mhook_Unhook((PVOID*)&faGetDesktopWindow);
 	if (hk28) Mhook_Unhook((PVOID*)&faEncodeToJPEGBuffer);
-	if (hk29) Mhook_Unhook((PVOID*)&faavcodec_encode_video);
+
 	if (hk30) Mhook_Unhook((PVOID*)&faCreateProcessA);
 	if (hk31) Mhook_Unhook((PVOID*)&faGetForegroundWindow);
-	if (hk32) Mhook_Unhook((PVOID*)&faGetDC);
+
 	if (hk33) Mhook_Unhook((PVOID*)&faCreateDCW);
-	
+	if (hk34) Mhook_Unhook((PVOID*)&faEnableMenuItem);
+	if (hk35) Mhook_Unhook((PVOID*)&faSetClassLongA);
+	if (hk36) Mhook_Unhook((PVOID*)&faSetClassLongW);
+
 
 	if (g_hhook) {
 		UnhookWindowsHookEx(g_hhook);
@@ -901,7 +981,7 @@ BOOL WINAPI hkSetWindowPos(HWND hWnd, HWND hWndInsertAfter, int x, int y, int cx
 			if ((x == 0 && y == 0 && cx == screenWidth && cy == screenHeight))
 			{
 				VSwitchLockState(hWnd, TRUE);
-				if (fakeFull && VIsWindowGbOrHp(hWnd))
+				if ((fakeFull) && VIsWindowGbOrHp(hWnd))
 					return raSetWindowPos(hWnd, hWndInsertAfter, x, y, cx, cy, uFlags);
 				if (VIsInIllegalCanSizeWindows(hWnd))
 				{
@@ -1212,14 +1292,17 @@ LONG WINAPI hkSetWindowLongW(HWND hWnd, int nIndex, LONG dwNewLong)
 }
 BOOL WINAPI hkShowWindow(HWND hWnd, int nCmdShow)
 {
-	if (VIsWindowGbOrHp(hWnd)) {
-		if (nCmdShow == SW_SHOW || nCmdShow == SW_SHOWNORMAL 
+	if (VIsWindowGbOrHp(hWnd)) 
+	{
+		if (nCmdShow == SW_SHOW || nCmdShow == SW_SHOWNORMAL  || nCmdShow == SW_MAXIMIZE || nCmdShow == SW_MAX || nCmdShow == SW_SHOWNA
 			|| nCmdShow ==  SW_SHOWMAXIMIZED || nCmdShow == SW_SHOWNOACTIVATE || nCmdShow == SW_SHOWDEFAULT) {
 			if(VIsWindowHp(hWnd))
 				VSwitchLockState(hWnd, TRUE);
+			if (VIsWindowGb(hWnd)) isGbFounded = true;
 			VSendMessageBack(L"hkb:immck", hWndMsgCenter);
 		}
 		else if (nCmdShow == SW_HIDE) {
+			if (VIsWindowGb(hWnd)) isGbFounded = false;
 			VSwitchLockState(hWnd, FALSE);
 		}
 	}
@@ -1251,27 +1334,42 @@ BOOL __cdecl hkEncodeToJPEGBuffer(int a1, int a2, int a3, int a4, int a5, DWORD 
 	if (!allowMonitor) return FALSE;
 	return faEncodeToJPEGBuffer(a1, a2, a3, a4, a5, a6, a7, a8, a9);
 }
-int __cdecl hkavcodec_encode_video(char a1, int a2, int a3, int a4)
-{
-	return allowMonitor ? faavcodec_encode_video(a1, a2, a3, a4) : 0;
-}
 HWND WINAPI hkGetForegroundWindow(VOID)
 {
 	return allowAllRunOp ? faGetForegroundWindow() : NULL;
 }
-HDC WINAPI hkGetDC(HWND hWnd)
-{
-	if (hWnd == NULL) return allowMonitor ? faGetDC(hWnd) : GetWindowDC(fakeDesktopWindow);
-	else return faGetDC(hWnd);
-}
 HDC WINAPI hkCreateDCW(LPCWSTR pwszDriver, LPCWSTR pwszDevice, LPCWSTR pszPort, const DEVMODEW * pdm)
 {
-	if (!allowMonitor) 
+	if (isGbFounded)
+		return faCreateDCW(pwszDriver, pwszDevice, pszPort, pdm);
+	if (!allowMonitor)
 	{
 		if (StrEqual(pwszDriver, L"DISPLAY"))
 			return NULL;
 	}
-	return faCreateDCW(pwszDriver,  pwszDevice,  pszPort, pdm);
+	return faCreateDCW(pwszDriver, pwszDevice, pszPort, pdm);
+}
+BOOL WINAPI hkEnableMenuItem(HMENU hMenu, UINT uIDEnableItem, UINT uEnable)
+{
+	if(uIDEnableItem == SC_CLOSE)
+		return 0;
+	return faEnableMenuItem(hMenu, uIDEnableItem, uEnable);
+}
+DWORD WINAPI hkSetClassLongA(HWND hWnd, int nIndex, LONG dwNewLong)
+{
+	if (loaded) {
+		if (nIndex == GCL_STYLE && (dwNewLong & CS_NOCLOSE) == CS_NOCLOSE)
+			return faSetClassLongA(hWnd, nIndex, dwNewLong ^ CS_NOCLOSE);
+	}
+	return faSetClassLongA(hWnd, nIndex, dwNewLong);
+}
+DWORD WINAPI hkSetClassLongW(HWND hWnd, int nIndex, LONG dwNewLong)
+{
+	if (loaded) {
+		if(nIndex == GCL_STYLE && (dwNewLong & CS_NOCLOSE) == CS_NOCLOSE)
+			return faSetClassLongA(hWnd, nIndex, dwNewLong ^ CS_NOCLOSE);
+	}
+	return faSetClassLongA(hWnd, nIndex, dwNewLong);
 }
 
 //HOOK Virus stub
@@ -1317,7 +1415,7 @@ INT_PTR CALLBACK MainWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 		SetWindowText(hDlg, L"JiYu Trainer Virus Window");
 
 		hIconRed = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_BITMAP_RED));
-		hIconGreen = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_BITMAP_GRRY));
+		hIconGreen = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_BITMAP_GREEN));
 		hIconGrey = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_BITMAP_GRRY));
 
 		hStatusMain = GetDlgItem(hDlg, IDC_STATUS_RUNNING);
@@ -1362,23 +1460,49 @@ INT_PTR CALLBACK MainWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			SetWindowPos(hDlg, 0, rc.left, -(rc.bottom - rc.top - 8), 0, 0, SWP_NOZORDER | SWP_NOACTIVATE | SWP_NOSIZE);
 			break;
 		}
-		case IDC_SW_STATUS_FAKEFULL: {
-			if (fakeFull) SendMessage(hStatusFakeFull, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconGreen);
-			else SendMessage(hStatusFakeFull, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconGrey);
+		case IDC_SW_STATUS_FAKEFULL:
+		case IDC_SW_STATUS_LOCKED: {
+			if (isLocked) {
+				if (fakeFull) SendMessage(hStatusLock, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconGreen);
+				else SendMessage(hStatusLock, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconRed);
+			}
+			else SendMessage(hStatusLock, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconGrey);
 			break;
 		}
-		case IDC_SW_STATUS_LOCKED: {
-			if (isLocked) SendMessage(hStatusLock, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconRed);
-			else SendMessage(hStatusLock, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconGreen);
+		case IDC_SW_STATUS_MAIN_FLASH: {
+			SendMessage(hStatusMain, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconGreen);
+			SetTimer(hDlg, TIMER_LIGNT_DELAY1, 1000, NULL);
 			break;
 		}
 		case IDC_SW_STATUS_MAIN: {
-			SendMessage(hStatusMain, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconGreen);
+			SendMessage(hStatusMain, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconGrey);
 			break;
 		}
 		case IDC_SW_STATUS_MAIN_OUT: {
 			SendMessage(hStatusMain, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconRed);
 			break;
+		}
+		case IDC_SW_STATUS_RB_FLASH: {
+			SendMessage(hStatusFakeFull, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconGreen);
+			SetTimer(hDlg, TIMER_LIGNT_DELAY2, 500, NULL);
+			break;
+		}
+		case IDC_SW_STATUS_RB: {
+			SendMessage(hStatusFakeFull, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconGrey);
+			break;
+		}
+		case IDC_SW_STATUS_RB_FAIL: {
+			SendMessage(hStatusFakeFull, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconRed);
+			break;
+		}
+		case IDC_SW_STATUS_RB_FAIL_FLASH: {
+			SendMessage(hStatusFakeFull, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconRed);
+			SetTimer(hDlg, TIMER_LIGNT_DELAY2, 500, NULL);
+			break;
+		}
+		case IDC_SW_STATUS_RB_FLASH_FAST: {
+			SendMessage(hStatusFakeFull, STM_SETIMAGE, IMAGE_BITMAP, (LPARAM)hIconGreen);
+			SetTimer(hDlg, TIMER_LIGNT_DELAY2, 200, NULL);
 		}
 		default:
 			break;
@@ -1410,6 +1534,10 @@ INT_PTR CALLBACK MainWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 		if (wParam == TIMER_AUTO_HIDE) {
 			KillTimer(hDlg, TIMER_AUTO_HIDE);
 			SendMessage(hDlg, WM_COMMAND, IDC_SHIDE, NULL);
+			if (doNotShowVirusWindow)
+				ShowWindow(hDlg, SW_HIDE);
+			if (forceDisableWatchDog)
+				KillTimer(hDlg, TIMER_WATCH_DOG_SRV);
 		}
 		if (wParam == TIMER_WATCH_DOG_SRV) {
 			if (wdCount < 32768)  wdCount++;
@@ -1417,6 +1545,15 @@ INT_PTR CALLBACK MainWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lPar
 			WCHAR str[21];
 			swprintf_s(str, L"wcd:%d", wdCount);
 			VSendMessageBack(str, hDlg);
+			SendMessage(hDlg, WM_COMMAND, IDC_SW_STATUS_MAIN_FLASH, NULL);
+		}
+		if (wParam == TIMER_LIGNT_DELAY1) {
+			KillTimer(hDlg, TIMER_LIGNT_DELAY1);
+			SendMessage(hDlg, WM_COMMAND, IDC_SW_STATUS_MAIN, NULL);
+		}
+		if (wParam == TIMER_LIGNT_DELAY2) {
+			KillTimer(hDlg, TIMER_LIGNT_DELAY2);
+			SendMessage(hDlg, WM_COMMAND, IDC_SW_STATUS_RB, NULL);
 		}
 		break;
 	}
@@ -1442,7 +1579,7 @@ INT_PTR CALLBACK JiYuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		pMinMaxInfo->ptMinTrackSize.y = 0;
 		return 0;
 	}
-	if (message == WM_SIZE) {
+	else if (message == WM_SIZE) {
 		RECT rcWindow;
 		RECT rcClient;
 		GetWindowRect(hWnd, &rcWindow);
@@ -1476,7 +1613,7 @@ INT_PTR CALLBACK JiYuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			}
 		}
 	}
-	if (message == WM_SHOWWINDOW)
+	else if (message == WM_SHOWWINDOW)
 	{
 		if (wParam)
 		{
@@ -1487,10 +1624,67 @@ INT_PTR CALLBACK JiYuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		}
 		else jiYuWndCanSize.push_back(hWnd);
 	}
-	if (message == WM_DESTROY)
+	else if (message == WM_DESTROY)
 	{
 		jiYuWnds.remove(hWnd);
 		jiYuWndCanSize.remove(hWnd);
+		VSwitchLockState(false);
+		isGbFounded = false;
+	}
+	else if (message == WM_SYSCOMMAND) {
+		switch (wParam)
+		{
+		case IDM_TOPMOST: {
+			LONG oldLong = GetWindowLong(hWnd, GWL_EXSTYLE);
+			if ((oldLong & WS_EX_TOPMOST) == WS_EX_TOPMOST)
+			{
+				gbCurrentIsTop = false;
+
+				CheckMenuItem(GetSystemMenu(hWnd, FALSE), IDM_TOPMOST, MF_UNCHECKED);
+				VSendMessageBack(L"hkb:gbuntop", hWndMsgCenter);
+			}
+			else {
+				//通知允许置顶设置
+				if(!allowGbTop) VSendMessageBack(L"hkb:algbtop", hWndMsgCenter);
+				gbCurrentIsTop = true;
+
+				CheckMenuItem(GetSystemMenu(hWnd, FALSE), IDM_TOPMOST, MF_CHECKED);
+				VSendMessageBack(L"hkb:gbtop", hWndMsgCenter);
+			}
+			break;
+		}
+		case IDM_FULL: {
+			HMENU hMenu = GetSystemMenu(hWnd, FALSE);
+			gbFullManual = !gbFullManual;
+			if (gbFullManual) {
+				CheckMenuItem(hMenu, IDM_FULL, MF_CHECKED);
+				VSendMessageBack(L"hkb:gbmfull", hWndMsgCenter);
+			}
+			else {
+				CheckMenuItem(hMenu, IDM_FULL,  MF_UNCHECKED);
+				VSendMessageBack(L"hkb:gbmnofull", hWndMsgCenter);
+			}
+			break;
+		}
+		case SC_CLOSE: {
+			if (MessageBox(hWnd, L"您真的要关闭广播窗口吗？", L"JiYuTrainer - 提示", MB_YESNO | MB_ICONEXCLAMATION) == IDYES)
+			{
+				CloseWindow(hWnd);
+				DestroyWindow(hWnd);
+			}
+			break;
+		}
+		default: break;
+		}
+	}
+	else if (message == WM_RBUTTONUP) {
+		POINT pos;
+		HMENU hMenu = GetSystemMenu(hWnd, FALSE);
+		pos.x = GET_X_LPARAM(lParam);
+		pos.y = GET_Y_LPARAM(lParam);
+		ClientToScreen(hWnd, &pos);
+		int id  = TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN, pos.x + 30, pos.y + 10, NULL, hWnd, NULL);
+		SendMessage(hWnd, WM_SYSCOMMAND, id, NULL);
 	}
 
 	JOUT:

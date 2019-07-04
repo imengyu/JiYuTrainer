@@ -213,12 +213,14 @@ BOOL XInitSelfProtect()
 }
 BOOL XLoadDriver() {
 
-	bool isWin7 = SysHlp::GetSystemVersion() == SystemVersionWindows7OrLater;
-	bool isXp = SysHlp::GetSystemVersion() == SystemVersionWindowsXP;
+	SysHlp * sysHlp = (SysHlp*)currentApp->GetUtils(UTILS_SYSHLP);
 
-	if (SysHlp::Is64BitOS())
+	bool isWin7 = sysHlp->GetSystemVersion() == SystemVersionWindows7OrLater;
+	bool isXp = sysHlp->GetSystemVersion() == SystemVersionWindowsXP;
+
+	if (sysHlp->Is64BitOS())
 		return FALSE;
-	if (!SysHlp::IsRunasAdmin() && !isXp)
+	if (!sysHlp->IsRunasAdmin() && !isXp)
 		return FALSE;
 
 	if (MLoadKernelDriver(L"JiYuTrainerDriver", currentApp->GetPartFullPath(PART_DRIVER), NULL))

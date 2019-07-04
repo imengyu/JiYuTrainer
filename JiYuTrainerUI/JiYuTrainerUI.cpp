@@ -4,6 +4,7 @@
 #include "stdafx.h"
 #include "MainWindow.h"
 #include "UpdaterWindow.h"
+#include "ConfigWindow.h"
 #include "../JiYuTrainer/AppPublic.h"
 #include "../JiYuTrainer/JiYuTrainer.h"
 #include "JiYuTrainerUI.h"
@@ -35,4 +36,10 @@ UIEXPORT_CFUNC(int) JTUI_RunUpdate()
 	currentApp = (JTApp*)JTGetApp();
 	UpdaterWindow updaterWindow(NULL);
 	return updaterWindow.RunLoop();
+}
+UIEXPORT_CFUNC(int) JTUI_RunConfig()
+{
+	currentApp = (JTApp*)JTGetApp();
+	ShowMoreSettings(GetDesktopWindow());
+	return 0;
 }

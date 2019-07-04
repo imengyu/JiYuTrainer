@@ -100,6 +100,7 @@
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
       <AdditionalDependencies>JiYuTrainerUpdater.lib;JiYuTrainer.lib;sciter.lib;Shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>Source.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -114,6 +115,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ModuleDefinitionFile>Source.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -134,6 +136,7 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalDependencies>JiYuTrainerUpdater.lib;JiYuTrainer.lib;sciter.lib;Shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <ModuleDefinitionFile>Source.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -152,9 +155,11 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
+      <ModuleDefinitionFile>Source.def</ModuleDefinitionFile>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="ConfigWindow.h" />
     <ClInclude Include="HelpWindow.h" />
     <ClInclude Include="JiYuTrainerUI.h" />
     <ClInclude Include="MainWindow.h" />
@@ -164,6 +169,7 @@
     <ClInclude Include="UpdaterWindow.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="ConfigWindow.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="HelpWindow.cpp" />
     <ClCompile Include="JiYuTrainerUI.cpp" />
@@ -195,12 +201,17 @@
     <Image Include="res\footer-xwarn.png" />
     <Image Include="res\footer-xwork.png" />
     <Image Include="res\icon-main-small.png" />
+    <Image Include="res\logo-text.png" />
     <Image Include="res\logo128.png" />
     <Image Include="res\states.png" />
+    <Image Include="res\update_bg.png" />
+    <Image Include="res\VERSION-DETAIL.png" />
+    <Image Include="res\version-text.png" />
   </ItemGroup>
   <ItemGroup>
     <None Include="HelpWindow.html" />
     <None Include="MainWindow.html" />
+    <None Include="Source.def" />
     <None Include="UpdaterWindow.html" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

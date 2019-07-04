@@ -101,11 +101,6 @@ bool HelpWindow::initClass()
 		return TRUE;
 	return FALSE;
 }
-sciter::value HelpWindow::goToGithub()
-{
-	SysHlp::RunApplication(L"https://github.com/717021/JiYuTrainer", NULL);
-	return sciter::value::null();
-}
 sciter::value HelpWindow::goToFullHelp()
 {
 	return sciter::value::null();

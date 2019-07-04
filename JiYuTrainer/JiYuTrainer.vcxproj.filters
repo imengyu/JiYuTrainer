@@ -162,5 +162,8 @@
     <None Include="..\Release\JiYuTrainerUI.dll" />
     <None Include="..\Release\JiYuTrainerUpdater.dll" />
     <None Include="..\Release\sciter.dll" />
+    <None Include="Source.def">
+      <Filter>源文件</Filter>
+    </None>
   </ItemGroup>
 </Project>

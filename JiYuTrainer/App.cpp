@@ -37,7 +37,7 @@ int JTAppInternal::CheckInstall(APP_INSTALL_MODE mode)
 	bool startBatCreated = false;
 	WCHAR installDir[MAX_PATH];
 
-	if (SysHlp::CheckIsPortabilityDevice(fullPath.c_str()) || SysHlp::CheckIsDesktop(fullDir.c_str())) {//是usb设备，或在桌面
+	if (!appForceInstallInCurrentDir && appSysHlp->CheckIsPortabilityDevice(fullPath.c_str()) || appSysHlp->CheckIsDesktop(fullDir.c_str())) {//是usb设备，或在桌面
 		WCHAR sysTempPath[MAX_PATH + 1];//在TEMP目录安装
 		GetTempPath(MAX_PATH, sysTempPath);
 		wcscpy_s(installDir, sysTempPath);
@@ -45,7 +45,7 @@ int JTAppInternal::CheckInstall(APP_INSTALL_MODE mode)
 		if (!Path::Exists(installDir) && !CreateDirectory(installDir, NULL)) {
 			wcscpy_s(installDir, fullDir.c_str());
 			MessageBox(NULL, L"无法创建临时目录，请尝试使用管理员身份运行本程序", L"错误", MB_ICONERROR);
-			ExitProcess(-1);
+			return 0;
 		}
 		appStartType = AppStartTypeInTemp;
 	}
@@ -101,7 +101,7 @@ int JTAppInternal::CheckInstall(APP_INSTALL_MODE mode)
 				}
 			}
 			else if ((mode == AppInstallNew || appArgForceCheckFileMd5) && !StrEmepty(partsMd5Checks[i])) {//检查原有文件版本是否一致，否则删除并更新文件
-				std::wstring *fileMd5 = MD5Utils::GetFileMD5(path);
+				std::wstring *fileMd5 = appMD5Utils->GetFileMD5(path);
 				bool needReplace = (!fileMd5->empty() && (*fileMd5) != partsMd5Checks[i]);
 				FreeStringPtr(fileMd5);
 				if (needReplace) {//替换
@@ -126,8 +126,8 @@ int JTAppInternal::CheckInstall(APP_INSTALL_MODE mode)
 		}
 	}
 	else if (mode == AppInstallNew || appArgForceCheckFileMd5) {//检查原有文件版本是否一致，否则删除并更新文件
-		std::wstring *fileMd5 = MD5Utils::GetFileMD5(parts[PART_MAIN].c_str());
-		std::wstring *thisMd5 = MD5Utils::GetFileMD5(fullPath.c_str());
+		std::wstring *fileMd5 = appMD5Utils->GetFileMD5(parts[PART_MAIN].c_str());
+		std::wstring *thisMd5 = appMD5Utils->GetFileMD5(fullPath.c_str());
 		bool needReplace = (!fileMd5->empty() && !thisMd5->empty() && (*fileMd5) != (*thisMd5));
 		FreeStringPtr(fileMd5);
 		if (needReplace){//替换
@@ -189,14 +189,24 @@ int JTAppInternal::CheckInstall(APP_INSTALL_MODE mode)
 
 		//新安装完成以后启动主程序，并删除本体
 		if (appStartType == AppStartTypeInTemp) 
-			SysHlp::RunApplicationPriviledge(parts[PART_RUN].c_str(), NULL);
+			appSysHlp->RunApplicationPriviledge(parts[PART_RUN].c_str(), NULL);
 		else if (appStartType == AppStartTypeNormal) {
 			WCHAR delThisArg[MAX_PATH]; swprintf_s(delThisArg, L"-ia -rc %s", fullPath.c_str());
-			SysHlp::RunApplicationPriviledge(parts[PART_MAIN].c_str(), MakeFromSourceArg(delThisArg));
+			appSysHlp->RunApplicationPriviledge(parts[PART_MAIN].c_str(), MakeFromSourceArg(delThisArg));
 		}
 	}
 
 	return 0;
+}
+void JTAppInternal::UnInstall() {
+	if (appWorker) {
+		//卸载病毒
+		appWorker->RunOperation(TrainerWorkerOpVirusBoom);
+		appWorker->RunOperation(TrainerWorkerOpForceUnLoadVirus);
+	}
+	Sleep(1000);
+	appSysHlp->RunApplicationPriviledge(parts[PART_UNINSTALL].c_str(), NULL);
+	TerminateProcess(GetCurrentProcess(), 0);
 }
 
 EXTRACT_RES JTAppInternal::InstallResFile(HINSTANCE resModule, LPWSTR resId, LPCWSTR resType, LPCWSTR extractTo)
@@ -294,13 +304,12 @@ int JTAppInternal::RunInternal()
 	setlocale(LC_ALL, "chs");
 	SetUnhandledExceptionFilter(UnhandledExceptionFilter);
 
-	if (SysHlp::GetSystemVersion() == SystemVersionNotSupport) {
-		MessageBox(NULL, L"运行本程序最低要求 Windows XP，请使用更高版本的系统", L"JiYuTrainer - 错误", MB_ICONERROR);
-		return 0;
-	}
-
 	MLoadNt();
+	InitUtils();
 
+	if (appSysHlp->GetSystemVersion() == SystemVersionNotSupport)
+		return APP_FAIL_SYSTEM_NOT_SUPPORT;
+	
 	InitPrivileges();
 	InitLogger();
 	InitPath();
@@ -322,6 +331,10 @@ int JTAppInternal::RunInternal()
 		return CheckMd5();
 	if (!appArgInstallMode && !appArgeementArgeed && !RunArgeementDialog())
 		return 0;
+	if (appIsConfigMode) {
+		appStartType = AppStartTypeConfig;
+		goto CONFIG;
+	}
 	if (appArgRemoveUpdater) {
 		Sleep(1000);//Sleep for a while
 		if (!DeleteFileW(updaterPath.c_str()))
@@ -335,43 +348,57 @@ int JTAppInternal::RunInternal()
 	if (!appIsRecover) {
 
 		int oldStatus = RunCheckRunningApp();
-		if (oldStatus == 1) {
-			MessageBox(0, L"已经有一个程序正在运行，同时只能运行一个实例，请关闭之前那个", L"JiYuTrainer - 错误", MB_ICONERROR);
-			return 0;
-		}
+		if (oldStatus == 1)
+			return APP_FAIL_ALEDAY_RUN;
 		if (oldStatus == -1)
 			return 0;
 	}
 
 	appWorker = new TrainerWorkerInternal();
-
 	appLogger->Log(L"初始化正常");
 
-	if (appArgForceTemp || appStartType == AppStartTypeInTemp) {
-		SysHlp::RunApplication(parts[0].c_str(), (L"-f " + fullPath).c_str());
-	}
-	else if (appStartType == AppStartTypeNormal) {
+	CONFIG:
+	if (appArgForceTemp || appStartType == AppStartTypeInTemp) appSysHlp->RunApplication(parts[PART_RUN].c_str(), NULL);
+	else {
+		typedef int(*fnJTUI_RunMain)();
+
 		HMODULE hMain = LoadLibrary(parts[PART_UI].c_str());
 		if (!hMain) {
-			LPCWSTR errStr = SysHlp::ConvertErrorCodeToString(GetLastError());
+			LPCWSTR errStr = appSysHlp->ConvertErrorCodeToString(GetLastError());
 			FAST_STR_BINDER(str, L"加载主部件发生错误。请尝试重新安装本程序。\n错误：%s (%d)", 300, errStr, GetLastError());
+			appStartErr = str;
 			LocalFree((HLOCAL)errStr);
-			MessageBox(NULL, str, APP_TITLE, MB_ICONERROR);
+			return APP_FAIL_MAIN_PART_LOADERR;
 		}
-		else {
-			typedef int(*fnJTUI_RunMain)();
-			fnJTUI_RunMain JTUI_RunMain = (fnJTUI_RunMain)GetProcAddress(hMain, "JTUI_RunMain");
+
+		if (appStartType == AppStartTypeNormal) {
+
+			fnJTUI_RunMain JTUI_RunMain = (fnJTUI_RunMain)GetProcAddress(hMain, (LPCSTR)2);
 			if (JTUI_RunMain) {
 				appLogger->Log(L"程序已启动");
 				return JTUI_RunMain();
 			}
-			else MessageBox(NULL, L"加载主部件发生错误。主部件损坏", APP_TITLE, MB_ICONERROR);
+			else return APP_FAIL_MAIN_PART_BROKED;
+		}
+		else if (appStartType == AppStartTypeUpdater) {
+
+			fnJTUI_RunMain JTUI_RunUpdate = (fnJTUI_RunMain)GetProcAddress(hMain, (LPCSTR)3);
+			if (JTUI_RunUpdate) {
+				appLogger->Log(L"启动程序更新测试模式");
+				return JTUI_RunUpdate();
+			}
+			else return APP_FAIL_MAIN_PART_BROKED;
+		}
+		else if (appStartType == AppStartTypeConfig) {
+		
+			fnJTUI_RunMain JTUI_RunConfig = (fnJTUI_RunMain)GetProcAddress(hMain, (LPCSTR)4);
+			if (JTUI_RunConfig) {
+				appLogger->Log(L"启动程序配置模式");
+				return JTUI_RunConfig();
+			}
+			else return APP_FAIL_MAIN_PART_BROKED;
 		}
 	}
-	else if (appStartType == AppStartTypeUpdater) {
-
-	}
-
 	return 0; 
 }
 
@@ -414,6 +441,10 @@ LPCWSTR JTAppInternal::GetPartFullPath(int partId)
 		return parts[partId].c_str();
 	return NULL;
 }
+void *JTAppInternal::GetUtils(int utilsId)
+{
+	return utilsPointer[utilsId];
+}
 
 LPVOID JTAppInternal::RunOperation(AppOperation op)
 {
@@ -437,7 +468,7 @@ LPVOID JTAppInternal::RunOperation(AppOperation op)
 void JTAppInternal::LoadDriver()
 {
 	if (!appForceNoDriver && XLoadDriver())
-		if (SysHlp::GetSystemVersion() == SystemVersionWindows7OrLater && !appForceNoSelfProtect && !XInitSelfProtect())
+		if (appSysHlp->GetSystemVersion() == SystemVersionWindows7OrLater && !appForceNoSelfProtect && !XInitSelfProtect())
 			currentLogger->LogWarn(L"驱动自我保护失败！");
 }
 
@@ -485,6 +516,7 @@ void JTAppInternal::InitArgs()
 	if (FindArgInCommandLine(appArgList, appArgCount, L"-r1") != -1) appIsRecover = true;
 	if (FindArgInCommandLine(appArgList, appArgCount, L"-md5ck") != -1) appIsMd5CalcMode = true;
 	if (FindArgInCommandLine(appArgList, appArgCount, L"-h") != -1) appIsHiddenMode = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"-c") != -1) appIsConfigMode = true;
 
 	int argFIndex = FindArgInCommandLine(appArgList, appArgCount, L"-f");
 	if (argFIndex >= 0 && (argFIndex + 1) < appArgCount) {
@@ -513,17 +545,26 @@ void JTAppInternal::InitLogger()
 }
 void JTAppInternal::InitPrivileges()
 {
-	SysHlp::EnableDebugPriv(SE_DEBUG_NAME);
-	SysHlp::EnableDebugPriv(SE_SHUTDOWN_NAME);
-	SysHlp::EnableDebugPriv(SE_LOAD_DRIVER_NAME);
+	appSysHlp->EnableDebugPriv(SE_DEBUG_NAME);
+	appSysHlp->EnableDebugPriv(SE_SHUTDOWN_NAME);
+	appSysHlp->EnableDebugPriv(SE_LOAD_DRIVER_NAME);
 }
 void JTAppInternal::InitSettings()
 {
-	appSetting = new SettingHlp(fullIniPath.c_str());
+	appSetting = new SettingHlpInternal(fullIniPath.c_str());
 
 	appArgeementArgeed = appSetting->GetSettingBool(L"Argeed", false, L"JTArgeement");
 	appForceNoDriver = appSetting->GetSettingBool(L"DisableDriver", false);
 	appForceNoSelfProtect = !appSetting->GetSettingBool(L"SelfProtect", true);
+	appForceInstallInCurrentDir = !appSetting->GetSettingBool(L"ForceInstallInCurrentDir", false);
+}
+void JTAppInternal::InitUtils()
+{
+	utilsPointer[UTILS_SYSHLP] = new SysHlpInternal();
+	utilsPointer[UTILS_MD5UTILS] = new MD5UtilsInternal();
+
+	appMD5Utils = (MD5UtilsInternal*)utilsPointer[UTILS_MD5UTILS];
+	appSysHlp = (SysHlpInternal*)utilsPointer[UTILS_SYSHLP];
 }
 
 HFONT JTAppInternal::hFontRed = NULL;
@@ -578,7 +619,7 @@ INT_PTR CALLBACK JTAppInternal::Md5ShowWndProc(HWND hDlg, UINT message, WPARAM w
 		for (int i = 1; i < PART_COUNT; i++) {
 			LPCWSTR path = app->parts[i].c_str();
 			if (app->partsResId[i] != 0 && Path::Exists(path)) {
-				std::wstring*md5 = MD5Utils::GetFileMD5(path);
+				std::wstring*md5 = app->appMD5Utils->GetFileMD5(path);
 				swprintf_s(buffer2, L"#define %s L\"%s\"\r\n", app->partsMd5CheckNames[i], md5->c_str());
 				wcscat_s(buffer, buffer2);
 				FreeStringPtr(md5);

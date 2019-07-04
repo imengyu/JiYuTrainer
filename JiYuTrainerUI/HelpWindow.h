@@ -20,12 +20,10 @@ public:
 	static HelpWindow* ptr(HWND hwnd);
 	static bool initClass();
 
-	sciter::value goToGithub();
 	sciter::value goToFullHelp();
 
 	BEGIN_FUNCTION_MAP
 		FUNCTION_0("goToFullHelp", goToFullHelp);
-		FUNCTION_0("goToGithub", goToGithub);
 	END_FUNCTION_MAP
 
 public:

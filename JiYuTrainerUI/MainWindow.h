@@ -5,6 +5,7 @@
 #include <ShellAPI.h>
 #include "../JiYuTrainer/TrainerWorker.h"
 #include "../JiYuTrainer/Logger.h"
+#include "../JiYuTrainer/SysHlp.h"
 #include <list>
 
 extern HINSTANCE hInst;
@@ -35,7 +36,6 @@ public:
 
 	sciter::value inspectorIsPresent();
 	sciter::value docunmentComplete();
-	sciter::value test1();
 	sciter::value exitClick();
 	sciter::value toGithub();
 
@@ -44,7 +44,6 @@ public:
 		FUNCTION_0("docunmentComplete", docunmentComplete);
 		FUNCTION_0("toGithub", toGithub);
 		FUNCTION_0("exitClick", exitClick);
-		FUNCTION_0("test1", test1);
 	END_FUNCTION_MAP
 
 	//Tray
@@ -81,6 +80,8 @@ private:
 	Logger* currentLogger = nullptr;
 	TrainerWorker * currentWorker = nullptr;
 	TrainerStatus currentStatus;
+	SysHlp * currentSysHlp = nullptr;
+
 	bool currentControlled = false;
 
 	std::wstring statusBuffer;
@@ -92,6 +93,8 @@ private:
 	sciter::dom::element status_icon;
 	sciter::dom::element status_text_main;
 	sciter::dom::element status_text_more;
+	sciter::dom::element status_protect;
+	sciter::dom::element btn_protect_stat;
 	sciter::dom::element btn_kill;
 	sciter::dom::element btn_top;
 	sciter::dom::element btn_restart;
@@ -116,6 +119,8 @@ private:
 	sciter::dom::element common_message_title;
 	sciter::dom::element common_message_text;
 	sciter::dom::element update_message;
+	sciter::dom::element update_message_newver;
+	sciter::dom::element update_message_text;
 
 	void OnWmCommand(WPARAM wParam); 
 	BOOL OnWmCreate();
@@ -130,8 +135,9 @@ private:
 	void OnUpdateState(TrainerStatus status, LPCWSTR textMain, LPCWSTR textMore) override;
 	void OnResolveBlackScreenWindow() override;
 	void OnBeforeSendStartConf() override;
-	HWND GetMainHWND() { return _hWnd; }
+	HWND GetMainHWND() override { return _hWnd; }
 	void OnSimpleMessageCallback(LPCWSTR text)override;
+	void OnAllowGbTop();
 
 	void ShowHelp();
 
@@ -139,12 +145,14 @@ private:
 	void ShowFastMessage(LPCWSTR title, LPCWSTR text);
 	void CloseCmdsTip();
 
+	void GetUpdateInfo();
+
 	void LoadSettings();
 	void LoadSettingsToUi();
 	void SaveSettings();
 	void ResetSettings();
 
-
+	static VOID WINAPI UpdateThread(LPVOID lpFiberParameter);
 	static void LogCallBack(const wchar_t*str, LogLevel level, LPARAM lParam);
 	void WriteLogItem(const wchar_t * str, LogLevel level);
 	void WritePendingLogs();

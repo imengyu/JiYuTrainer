@@ -14,7 +14,7 @@
 
 using namespace std;
 
-#define CURRENT_VERSION "1.6.73.1031" 
+#define CURRENT_VERSION "1.6.703.1031" 
 #define UPDATE_HOST "http://update.imyzc.com/JiYuTrainer/" 
 //#define UPDATE_HOST "http://localhost/JiYuTrainer/" 
 
@@ -39,6 +39,8 @@ BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReser
 JTApp* appCurrent = nullptr;
 Logger * appLogger = nullptr;
 
+WCHAR newVer[64];
+
 UPEXPORT_CFUNC(BOOL) JUpdater_CheckInternet()
 {
 	return InternetGetConnectedState(NULL, 0);
@@ -52,6 +54,13 @@ UPEXPORT_CFUNC(BOOL) JUpdater_CheckUpdate(bool byUser)
 		return UPDATE_STATUS_CHECKED;
 
 	return CheckServerForUpdateInfo(byUser);
+}
+UPEXPORT_CFUNC(BOOL) JUpdater_GetUpdateNew(LPCSTR buffer, size_t maxCount) {
+	return CheckServerForUpdateNew(buffer, maxCount);
+}
+UPEXPORT_CFUNC(LPCWSTR) JUpdater_GetUpdateNewVer() {
+	CheckServerForUpdateVer();
+	return newVer;
 }
 
 int CheckServerForUpdateInfo(bool byUser) {
@@ -75,6 +84,35 @@ int CheckServerForUpdateInfo(bool byUser) {
 		}
 	}
 	return false;
+}
+BOOL CheckServerForUpdateNew(LPCSTR buffer, size_t maxCount) {
+	// test get requery
+	string getUrlStr = string(UPDATE_HOST) + string("?getupdateinfo");
+	string getResponseStr;
+	auto res = curl_get_req(getUrlStr, getResponseStr);
+	if (res != CURLE_OK) {
+		appLogger->LogError(L"获取更新内容错误：curl_easy_perform() failed:  %S", curl_easy_strerror(res));
+		return FALSE;
+	}
+	else {
+		strncpy_s((char*)buffer, maxCount, getResponseStr.c_str(), maxCount);
+		return TRUE;
+	}
+}
+BOOL CheckServerForUpdateVer() {
+	string getUrlStr = string(UPDATE_HOST) + string("?getnewver");
+	string getResponseStr;
+	auto res = curl_get_req(getUrlStr, getResponseStr);
+	if (res != CURLE_OK) {
+		appLogger->LogError(L"获取更新内容错误：curl_easy_perform() failed:  %S", curl_easy_strerror(res));
+		return FALSE;
+	}
+	else {
+		LPCWSTR getResponseStrW = StringHlp::AnsiToUnicode(getResponseStr.c_str());
+		wcscpy_s(newVer, 64, getResponseStrW);
+		FreeStringPtr(getResponseStrW);
+		return TRUE;
+	}
 }
 bool CheckLastUpdateDate(LPCWSTR iniPath) {
 
@@ -173,7 +211,7 @@ UPEXPORT_CFUNC(BOOL) JUpdater_RunInstallion()
 		if(appCurrent->GetTrainerWorker())
 			appCurrent->GetTrainerWorker()->RunOperation(TrainerWorkerOpForceUnLoadVirus);
 		//运行更新
-		if (!SysHlp::RunApplicationPriviledge(updateFilePath, appCurrent->MakeFromSourceArg(L"-install-full")) && GetLastError() == ERROR_CANCELLED) {
+		if (!((SysHlp*)appCurrent->GetUtils(UTILS_SYSHLP))->RunApplicationPriviledge(updateFilePath, appCurrent->MakeFromSourceArg(L"-install-full")) && GetLastError() == ERROR_CANCELLED) {
 			MessageBox(nullptr, L"您取消了更新", L"", MB_ICONEXCLAMATION);
 			return FALSE;
 		}else return TRUE;

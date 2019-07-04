@@ -167,10 +167,11 @@ typedef LRESULT (WINAPI *fnCallNextHookEx)( HHOOK hhk, int nCode, WPARAM wParam,
 typedef HWND (WINAPI* fnGetDesktopWindow)(VOID);
 typedef HDC (WINAPI *fnGetWindowDC)(__in_opt HWND hWnd);
 typedef int(__cdecl *fnEncodeToJPEGBuffer)(int a1, int a2, int a3, int a4, int a5, DWORD *a6, int a7, int a8, int a9);
-typedef int(__cdecl *fnavcodec_encode_video)(char a1, int a2, int a3, int a4);
 typedef HWND(WINAPI*fnGetForegroundWindow)(VOID);
-typedef HDC (WINAPI* fnGetDC)(__in_opt HWND hWnd);
 typedef HDC (WINAPI *fnCreateDCW)(__in_opt LPCWSTR pwszDriver, __in_opt LPCWSTR pwszDevice, __in_opt LPCWSTR pszPort, __in_opt CONST DEVMODEW * pdm);
+typedef BOOL(WINAPI *fnEnableMenuItem)(HMENU hMenu, UINT  uIDEnableItem, UINT  uEnable);
+typedef DWORD (WINAPI *fnSetClassLongA)(__in HWND hWnd, __in int nIndex, __in LONG dwNewLong);
+typedef DWORD (WINAPI *fnSetClassLongW)(__in HWND hWnd, __in int nIndex, __in LONG dwNewLong);
 
 //Hooks
 
@@ -282,10 +283,11 @@ LRESULT WINAPI hkCallNextHookEx(HHOOK hhk, int nCode, WPARAM wParam, LPARAM lPar
 HWND WINAPI hkGetDesktopWindow(VOID);
 HDC WINAPI hkGetWindowDC(__in_opt HWND hWnd);
 BOOL __cdecl hkEncodeToJPEGBuffer(int a1, int a2, int a3, int a4, int a5, DWORD *a6, int a7, int a8, int a9);
-int __cdecl hkavcodec_encode_video(char a1, int a2, int a3, int a4);
 HWND WINAPI hkGetForegroundWindow(VOID);
-HDC WINAPI hkGetDC(__in_opt HWND hWnd);
 HDC WINAPI hkCreateDCW(__in_opt LPCWSTR pwszDriver, __in_opt LPCWSTR pwszDevice, __in_opt LPCWSTR pszPort, __in_opt CONST DEVMODEW * pdm);
+BOOL WINAPI hkEnableMenuItem(HMENU hMenu,	UINT  uIDEnableItem,	 UINT  uEnable);
+DWORD WINAPI hkSetClassLongA(__in HWND hWnd, __in int nIndex,	__in LONG dwNewLong);
+DWORD WINAPI hkSetClassLongW(__in HWND hWnd, __in int nIndex,	__in LONG dwNewLong);
 
 INT_PTR CALLBACK VShowOpConfirmWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 

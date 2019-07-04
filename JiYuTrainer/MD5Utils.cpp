@@ -2,17 +2,9 @@
 #include "MD5Utils.h"
 #include <time.h>
 
-
-MD5Utils::MD5Utils()
-{
-}
-MD5Utils::~MD5Utils()
-{
-}
-
 #define INPUT_BUFFER_SIZE 100 * 1024
 
-std::wstring* MD5Utils::GetFileMD5(LPCWSTR  filePath)
+std::wstring* MD5UtilsInternal::GetFileMD5(LPCWSTR  filePath)
 {
 	std::wstring *result = new 	std::wstring();
 	FILE *file;
@@ -45,7 +37,7 @@ std::wstring* MD5Utils::GetFileMD5(LPCWSTR  filePath)
 	}
 	return result;
 }
-std::wstring* MD5Utils::GetStringMD5(LPCWSTR filePath)
+std::wstring* MD5UtilsInternal::GetStringMD5(LPCWSTR filePath)
 {
 	return new std::wstring();
 }

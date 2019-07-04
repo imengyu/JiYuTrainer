@@ -14,7 +14,7 @@ UpdaterWindow::UpdaterWindow(HWND parentHWnd)
 
 	if(!initClass()) return;
 
-	_hWnd = CreateWindowExW(0, L"sciter-jytrainer-update-window", L"JiYu Trainer Help Window", WS_OVERLAPPEDWINDOW ^ (WS_SIZEBOX | WS_MAXIMIZEBOX | WS_MINIMIZEBOX), CW_USEDEFAULT, CW_USEDEFAULT, 430, 220, nullptr, nullptr, hInst, this);
+	_hWnd = CreateWindowExW(0, L"sciter-jytrainer-update-window", L"JiYu Trainer Update Window", WS_OVERLAPPEDWINDOW ^ (WS_SIZEBOX | WS_MAXIMIZEBOX | WS_MINIMIZEBOX), CW_USEDEFAULT, CW_USEDEFAULT, 430, 220, nullptr, nullptr, hInst, this);
 	if (!_hWnd) return;
 
 	init();

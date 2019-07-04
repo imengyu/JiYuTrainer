@@ -12,8 +12,12 @@
 
 UPEXPORT_CFUNC(BOOL) JUpdater_CheckInternet();
 UPEXPORT_CFUNC(BOOL) JUpdater_CheckUpdate(bool byUser);
+UPEXPORT_CFUNC(BOOL) JUpdater_GetUpdateNew(LPCSTR buffer, size_t maxCount);
+UPEXPORT_CFUNC(LPCWSTR) JUpdater_GetUpdateNewVer();
 
 int CheckServerForUpdateInfo(bool byUser);
+BOOL CheckServerForUpdateNew(LPCSTR buffer, size_t maxCount);
+BOOL CheckServerForUpdateVer();
 bool CheckLastUpdateDate(LPCWSTR iniPath);
 DWORD WINAPI UpdateDownloadThread(LPVOID lpThreadParameter);
 int UpdateProgressFunc(void* ptr, double TotalToDownload, double NowDownloaded, double TotalToUpload, double NowUploaded);

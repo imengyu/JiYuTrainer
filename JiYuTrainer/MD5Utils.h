@@ -3,13 +3,16 @@
 #include "md5.h"
 #include <string>
 
-class EXPORT MD5Utils
+class MD5Utils
 {
 public:
-	MD5Utils();
-	~MD5Utils();
-
-	static std::wstring *GetFileMD5(LPCWSTR filePath);
-	static std::wstring *GetStringMD5(LPCWSTR filePath);
+	virtual std::wstring *GetFileMD5(LPCWSTR filePath) { return nullptr; }
+	virtual std::wstring *GetStringMD5(LPCWSTR filePath) { return nullptr; }
+};
+class MD5UtilsInternal : public MD5Utils
+{
+public:
+	std::wstring *GetFileMD5(LPCWSTR filePath) override;
+	std::wstring *GetStringMD5(LPCWSTR filePath) override;
 };
 

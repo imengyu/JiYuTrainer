@@ -12,7 +12,7 @@ BOOL _Is64BitOS = -1;
 BOOL _IsRunasAdmin = -1;
 SystemVersion currentVersion = SystemVersionUnknow;
 
-SystemVersion SysHlp::GetSystemVersion()
+SystemVersion SysHlpInternal::GetSystemVersion()
 {
 	if (currentVersion == SystemVersionUnknow) {
 		if (IsWindows7OrGreater())
@@ -26,23 +26,23 @@ SystemVersion SysHlp::GetSystemVersion()
 	return currentVersion;
 }
 
-bool SysHlp::RunApplication(LPCWSTR path, LPCWSTR cmd)
+bool SysHlpInternal::RunApplication(LPCWSTR path, LPCWSTR cmd)
 {
 	return (INT)ShellExecute(NULL, L"open", path, cmd, NULL, SW_NORMAL) > 32;
 }
-bool SysHlp::RunApplicationPriviledge(LPCWSTR path, LPCWSTR cmd)
+bool SysHlpInternal::RunApplicationPriviledge(LPCWSTR path, LPCWSTR cmd)
 {
 	return (INT)ShellExecute(NULL, (currentVersion == SystemVersionWindowsXP ?  L"open" : L"runas"), path, cmd, NULL, SW_NORMAL) > 32;
 }
 
-LPCWSTR SysHlp::ConvertErrorCodeToString(DWORD ErrorCode)
+LPCWSTR SysHlpInternal::ConvertErrorCodeToString(DWORD ErrorCode)
 {
 	HLOCAL LocalAddress = NULL;
 	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
 		NULL, ErrorCode, 0, (LPWSTR)&LocalAddress, 0, NULL);
 	return (LPCWSTR)LocalAddress;
 }
-bool  SysHlp::CheckIsPortabilityDevice(LPCWSTR path) {
+bool  SysHlpInternal::CheckIsPortabilityDevice(LPCWSTR path) {
 	//
 //path: "\\\\?\\F:"
 #define IOCTL_STORAGE_QUERY_PROPERTY   CTL_CODE(IOCTL_STORAGE_BASE, 0x0500, METHOD_BUFFERED, FILE_ANY_ACCESS)
@@ -82,7 +82,7 @@ bool  SysHlp::CheckIsPortabilityDevice(LPCWSTR path) {
 	}
 	return false;
 }
-bool SysHlp::CheckIsDesktop(LPCWSTR path)
+bool SysHlpInternal::CheckIsDesktop(LPCWSTR path)
 {
 	wchar_t desktopPath[MAX_PATH];
 	if (!SHGetSpecialFolderPathW(0, desktopPath, 0x0010, 0))
@@ -90,7 +90,7 @@ bool SysHlp::CheckIsDesktop(LPCWSTR path)
 	return wcscmp(desktopPath, path) == 0;
 }
 
-bool SysHlp::EnableDebugPriv(const wchar_t * name)
+bool SysHlpInternal::EnableDebugPriv(const wchar_t * name)
 {
 	HANDLE hToken;
 	TOKEN_PRIVILEGES tp;
@@ -106,7 +106,7 @@ bool SysHlp::EnableDebugPriv(const wchar_t * name)
 	//调整权限
 	return AdjustTokenPrivileges(hToken, 0, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL);
 }
-BOOL SysHlp::IsRunasAdmin()
+BOOL SysHlpInternal::IsRunasAdmin()
 {
 	if (_IsRunasAdmin = -1)
 	{
@@ -134,7 +134,7 @@ BOOL SysHlp::IsRunasAdmin()
 	}
 	return _IsRunasAdmin;
 }
-BOOL SysHlp::Is64BitOS()
+BOOL SysHlpInternal::Is64BitOS()
 {
 	if (_Is64BitOS == -1)
 	{

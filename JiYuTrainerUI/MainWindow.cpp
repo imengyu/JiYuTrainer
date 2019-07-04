@@ -2,6 +2,7 @@
 #include "MainWindow.h"
 #include "HelpWindow.h"
 #include "UpdaterWindow.h"
+#include "ConfigWindow.h"
 #include "resource.h"
 #include "../JiYuTrainer/JiYuTrainer.h"
 #include "../JiYuTrainer/AppPublic.h"
@@ -31,6 +32,7 @@ int screenWidth, screenHeight;
 MainWindow::MainWindow()
 {
 	currentLogger = currentApp->GetLogger();
+	currentSysHlp = (SysHlp*)currentApp->GetUtils(UTILS_SYSHLP);
 
 	swprintf_s(wndClassName, L"sciter-jytrainer-main-window");
 
@@ -136,6 +138,8 @@ sciter::value MainWindow::docunmentComplete()
 	input_cmd = root.get_element_by_id(L"input_cmd");
 	tooltip_top = root.get_element_by_id(L"tooltip_top");
 	tooltip_fast = root.get_element_by_id(L"tooltip_fast"); 
+	btn_protect_stat = root.get_element_by_id(L"btn_protect_stat");
+	status_protect = root.get_element_by_id(L"status_protect");
 	
 	check_auto_fkill = root.get_element_by_id(L"check_auto_fkill");
 	check_auto_fck = root.get_element_by_id(L"check_auto_fck");
@@ -151,6 +155,8 @@ sciter::value MainWindow::docunmentComplete()
 	common_message = root.get_element_by_id(L"common_message");
 	common_message_title = root.get_element_by_id(L"common_message_title");
 	common_message_text = root.get_element_by_id(L"common_message_text");
+	update_message_newver = root.get_element_by_id(L"update_message_newver");
+	update_message_text = root.get_element_by_id(L"update_message_text");
 	update_message = root.get_element_by_id(L"update_message");
 
 	domComplete = true;
@@ -161,22 +167,13 @@ sciter::value MainWindow::docunmentComplete()
 
 	return sciter::value(domComplete);
 }
-sciter::value MainWindow::test1()
-{
-	TrainerStatus st = currentStatus;
-	int st1 = (int)st;
-	if(st1<6) st1++;
-	else st1 = 0;
-	OnUpdateState((TrainerStatus)st1, L"DEBUG", L"尝试 DEBUG");
-	return sciter::value::null();
-}
 sciter::value MainWindow::exitClick()
 {
 	SendMessage(_hWnd, WM_SYSCOMMAND, SC_CLOSE, NULL);
 	return sciter::value::null();
 }
 sciter::value MainWindow::toGithub() {
-	SysHlp::RunApplication(L"https://github.com/717021/JiYuTrainer", NULL);
+	currentSysHlp->RunApplication(L"https://github.com/717021/JiYuTrainer", NULL);
 	return sciter::value::null();
 }
 
@@ -193,8 +190,6 @@ void MainWindow::OnWmCommand(WPARAM wParam)
 		{
 			ShowWindow(_hWnd, SW_SHOW);
 			SetWindowPos(_hWnd, HWND_TOP, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
-			sciter::dom::element root(get_root());
-			root.call_function("showWindow"); 
 		}
 		break;
 	}
@@ -221,7 +216,7 @@ BOOL MainWindow::OnWmCreate()
 void MainWindow::OnWmDestroy()
 {
 	if (!isUserCancel && currentControlled)
-		SysHlp::RunApplicationPriviledge(currentApp->GetFullPath(), L"-r1");
+		currentSysHlp->RunApplicationPriviledge(currentApp->GetFullPath(), L"-r1");
 
 	UnregisterHotKey(_hWnd, hotkeyShowHide);
 	UnregisterHotKey(_hWnd, hotkeySwFull);
@@ -312,7 +307,7 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 			if (len >= 2) {
 				LPCWSTR filePath = (cmds)[1].c_str();
 				if (Path::Exists(filePath)) {
-					std::wstring *md5Sting = MD5Utils::GetFileMD5(filePath);
+					std::wstring *md5Sting = ((MD5Utils*)currentApp->GetUtils(UTILS_MD5UTILS))->GetFileMD5(filePath);
 					currentLogger->Log(L"MD5 : %s", md5Sting->c_str());
 					FreeStringPtr(md5Sting);
 				}
@@ -355,7 +350,8 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 			}
 		}
 		else if (cmd == L"test") currentLogger->Log(L"测试命令，无功能");
-		else if (cmd == L"test2") currentWorker->SendMessageToVirus(L"test2:test2");
+		else if (cmd == L"test2") currentWorker->SendMessageToVirus(L"test2:f");
+		else if (cmd == L"test3") MessageBox(hWndMain, L"MessageBox", L"test3", 0);
 		else if (cmd == L"exit")  SendMessage(hWndMain, WM_COMMAND, IDM_EXIT, NULL);
 		else if (cmd == L"hide")  SendMessage(hWndMain, WM_COMMAND, IDM_SHOWMAIN, NULL);
 		else {
@@ -397,9 +393,8 @@ void MainWindow::OnFirstShow()
 		ShowFastMessage(L"更新完成！", L"您已经更新到软件最新版本，我们努力保证您的最佳使用体验，时常更新是非常好的做法。");
 
 	//运行更新
-	if(setAutoUpdate)
-		if (JUpdater_CheckInternet() && JUpdater_CheckUpdate(false) == UPDATE_STATUS_HAS_UPDATE) 
-			update_message.set_attribute("class", L"window-extend-area shown");
+	if (setAutoUpdate)
+		CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)UpdateThread, this, 0, NULL);
 
 	currentLogger->LogInfo(L"控制器已启动");
 
@@ -452,7 +447,7 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 			if (JUpdater_CheckInternet()) {
 				int updateStatus = JUpdater_CheckUpdate(true);
 				if (updateStatus == UPDATE_STATUS_LATEST)  ShowFastTip(L"<h4>您的JiYu Trainer 是最新版本！</h4>");
-				else if (updateStatus == UPDATE_STATUS_HAS_UPDATE) update_message.set_attribute("class", L"window-extend-area shown");
+				else if (updateStatus == UPDATE_STATUS_HAS_UPDATE) GetUpdateInfo();
 				else if (updateStatus == UPDATE_STATUS_COULD_NOT_CONNECT) ShowFastTip(L"检查更新失败，请检查您的网络连接？");
 				else if (updateStatus == UPDATE_STATUS_NOT_SUPPORT) ShowFastMessage(L"糟糕，更新服务器出了一点故障，请你稍后再试", L"更新服务器返回了错误的结果");
 			}
@@ -478,23 +473,24 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 			Close();
 		}
 		else if (ele.get_attribute("id") == L"link_uninstall") {
-			if (MessageBox(_hWnd, L"你是否真的要卸载本软件？\n卸载会删除本软件相关安装文件，但不会删除源安装包；并且卸载过程中会暂时结束极域，稍后需要您重新启动。", L"JiYuTrainer - 警告", MB_YESNO | MB_ICONEXCLAMATION) == IDYES)
-			{
-				if (currentWorker) {
-					//卸载病毒
-					currentWorker->RunOperation(TrainerWorkerOpVirusBoom);
-					currentWorker->RunOperation(TrainerWorkerOpForceUnLoadVirus);
-				}
-				Sleep(1000);
-				SysHlp::RunApplicationPriviledge(currentApp->GetPartFullPath(PART_UNINSTALL), NULL);
-				TerminateProcess(GetCurrentProcess(), 0);
-			}
+			if (MessageBox(_hWnd, L"你是否真的要卸载本软件？\n卸载会删除本软件相关安装文件，但不会删除源安装包；并且卸载过程中会暂时结束极域主进程，稍后您需要手动启动极域。", L"JiYuTrainer - 警告", MB_YESNO | MB_ICONEXCLAMATION) == IDYES)
+				currentApp->UnInstall();
 		}
 		else if (ele.get_attribute("id") == L"link_read_jiyu_password" || ele.get_attribute("id") == L"link_read_jiyu_password2") { OnRunCmd(L"jypasswd"); CloseCmdsTip(); }
 		else if (ele.get_attribute("id") == L"link_uj") { OnRunCmd(L"uj"); CloseCmdsTip(); }
 		else if (ele.get_attribute("id") == L"link_ckend") { OnRunCmd(L"ckend"); CloseCmdsTip();  }
 		else if (ele.get_attribute("id") == L"link_fuljydrv") { OnRunCmd(L"fuljydrv"); CloseCmdsTip(); }
 		else if (ele.get_attribute("id") == L"link_fuldrv") { OnRunCmd(L"unloaddrv"); CloseCmdsTip();  }
+		else if (ele.get_attribute("id") == L"link_shutdown") {
+			if (MessageBox(_hWnd, L"你是否真的要关闭电脑？", L"JiYuTrainer - 警告", MB_YESNO | MB_ICONEXCLAMATION) == IDYES) 
+				OnRunCmd(L"sss");
+		}
+		else if (ele.get_attribute("id") == L"link_reboot") {
+			if (MessageBox(_hWnd, L"你是否真的要重启电脑？", L"JiYuTrainer - 警告", MB_YESNO | MB_ICONEXCLAMATION) == IDYES) 
+				OnRunCmd(L"ssr");
+		}
+		else if (ele.get_attribute("id") == L"link_more_settings") ShowMoreSettings(_hWnd);
+		
 	}
 	else if (type == BUTTON_CLICK)
 	{
@@ -556,17 +552,32 @@ void MainWindow::OnUpdateState(TrainerStatus status, LPCWSTR textMain, LPCWSTR t
 	status_text_more.set_html((UCHAR*)textMore2, strlen(textMore2));
 	FreeStringPtr(textMore2);
 
+	int protectStat = 0;
+
 	switch (status)
 	{
-	case TrainerWorkerCallback::TrainerStatusNotFound: status_icon.set_attribute("class", L"state-not-found"); wnd.set_attribute("class", L"window-box state-notwork");  break;
-	case TrainerWorkerCallback::TrainerStatusNotRunning: status_icon.set_attribute("class", L"state-not-run"); wnd.set_attribute("class", L"window-box state-notwork"); break;
-	case TrainerWorkerCallback::TrainerStatusUnknowProblem: status_icon.set_attribute("class", L"state-unknow-problem"); wnd.set_attribute("class", L"window-box state-warn"); break;
-	case TrainerWorkerCallback::TrainerStatusControllFailed: status_icon.set_attribute("class", L"state-failed"); wnd.set_attribute("class", L"window-box state-warn"); break;
-	case TrainerWorkerCallback::TrainerStatusControlled: status_icon.set_attribute("class", L"state-ctl-no-lock"); wnd.set_attribute("class", L"window-box state-work"); break;
-	case TrainerWorkerCallback::TrainerStatusControlledAndUnLocked: status_icon.set_attribute("class", L"state-ctl-unlock"); wnd.set_attribute("class", L"window-box state-work"); break;
-	case TrainerWorkerCallback::TrainerStatusStopped: status_icon.set_attribute("class", L"state-manual-stop"); wnd.set_attribute("class", L"window-box state-warn"); break;
+	case TrainerWorkerCallback::TrainerStatusNotFound: status_icon.set_attribute("class", L"state-not-found"); wnd.set_attribute("class", L"window-box state-notwork"); protectStat = 0;  break;
+	case TrainerWorkerCallback::TrainerStatusNotRunning: status_icon.set_attribute("class", L"state-not-run"); wnd.set_attribute("class", L"window-box state-notwork");  protectStat = 0; break;
+	case TrainerWorkerCallback::TrainerStatusUnknowProblem: status_icon.set_attribute("class", L"state-unknow-problem"); wnd.set_attribute("class", L"window-box state-warn");  protectStat = 1;  break;
+	case TrainerWorkerCallback::TrainerStatusControllFailed: status_icon.set_attribute("class", L"state-failed"); wnd.set_attribute("class", L"window-box state-warn");  protectStat = 1; break;
+	case TrainerWorkerCallback::TrainerStatusControlled: status_icon.set_attribute("class", L"state-ctl-no-lock"); wnd.set_attribute("class", L"window-box state-work");  protectStat = 2;  break;
+	case TrainerWorkerCallback::TrainerStatusControlledAndUnLocked: status_icon.set_attribute("class", L"state-ctl-unlock"); wnd.set_attribute("class", L"window-box state-work"); protectStat = 2;  break;
+	case TrainerWorkerCallback::TrainerStatusStopped: status_icon.set_attribute("class", L"state-manual-stop"); wnd.set_attribute("class", L"window-box state-warn");  protectStat = 1; break;
 	default:
 		break;
+	}
+	
+	if (protectStat == 0) {
+		btn_protect_stat.set_attribute("class", L"btn-footers protect-stat no-danger");
+		status_protect.set_text(L"您未受到极域电子教室的控制");
+	}
+	else if (protectStat == 1) {
+		btn_protect_stat.set_attribute("class", L"btn-footers protect-stat not-protected");
+		status_protect.set_text(L"出现错误，无法保护您免受极域电子教室的控制");
+	}
+	else if (protectStat == 2) {
+		btn_protect_stat.set_attribute("class", L"btn-footers protect-stat protected");
+		status_protect.set_text(L"已保护您免受极域电子教室的控制");
 	}
 }
 void MainWindow::OnResolveBlackScreenWindow()
@@ -582,6 +593,11 @@ void MainWindow::OnSimpleMessageCallback(LPCWSTR text)
 {
 	if (!domComplete) return;
 	ShowFastTip(text);
+}
+void MainWindow::OnAllowGbTop() {
+	setAllowGbTop = true;
+	LoadSettingsToUi();
+	SaveSettings();
 }
 
 void MainWindow::ShowHelp()
@@ -605,6 +621,13 @@ void MainWindow::ShowFastMessage(LPCWSTR title, LPCWSTR text)
 void MainWindow::CloseCmdsTip() {
 	sciter::dom::element root(get_root());
 	root.call_function("common_close_extend_area", sciter::value(cmds_message));
+}
+void MainWindow::GetUpdateInfo() {
+	CHAR newUpdateMessage[256];
+	if (JUpdater_GetUpdateNew(newUpdateMessage, 256))
+		update_message_text.set_html((UCHAR*)newUpdateMessage, strlen(newUpdateMessage));
+	update_message_newver.set_text(JUpdater_GetUpdateNewVer());
+	update_message.set_attribute("class", L"window-extend-area shown");
 }
 
 void MainWindow::LoadSettings()
@@ -675,6 +698,14 @@ void MainWindow::ResetSettings()
 
 	LoadSettingsToUi();
 	SaveSettings();
+}
+
+
+VOID WINAPI MainWindow::UpdateThread(LPVOID lpFiberParameter)
+{
+	MainWindow* self = (MainWindow*)lpFiberParameter;
+	if (JUpdater_CheckInternet() && JUpdater_CheckUpdate(false) == UPDATE_STATUS_HAS_UPDATE)
+		self->GetUpdateInfo();
 }
 
 void MainWindow::LogCallBack(const wchar_t * str, LogLevel level, LPARAM lParam)
@@ -749,7 +780,7 @@ LRESULT CALLBACK MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 		return lr;
 	//SCITER integration ends
 
-	MainWindow* self = ptr(hWnd);
+	MainWindow* self = NULL;
 
 	switch (message)
 	{
@@ -766,8 +797,9 @@ LRESULT CALLBACK MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 
 		return self->OnWmCreate();
 	}
-	case WM_COMMAND:  self->OnWmCommand(wParam); break;
+	case WM_COMMAND:  self = ptr(hWnd);  self->OnWmCommand(wParam); break;
 	case WM_COPYDATA: {
+		self = ptr(hWnd);
 		PCOPYDATASTRUCT  pCopyDataStruct = (PCOPYDATASTRUCT)lParam;
 		if (pCopyDataStruct->cbData > 0)
 		{
@@ -778,8 +810,12 @@ LRESULT CALLBACK MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 		break;
 	}
 	case WM_SHOWWINDOW: {
+		self = ptr(hWnd);
 		if (wParam)
 		{
+			sciter::dom::element root(self->get_root());
+			root.call_function("showWindow");
+
 			if (self->_firstShow)
 			{
 				self->OnFirstShow();
@@ -788,13 +824,8 @@ LRESULT CALLBACK MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 		}
 		break;
 	}
-	case WM_PAINT: {
-		PAINTSTRUCT ps;
-		HDC hdc = BeginPaint(hWnd, &ps);
-		EndPaint(hWnd, &ps);
-		break;
-	}
 	case WM_SYSCOMMAND: {
+		self = ptr(hWnd);
 		switch (wParam)
 		{
 		case SC_RESTORE: ShowWindow(hWnd, SW_RESTORE); SetForegroundWindow(hWnd); return TRUE;
@@ -812,15 +843,16 @@ LRESULT CALLBACK MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 		}
 		break;
 	}
-	case WM_HOTKEY:   self->OnWmHotKey(wParam); break;
-	case WM_DESTROY:  self->OnWmDestroy(); break;
-	case WM_TIMER:  self->OnWmTimer(wParam);
-	case WM_USER: self->OnWmUser(wParam, lParam); break;
+	case WM_HOTKEY: self = ptr(hWnd);  self->OnWmHotKey(wParam); break;
+	case WM_DESTROY: self = ptr(hWnd); self->OnWmDestroy(); break;
+	case WM_TIMER:  self = ptr(hWnd); self->OnWmTimer(wParam);
+	case WM_USER: self = ptr(hWnd); self->OnWmUser(wParam, lParam); break;
 	case WM_QUERYENDSESSION: {
 		DestroyWindow(hWnd);
 		break;
 	}
 	case WM_DISPLAYCHANGE: {
+		self = ptr(hWnd);
 		screenWidth = GetSystemMetrics(SM_CXSCREEN);
 		screenHeight = GetSystemMetrics(SM_CYSCREEN);
 		if (self->currentWorker) self->currentWorker->UpdateScreenSize();

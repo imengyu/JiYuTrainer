@@ -5,10 +5,16 @@
 #include <string>
 #include "AppPublic.h"
 #include "PartsMD5.h"
+#include "SysHlp.h"
+#include "MD5Utils.h"
 #endif
 
 
 #define APP_TITLE L"JiYuTrainer"
+#define APP_FAIL_SYSTEM_NOT_SUPPORT -2
+#define APP_FAIL_MAIN_PART_BROKED -3
+#define APP_FAIL_MAIN_PART_LOADERR -4
+#define APP_FAIL_ALEDAY_RUN -5
 
 #ifdef JTEXPORT
 
@@ -16,12 +22,12 @@ class JTAppInternal : public JTApp
 {
 public:
 
-
 	JTAppInternal(HINSTANCE hInstance);
 	~JTAppInternal();
 
 	int CheckInstall(APP_INSTALL_MODE mode);
 	int CheckMd5();
+	void UnInstall();
 
 	EXTRACT_RES InstallResFile(HINSTANCE resModule, LPWSTR resId, LPCWSTR resType, LPCWSTR extractTo);
 
@@ -29,7 +35,6 @@ public:
 	int GetCommandLineArraySize() { return appArgCount; };
 
 	bool IsCommandExists(LPCWSTR cmd);
-
 	int FindArgInCommandLine(LPWSTR *szArgList, int argCount, const wchar_t * arg);
 
 	LPCWSTR MakeFromSourceArg(LPCWSTR arg);
@@ -51,11 +56,13 @@ public:
 	LPCWSTR GetFullPath() { return fullPath.c_str(); }
 	LPCWSTR GetCurrentDir() { return fullDir.c_str(); }
 	LPCWSTR GetSourceInstallerPath() { return fullSourceInstallerPath.c_str(); }
+	LPCWSTR GetStartupErr() { return appStartErr.c_str(); }
 
 	Logger* GetLogger() { return appLogger; };
 	SettingHlp* GetSettings() { return appSetting; };
 	bool GetSelfProtect() { return !appForceNoSelfProtect; }
 	TrainerWorker* GetTrainerWorker() { return appWorker; };
+	void* GetUtils(int utilsId);
 
 	LPVOID RunOperation(AppOperation op);
 private:
@@ -106,19 +113,23 @@ private:
 		L"PART_MD5_UPDATER",
 		L"PART_MD5_SCITER"
 	};
+	LPVOID utilsPointer[16];
 
 	enum AppStartType {
 		AppStartTypeNormal,
 		AppStartTypeInTemp,
 		AppStartTypeUpdater,
+		AppStartTypeConfig,
 	};
 
 	int appResult = 0;
 	static HINSTANCE hInstance;
 	int appStartType = AppStartTypeNormal;
+	std::wstring appStartErr;
 
 	bool appArgeementArgeed = false;
 	bool appForceNoSelfProtect = false;
+	bool appForceInstallInCurrentDir = false;
 	bool appForceNoDriver = false;
 	bool appArgForceNoInstall = false;
 	bool appArgForceCheckFileMd5 = false;
@@ -129,6 +140,7 @@ private:
 	bool appNeedInstallIniTemple = false;
 	bool appIsRecover = false;
 	bool appIsMd5CalcMode = false;
+	bool appIsConfigMode = false;
 	bool appIsHiddenMode = false;
 
 	int appShowCmd = 0;
@@ -140,6 +152,8 @@ private:
 	Logger *appLogger = nullptr;
 	SettingHlp *appSetting = nullptr;
 	TrainerWorker *appWorker = nullptr;
+	SysHlp *appSysHlp = nullptr;
+	MD5Utils* appMD5Utils = nullptr;
 
 	void MergePathString(LPCWSTR path);
 	void InitPath();
@@ -148,6 +162,7 @@ private:
 	void InitLogger();
 	void InitPrivileges();
 	void InitSettings();
+	void InitUtils();
 
 	int RunCheckRunningApp();
 	bool RunArgeementDialog();

@@ -147,9 +147,9 @@
             left: -5px;
             right: -5px;
             top: 60px;
-            bottom: 90px;
+            bottom: 100px;
             transform: scale(0.8);
-            border-radius: 19px;
+            border-radius: 10px;
             box-shadow: 0px 0px 10px 0px rgba(0,0,0,.3);
             background-color: #fff;
             opacity: 0;
@@ -166,11 +166,45 @@
              transform: scale(0.8) ;
              opacity: 0;
         }
+        .window-extend-area-mask {
+            display: none;
+            opacity: 0;
+            position: absolute;
+            top: 0;
+            right: 0;
+            bottom: 0;
+            left: 0;
+            background-color: #000;
+            transition: opacity linear 150ms;
+        }
+        .window-extend-area.shown.with-mask + .window-extend-area-mask {
+            display: block;
+            opacity: 0.3;
+        }
 
         #common_message {
             padding: 10px 20px;
             top: 150px;
             bottom: 150px;
+            z-index: 13;
+        }
+        #update_message {
+            z-index: 11;
+            bottom: 85px;
+            top: 75px;
+            left: 15px;
+            right: 15px;
+            padding: 10px 20px;
+            background-image: url(res:update_bg.png);
+            background-repeat: no-repeat
+        }
+        #update_message_text {
+            margin-top: 25px;
+            padding:  20px;
+        }
+        #update_message_text ol, #update_message_text ul {
+            margin: 0;
+            padding: 0;
         }
 
         /* Window base content */
@@ -234,46 +268,72 @@
             width: 40px;
             height: 40px;
             background-image: url(res:btn-footers.png);
-            margin-left: 35px;
+            margin-left: 20px;
         }
         .btn-footers-area{
             display: block;
             position: absolute;
             text-align: center;
-            bottom: -30px;
+            bottom: -20px;
             left: 0;
             right: 0;
         }
+        .btn-footers-area .version {
+            display: inline-block;
+            position: absolute;
+            text-align: center;
+            bottom: -22px;
+            left: 26px;
+        }
         .btn-footers.btn-kill {
             background-position: -80px 0;
-         }
-         .btn-footers.btn-kill:hover {
+        }
+        .btn-footers.btn-kill:hover {
             background-position: -120px 0;
          }
-         .btn-footers.btn-restart {
+        .btn-footers.btn-restart {
             background-position: 0px 0;
          }
-         .btn-footers.btn-restart:hover {
+        .btn-footers.btn-restart:hover {
             background-position: -40px 0;
          }
-         .btn-footers.btn-top {
+        .btn-footers.btn-top {
             background-position: -240px 0;
-         }
-         .btn-footers.btn-top:hover,  .btn-footers.btn-top.topmost {
+            margin-left: 20px;
+        }
+        .btn-footers.btn-top:hover,  .btn-footers.btn-top.topmost {
             background-position: -280px 0;
          }
-         .btn-footers.btn-debug {
+        .btn-footers.btn-debug {
             background-position: -160px 0;
          }
-         .btn-footers.btn-debug:hover {
+        .btn-footers.btn-debug:hover {
             background-position: -200px 0;
          }
-         .btn-footers.btn-about {
+        .btn-footers.btn-about {
             background-position: -320px 0;
          }
-         .btn-footers.btn-about:hover {
+        .btn-footers.btn-about:hover {
             background-position: -360px 0;
          }
+        .btn-footers.btn-power {
+            background-position: -400px 0;
+         }
+        .btn-footers.btn-power:hover {
+            background-position: -440px 0;
+         }
+        .btn-footers.protect-stat {
+            margin-left: 0px;
+        }
+        .btn-footers.protect-stat.not-protected {
+            background-position: -480px 0;
+        }
+        .btn-footers.protect-stat.protected {
+            background-position: -520px 0;
+        }
+        .btn-footers.protect-stat.no-danger {
+            background-position: -560px 0;
+        }
 
          /* Tooltip */
         .window-tooltips-top {
@@ -329,8 +389,9 @@
             display: inline-block;
             position: relative;
             padding: 0;
-            width: 306px;
-            box-shadow: 0 0 7px rgba(0,0,0,.5);
+            width: auto;
+            word-break: keep-all;
+            background-color: rgba(0, 0, 0, .6);
             border-radius: 20px;
         }
         .window-page {
@@ -343,19 +404,23 @@
         .btn-tab {
             display: inline-block;
             padding: 5px 15px;
-            background-color: #cdcdcd;
+            background-color: transparent;
             color: #fff;
-            text-decoration: none;
             margin: 0;
+            border-radius: 20px;
+            text-decoration: none;
         }
         .btn-tab.active{
-            background-color: #0083c6;
-            color: #fff;
+            background-color: #fff;
+            box-shadow: 0 0 7px rgba(0,0,0,.5);
+            color: #000;
         }
         .btn-tab:hover {
-            background-color: #009bea;
-            color: #fff;
+            color: #50c6ff
         }
+        .btn-tab.active:hover {
+            color: #000;
+         }
 
         /* Button*/
         .btn-common {
@@ -373,7 +438,14 @@
         .btn-about {
             position: absolute;
             bottom: 36px;
-            left: -15px;
+            left: 5px;
+        }
+        .btn-quit {
+            border-top-right-radius: 0px;
+            border-bottom-right-radius: 0px;
+        }
+        .btn-quit:hover {
+            color: #fff;
         }
 
         .btn-dager {
@@ -395,22 +467,83 @@
             background-color: #91adc4;
         }
 
-        #link_close_extend_area i {
+        .btn-close-extend-area i {
             display: inline-block;
             width: 13px;
-            padding-left: 0;
-            padding-right: 0;
-            margin-left: -1px;
+            padding-left: 9px;
+            padding-top: 5px;
             background-image: url(res:btn-close.png);
             background-repeat: no-repeat;
-            background-position: -10px -7px;
-
+            background-position: -1px -2px;
         }
-        #link_close_extend_area {
+        .btn-close-extend-area {
+            position: absolute;
+            top: -10px;
+            right: 15px;
+            display: inline-block;
+            width: 30px;
+            height: 30px;
+            border: 3px solid #fff;
+            border-radius: 50%;
             background-color: #ff6440;
+            color: #fff;
+            margin: 0;
+            padding: 0;
+            text-decoration: none;
         }
-        #link_close_extend_area:hover {
+        .btn-close-extend-area:hover {
             background-color: #ff3100;
+        }
+
+        .op-item {
+            height: 46px;
+            cursor: pointer;
+            display: block;
+            margin-top: 5px;
+            padding: 3px;
+            text-decoration: none;
+        }
+        .op-item span {
+            display: inline-block;
+            vertical-align: middle;
+            font-size: 18px;
+            color: #101;
+            margin-left: 10px;
+        }
+        .op-item img {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            background-image: url(res:btn-footers.png);
+            vertical-align: middle;
+        }
+        .op-item img.shutdown {
+            background-position: -640px 0;
+        }
+        .op-item img.reboot {
+            background-position: -680px 0;
+        }
+        .op-item img.quit {
+            background-position: -600px 0;
+        }
+        .op-item:hover {
+            border-radius: 10px;
+            box-shadow: 0 0 7px rgba(0,0,0,.5);
+        }
+
+        .new-ver{
+            margin-top: 10px;
+            text-align: center;
+            color: #fff;
+            margin-bottom: 10px;
+        }
+        .new-ver .ver {
+            font-size: 16px;
+        }
+        .new-ver .text {
+            display: block;
+            font-size: 25px;
+            font-weight: bold;
         }
 
         /*Status area*/
@@ -449,6 +582,15 @@
         }
         .mt-3 {
             margin-top: 8px;
+        }
+        .ml-1 {
+            margin-left: 3px;
+        }
+        .ml-2 {
+            margin-left: 5px;
+        }
+        .ml-3 {
+            margin-left: 8px;
         }
         .p-0 {
             padding: 0px;
@@ -553,12 +695,13 @@
             <div class="tooltip" id="tooltip_fast" style="top: 100px; left: 30px; right: 30px"></div>
         </div>
         <div class="window-tooltips-bottom">
-            <div class="tooltip tooltip-vesion" style="bottom: 90px; left: 70px; width: 150px">当前版本 ：V1.6<br /><small>点击查看帮助</small></div>
-            <div class="tooltip tooltip-jiyu-pid" style="bottom: 80px; left: 30px; width: 300px;padding-top:8px;padding-bottom:8px">StudentMain.exe PID : <span id="status_jiyu_pid">未知</span><br /><small>点击杀死极域电子教室</small></div>
-            <div class="tooltip tooltip-jiyu-restart" style="bottom: 80px; left: 30px; width: 300px;padding-top:8px;padding-bottom:8px"><h4 class="m-0">极域位置</h4><span id="status_jiyu_path" style="color: #cecece">未找到极域电子教室</span></div>
-            <div class="tooltip tooltip-topmost" id="tooltip_top" style="bottom: 72px; left: 60px; width: 80px">本窗口置顶</div>
-            <div class="tooltip tooltip-sets" style="bottom: 72px; left: 218px; width: 80px">控制台和设置</div>
-            <div class="tooltip tooltip-close-debug" style="right: 90px; bottom: 110px; width: 80px">关闭控制台</div>
+            <div class="tooltip tooltip-vesion" style="bottom: 90px; left: 75px; width: 150px">当前版本 ：V1.6<br /><small>点击查看帮助</small></div>
+            <div class="tooltip tooltip-jiyu-pid" style="bottom: 86px; left: 30px; width: 300px;padding-top:8px;padding-bottom:8px">StudentMain.exe PID : <span id="status_jiyu_pid">未知</span><br /><small>点击杀死极域电子教室</small></div>
+            <div class="tooltip tooltip-jiyu-restart" style="bottom: 86px; left: 30px; width: 300px;padding-top:8px;padding-bottom:8px"><h4 class="m-0">极域位置</h4><span id="status_jiyu_path" style="color: #cecece">未找到极域电子教室</span></div>
+            <div class="tooltip tooltip-topmost" id="tooltip_top" style="bottom: 83px; left: 83px; width: 70px">本窗口置顶</div>
+            <div class="tooltip tooltip-sets" style="bottom: 83px; left: 203px; width: 80px">控制台和设置</div>
+            <div class="tooltip tooltip-power" style="bottom: 83px; left: 281px; width: 55px">电源控制</div>
+            <div class="tooltip tooltip-protect-stat" style="bottom: 83px; left: 30px; width: 300px;" id="status_protect">您未受到极域电子教室的控制</div>
         </div>
         <!--底栏-->
         <div class="window-footer-area">
@@ -566,10 +709,13 @@
             <a class="btn-footers btn-about" id="btn_about" href="#"></a>
             <!--底栏区域-->
             <div class="btn-footers-area">
-                <a class="btn-footers btn-top ml-0" id="btn_top" href="#"></a>
+                <a class="btn-footers protect-stat no-danger" id="btn_protect_stat"></a>
+                <a class="btn-footers btn-top" id="btn_top" href="#"></a>
                 <a class="btn-footers btn-kill" id="btn_kill" href="#" style="display:none;"></a>
                 <a class="btn-footers btn-restart" id="btn_restart" href="#"></a>
                 <a class="btn-footers btn-debug" id="btn_debug" href="#"></a>
+                <a class="btn-footers btn-power" id="btn_power" href="#"></a>
+                <span class="version"><img src="res:version-text.png" /></span>
             </div>
         </div>
         <!--扩展区域-->
@@ -577,9 +723,11 @@
             <!--Tab 按钮-->
             <div class="window-tab-con">
                 <div class="window-tab">
-                    <a class="btn-tab active" href="#" id="btn_tab_setting" style="width: 30px; border-top-left-radius: 20px; border-bottom-left-radius: 20px;">设置</a><a class="btn-tab" href="#" id="btn_tab_debug" style="width: 30px;">调试</a><a class="btn-tab" href="#" id="btn_tab_about" style="width: 30px;">关于</a><a href="#" id="link_exit" class="btn-tab btn-dager">退出软件</a><a href="#" id="link_close_extend_area" class="btn-tab" style="border-top-right-radius: 20px; border-bottom-right-radius: 20px;"><i>&nbsp;</i></a>
+                    <a class="btn-tab active" href="#" id="btn_tab_setting" style="width: 30px">设置</a><a class="btn-tab" href="#" id="btn_tab_debug" style="width: 30px;">调试</a><a class="btn-tab" href="#" id="btn_tab_about" style="width: 30px;">关于</a>
                 </div>
             </div>
+            <!--Tab 关闭-->
+            <a href="#" id="link_close_extend_area" class="btn-close-extend-area"><i>&nbsp;</i></a>
             <!--Tab 区域-->
             <div class="window-page active" id="page_setting">
                 <h4 class="mb-0">程序配置</h4>
@@ -588,11 +736,11 @@
                         <input type="checkbox" id="check_auto_fck">
                         <label for="check_auto_fck">启用严格窗口控制模式</label>
                     </div>
-                    <div class="form-check"  style="display: inline-block; width: 120px;" title="是否启用自动强制清除模式，勾选该模式会在操作失败时直接清除极域有关进程，不建议使用">
+                    <div class="form-check" style="display: inline-block; width: 120px;" title="是否启用自动强制清除模式，勾选该模式会在操作失败时直接清除极域有关进程，不建议使用">
                         <input type="checkbox" id="check_auto_fkill" />
                         <label for="check_auto_fkill">不客气模式</label>
                     </div>
-                    <div style="display: inline-block; width: 180px;"  class="form-check" title=" （重要）控制器和检测器负责检查和控制极域，如果关闭将导致极域脱离控制或无法检测到极域的操作。不建议关闭，仅调试时使用">
+                    <div style="display: inline-block; width: 180px;" class="form-check" title=" （重要）控制器和检测器负责检查和控制极域，如果关闭将导致极域脱离控制或无法检测到极域的操作。不建议关闭，仅调试时使用">
                         <input type="checkbox" id="check_ck" checked="checked" />
                         <label for="check_ck" style="color: #007bff">是否启用控制器</label>
                     </div>
@@ -616,12 +764,14 @@
                         <input type="checkbox" id="check_auto_update">
                         <label for="check_auto_update">自动更新软件</label>
                     </div>
-                    <a href="#" id="link_read_jiyu_password2" style="float: right" class="text-info" title="本软件可尝试破解极域电子教室的卸载和解锁密码">破解极域解锁、卸载密码</a>
                 </div>
                 <div class="from-group" style="margin-top:10px; margin-left: 5px;">
                     <label for="input_ckinterval">监控时间间隔(毫秒)</label><br />
-                    <input style="width: 50px;margin-top: 5px;" type="text" id="input_ckinterval" /><br />
-                </div>            
+                    <input style="width: 50px;margin-top: 5px;" type="text" id="input_ckinterval" />
+                    <a href="#" id="link_read_jiyu_password2" style="float: right;margin-right: 10px; margin-top: 7px" class="text-info" title="本软件可尝试破解极域电子教室的卸载和解锁密码">破解极域解锁、卸载密码</a>
+                    <a href="#" id="link_more_settings" style="float: right;margin-right: 20px; margin-top: 7px;" class="text-info">高级配置</a>
+                    <br />
+                </div>
                 <div class="text-center" style="margin-top:10px;">
                     <a href="#" id="link_save_setting" class="btn-common">保存设置</a>&nbsp;
                     <a href="#" id="link_setto_default" class="btn-common">恢复默认</a>&nbsp;
@@ -641,9 +791,10 @@
                 <div style="position: absolute; display: block; left: 0px; top: -20px; right: 0;">
                     <img src="res:logo128.png" style="width:100px; height:100px;border-radius: 30px; box-shadow: 0 0 13px rgba(0,0,0,.5); background-color: #fff;" />
                 </div>
-                <h2 style="margin-top: 90px">JiYu Trainer</h2>
-                <span>V 1.6 2019/7/3</span><br />
-                <span>&copy; 2019 DreamFish</span> <br />
+                <div style="margin-top: 70px">
+                    <img src="res:logo-text.png" style="width:250px; height:50px;" />
+                </div>
+                <img src="res:version-detail.png" />
                 <br />
                 <a href="#" id="link_help" class="link">软件帮助</a>&nbsp;|&nbsp;<a href="#" id="link_checkupdate" class="link">检查更新</a>&nbsp;<!--|&nbsp;<a href="#" id="link_github" class="link">Github</a>&nbsp;-->|&nbsp;<a href="#" id="link_uninstall" class="link" style="color: rgb(228, 126, 0);font-size: 12px;" title="从此计算机上卸载 JiYu Trainer ">卸载软件</a><br />
                 <br />
@@ -654,7 +805,7 @@
         </div>
         <!--扩展区域结束-->
         <!--普通提示框-->
-        <div class="window-extend-area" id="common_message">
+        <div class="window-extend-area with-mask" id="common_message">
             <a href="#" class="title-close black" id="common_message_close"></a>
             <h3 id="common_message_title">测试消息</h3>
             <p id="common_message_text">测试消息文字，尝试 DEBUG</p>
@@ -662,8 +813,9 @@
                 <a href="#" class="btn-common btn-primary" id="common_message_close2">我知道了</a>
             </div>
         </div>
+        <div class="window-extend-area-mask"></div>
         <!--更多命令提示框-->
-        <div class="window-extend-area" id="cmds_message" style="bottom: 100px; top :135px; left: -15px; right: -15px; padding: 10px 20px; ">
+        <div class="window-extend-area with-mask" id="cmds_message" style="z-index:11; bottom: 100px; top :135px; left: -15px; right: -15px; padding: 10px 20px; ">
             <a href="#" class="title-close black" id="cmds_message_close"></a>
             <h3>测试命令</h3>
             <p class="text-danger">以下命令仅供测试使用，可能存在危险</p>
@@ -678,34 +830,61 @@
                 <a href="#" class="btn-common btn-primary" id="cmds_message_close2">关闭</a>
             </div>
         </div>
+        <div class="window-extend-area-mask"></div>
         <!--初次提示框-->
-        <div class="window-extend-area" id="hello_message">
+        <div class="window-extend-area with-mask" id="hello_message" style="z-index:11; ">
+            <a href="#" id="link_close_hello_message" class="btn-close-extend-area"><i>&nbsp;</i></a>
 
         </div>
+        <div class="window-extend-area-mask"></div>
+        <!--电源提示框-->
+        <div class="window-extend-area with-mask" id="power_message" " style="z-index:12; bottom: 130px; top :105px; left: -10px; right: -10px; padding: 10px 20px; ">
+            <a href="#" id="link_close_power_message" class="btn-close-extend-area"><i>&nbsp;</i></a>
+            <h3>选择要执行的操作</h3>
+            <a class="op-item" id="link_shutdown" href="#">
+                <img class="shutdown" />
+                <span>关闭计算机</span>
+            </a>
+            <a class="op-item" id="link_reboot" href="#">
+                <img class="reboot" />
+                <span>重启计算机</span>
+            </a>
+            <a class="op-item" id="link_exit" href="#">
+                <img class="quit" />
+                <span>退出本软件</span>
+            </a>
+        </div>
+        <div class="window-extend-area-mask"></div>
         <!--更新提示框-->
-        <div class="window-extend-area" style="bottom: 150px; top :145px; left: -15px; right: -15px; padding: 10px 20px; " id="update_message">
-            <h3 class="text-center">您的 JiYu Trainer 有新的版本了，是否更新？</h3>
-            <p id="common_message_text">更新到最新版本，可以获得更稳定的使用体验！<br />更新过程中会暂时关闭极域</p>
-            <div class="text-right" style="position: absolute;bottom: 0; left: 15px; right: 15px; height :45px;">
+        <div class="window-extend-area with-mask" id="update_message">
+            <div class="new-ver">
+                <span class="text">发现新版本</span>
+                <span class="ver"><span id="update_message_newver"></span> 更新内容</span>
+            </div>
+            <p id="update_message_text">
+            </p>
+            <p style="position: absolute;bottom: 50px; left: 15px; right: 15px; height :28px;text-align:center; font-size: 12px;color:rgb(108, 117, 125)">更新到最新版本，可以获得更稳定的使用体验！<br />更新过程中会暂时关闭极域</p>
+            <div class="text-right" style="position: absolute;bottom: 0; left: 15px; right: 15px; height :45px;text-align:center;">
                 <a href="#" class="btn-common btn-primary" id="update_message_update">立即更新!</a>
-                <a href="#" class="btn-common" id="update_message_close">我不想更新</a>
+                <a href="#" class="btn-common ml-2" id="update_message_close">下次再说</a>
             </div>
         </div>
+        <div class="window-extend-area-mask"></div>
         <!--退出提示框-->
-        <div class="window-extend-area" id="exit_message" style="bottom: 135px; top :135px; left: -15px; right: -15px; padding: 10px 20px;">
-            <a href="#" class="title-close black" id="exit_message_close"></a>
+        <div class="window-extend-area with-mask" id="exit_message" style="z-index:20; bottom: 135px; top :135px; left: -10px; right: -10px; padding: 10px 20px;">
+            <a href="#" class="btn-close-extend-area" id="exit_message_close"><i>&nbsp;</i></a>
             <h3>极域正在运行，您是否还要退出？</h3>
             <p>
                 当前正在控制极域，退出软件会非常不安全。
                 <br />你可以选择强制分离极域，但会导致极域脱离控制(不推荐)；也可以选择退出本软件，并杀死极域。
             </p>
             <div class="text-right" style="position: absolute;bottom: 0; left: 0px; right: 15px; height :45px;">
-                <a href="#" class="btn-common" id="exit_message_kill_and_exit">杀死极域并退出</a>
-                <a href="#" class="btn-common btn-secondary" id="exit_message_end_ctl_and_exit">分离极域并退出(不推荐)</a>
-                <a href="#" class="btn-common btn-primary" id="exit_message_close2">不退出</a>
+                <a href="#" class="btn-common btn-secondary" id="exit_message_kill_and_exit">杀死极域退出</a>
+                <a href="#" class="btn-common" id="exit_message_end_ctl_and_exit">分离极域退出(不推荐)</a>
+                <a href="#" class="btn-common btn-primary" id="exit_message_close2">取消</a>
             </div>
         </div>
-
+        <div class="window-extend-area-mask"></div>
     </div>
     <script type="text/tiscript">
 
@@ -747,9 +926,10 @@
                 });
             }
         }
-        $(#status_icon).onClick = function(){ /*view.test1();*/ }
         /*$(#link_github).onClick = function (){ view.toGithub();  }*/
         $(#link_more_cmd).onClick = function (){ $(#cmds_message).attributes.addClass("shown");  }
+        $(#link_close_power_message).onClick = function (){ common_close_extend_area($(#power_message));  }
+        $(#link_close_hello_message).onClick = function (){ common_close_extend_area($(#hello_message));  }
 
         function common_close_extend_area(area){
             if(area.attributes.hasClass("shown")) {
@@ -780,9 +960,16 @@
         $(#btn_top).on("mouseleave", function () { $(.tooltip.tooltip-topmost).attributes.removeClass("shown"); });
         $(#btn_debug).on("mouseenter", function () { $(.tooltip.tooltip-sets).attributes.addClass("shown"); });
         $(#btn_debug).on("mouseleave", function () { $(.tooltip.tooltip-sets).attributes.removeClass("shown"); });
+        $(#btn_protect_stat).on("mouseenter", function () { $(.tooltip.tooltip-protect-stat).attributes.addClass("shown"); });
+        $(#btn_protect_stat).on("mouseleave", function () { $(.tooltip.tooltip-protect-stat).attributes.removeClass("shown"); });
+        $(#btn_power).on("mouseenter", function () { $(.tooltip.tooltip-power).attributes.addClass("shown"); });
+        $(#btn_power).on("mouseleave", function () { $(.tooltip.tooltip-power).attributes.removeClass("shown"); });
+
         $(#tooltip_fast).onClick = function() { $(#tooltip_fast).attributes.removeClass("shown"); }
-        $(#link_close_extend_area).on("mouseenter", function () { $(.tooltip.tooltip-close-debug).attributes.addClass("shown"); });
-        $(#link_close_extend_area).on("mouseleave", function () { $(.tooltip.tooltip-close-debug).attributes.removeClass("shown"); });
+        $(#btn_power).onClick = function() { $(#power_message).attributes.addClass("shown"); }
+        $(#link_exit).onClick = function() { $(#power_message).attributes.removeClass("shown"); }
+        $(#link_reboot).onClick =  $(#link_exit).onClick;
+        $(#link_shutdown).onClick =  $(#link_exit).onClick;
 
         //Tabs
         $(#btn_tab_setting).onClick = function() { selectTab(this, $(#page_setting)); }
@@ -819,10 +1006,20 @@
             if(!body.attributes.hasClass("shown"))
                 body.attributes.addClass("shown");
         }
+
+        const exit_message = $(#exit_message);
+        const hello_message = $(#hello_message);
+        const power_message = $(#power_message);
+        const update_message = $(#update_message);
+
         function closeWindow(){
-             if(extend_area.attributes.hasClass("shown"))
-                extend_area.attributes.removeClass("shown");
-             else {
+            if(extend_area.attributes.hasClass("shown")) extend_area.attributes.removeClass("shown");
+            else  if(update_message.attributes.hasClass("shown")) return;
+            else  if(common_message.attributes.hasClass("shown")) common_message.attributes.removeClass("shown");
+            else  if(power_message.attributes.hasClass("shown")) power_message.attributes.removeClass("shown");
+            else  if(exit_message.attributes.hasClass("shown"))  exit_message.attributes.removeClass("shown");
+            else  if(hello_message.attributes.hasClass("shown")) hello_message.attributes.removeClass("shown");
+            else {
                 body.onAnimationEnd = function(){
                     view.exitClick();
                 };

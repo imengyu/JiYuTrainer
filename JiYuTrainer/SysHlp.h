@@ -8,24 +8,40 @@ enum SystemVersion {
 	SystemVersionWindows7OrLater,
 	SystemVersionNotSupport,
 };
-
-class EXPORT SysHlp
+class SysHlp
 {
 public:
-	static SystemVersion GetSystemVersion();
+	virtual SystemVersion GetSystemVersion() { return SystemVersion::SystemVersionUnknow; }
 
-	static LPCWSTR ConvertErrorCodeToString(DWORD ErrorCode);
+	virtual LPCWSTR ConvertErrorCodeToString(DWORD ErrorCode) { return false; }
 
-	static bool CheckIsPortabilityDevice(LPCWSTR path);
-	static bool CheckIsDesktop(LPCWSTR path);
+	virtual bool CheckIsPortabilityDevice(LPCWSTR path) { return false; }
+	virtual bool CheckIsDesktop(LPCWSTR path) { return false; }
 
-	static bool EnableDebugPriv(const wchar_t * name);
+	virtual bool EnableDebugPriv(const wchar_t * name) { return false; }
 
-	static BOOL IsRunasAdmin();
-	static BOOL Is64BitOS();
+	virtual BOOL IsRunasAdmin() { return false; }
+	virtual BOOL Is64BitOS() { return false; }
 
-	static bool RunApplication(LPCWSTR path, LPCWSTR cmd);
-	static bool RunApplicationPriviledge(LPCWSTR path, LPCWSTR cmd);
+	virtual bool RunApplication(LPCWSTR path, LPCWSTR cmd) { return false; }
+	virtual bool RunApplicationPriviledge(LPCWSTR path, LPCWSTR cmd) { return false; }
 
+};
+class SysHlpInternal : public SysHlp
+{
+public:
+	SystemVersion GetSystemVersion();
+ LPCWSTR ConvertErrorCodeToString(DWORD ErrorCode);
+
+	bool CheckIsPortabilityDevice(LPCWSTR path);
+	bool CheckIsDesktop(LPCWSTR path);
+
+	bool EnableDebugPriv(const wchar_t * name);
+
+	BOOL IsRunasAdmin();
+	BOOL Is64BitOS();
+
+	bool RunApplication(LPCWSTR path, LPCWSTR cmd);
+	bool RunApplicationPriviledge(LPCWSTR path, LPCWSTR cmd);
 };
 

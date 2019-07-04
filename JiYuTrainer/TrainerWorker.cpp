@@ -29,6 +29,15 @@ PSYSTEM_PROCESSES current_system_process = NULL;
 TrainerWorkerInternal::TrainerWorkerInternal()
 {
 	currentTrainerWorker = this;
+	appSysHlp = (SysHlp*)currentApp->GetUtils(UTILS_SYSHLP);
+
+	//For message box center
+	hMsgBoxHook = SetWindowsHookEx(
+		WH_CBT,        // Type of hook 
+		CBTProc,        // Hook procedure (see below)
+		NULL,         // Module handle. Must be NULL (see docs)
+		GetCurrentThreadId()  // Only install for THIS thread!!!
+	);
 }
 TrainerWorkerInternal::~TrainerWorkerInternal()
 {
@@ -36,6 +45,8 @@ TrainerWorkerInternal::~TrainerWorkerInternal()
 		CloseDesktop(hDesktop);
 		hDesktop = NULL;
 	}
+
+	UnhookWindowsHookEx(hMsgBoxHook);
 
 	StopInternal();
 	ClearProcess();
@@ -136,7 +147,21 @@ void TrainerWorkerInternal::HandleMessageFromVirus(LPCWSTR buf)
 					UpdateState();
 				}
 			}
-			
+			else if (arr[1] == L"algbtop") {
+				currentLogger->LogInfo(L"Receive allow gbTop message ");
+				_Callback->OnAllowGbTop();
+			}
+			else if (arr[1] == L"gbmfull") {
+				gbFullManual = true;
+				ManualFull(gbFullManual);
+			}
+			else if (arr[1] == L"gbmnofull") {
+				if (_FakeFull) FakeFull(false);
+				gbFullManual = false;
+				ManualFull(gbFullManual);
+			}
+			else if (arr[1] == L"gbuntop") ManualTop(false);
+			else if (arr[1] == L"gbtop") ManualTop(true);
 		}
 		else if (arr[0] == L"wcd")
 		{
@@ -148,7 +173,7 @@ void TrainerWorkerInternal::HandleMessageFromVirus(LPCWSTR buf)
 		else if (arr[0] == L"vback") {
 			wstring strBuff = arr[1];
 			if (arr.size() > 2) {
-				for (int i = 2; i < arr.size(); i++)
+				for (UINT i = 2; i < arr.size(); i++)
 					strBuff += L":" + arr[i];
 			}
 			currentLogger->Log(L"Receive virus echo : %s", strBuff.c_str());
@@ -169,7 +194,13 @@ bool TrainerWorkerInternal::Kill(bool autoWork)
 	if (_StudentMainControlled){
 		bool vkill = autoWork;
 		if(!vkill){
-			int drs = MessageBox(hWndMain, L"您是否希望使用病毒进行爆破？", L"JiYuTrainer - 提示", MB_ICONASTERISK | MB_YESNOCANCEL);
+			MSGBOXPARAMSW mbp = { 0 };
+			mbp.hwndOwner = hWndMain;
+			mbp.lpszCaption = L"JiYuTrainer - 提示";
+			mbp.lpszText = L"您是否希望使用病毒进行爆破？";
+			mbp.cbSize = sizeof(MSGBOXPARAMSW);
+			mbp.dwStyle = MB_ICONEXCLAMATION | MB_TOPMOST | MB_YESNOCANCEL;
+			int drs = MessageBoxIndirect(&mbp);
 			if (drs == IDCANCEL) return false;
 			else if (drs == IDYES) vkill = true;
 		}
@@ -224,7 +255,7 @@ bool TrainerWorkerInternal::Kill(bool autoWork)
 	}
 
 FORCEKILL:
-	if (XDriverLoaded() && MessageBox(hWndMain, L"普通无法结束极域，是否调用驱动结束极域？\n（驱动可能不稳定，请慎用。您也可以使用 PCHunter 等安全软件进行强杀）", L"JiYuTrainer - 提示", MB_ICONEXCLAMATION | MB_YESNO) == IDYES)
+	if (XDriverLoaded() && MessageBox(hWndMain, L"普通无法结束极域，是否调用驱动结束极域？\n（驱动可能不稳定，请慎用。您也可以使用 PCHunter 等安全软件进行强杀）", L"JiYuTrainer - 提示", MB_ICONEXCLAMATION | MB_YESNO | MB_TOPMOST) == IDYES)
 	{
 		if (KForceKill(_StudentMainPid, &status)) {
 			_StudentMainPid = 0;
@@ -247,7 +278,7 @@ bool TrainerWorkerInternal::Rerun(bool autoWork)
 			_Callback->OnSimpleMessageCallback(L"<h5>我们无法在此计算机上找到极域电子教室，您需要手动启动</h5>");
 		return false;
 	}
-	return SysHlp::RunApplication(_StudentMainPath.c_str(), NULL);
+	return  appSysHlp->RunApplication(_StudentMainPath.c_str(), NULL);
 }
 void* TrainerWorkerInternal::RunOperation(TrainerWorkerOp op) 
 {
@@ -345,6 +376,7 @@ void TrainerWorkerInternal::RunResetPid()
 
 	}
 
+	/*
 	newPid = 0;
 	if (LocateMasterHelper(&newPid)) {
 		if (_MasterHelperPid != newPid)
@@ -357,6 +389,7 @@ void TrainerWorkerInternal::RunResetPid()
 	else {
 		_MasterHelperPid = 0;
 	}
+	*/
 }
 
 bool TrainerWorkerInternal::FlushProcess()
@@ -451,7 +484,7 @@ bool TrainerWorkerInternal::ReadTopDomanPassword(BOOL forceKnock)
 	if (forceKnock) goto READ_EX;
 	//普通注册表读取，适用于4.0版本
 	
-	lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, SysHlp::Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\TopDomain\\e-Learning Class Standard\\1.00" : L"SOFTWARE\\TopDomain\\e-Learning Class Standard\\1.00", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
+	lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, appSysHlp->Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\TopDomain\\e-Learning Class Standard\\1.00" : L"SOFTWARE\\TopDomain\\e-Learning Class Standard\\1.00", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
 	if (lastError == ERROR_SUCCESS) {
 		DWORD dwType = REG_SZ;
 		WCHAR Data[32];
@@ -471,7 +504,7 @@ bool TrainerWorkerInternal::ReadTopDomanPassword(BOOL forceKnock)
 
 	//HKEY_LOCAL_MACHINE\SOFTWARE\TopDomain\e-Learning Class\Student Knock1
 READ_EX:
-	lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, SysHlp::Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\TopDomain\\e-Learning Class\\Student" : L"SOFTWARE\\TopDomain\\e-Learning Class\\Student", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
+	lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, appSysHlp->Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\TopDomain\\e-Learning Class\\Student" : L"SOFTWARE\\TopDomain\\e-Learning Class\\Student", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
 	if (lastError == ERROR_SUCCESS) {
 
 		DWORD dwType = REG_BINARY;
@@ -499,7 +532,7 @@ bool TrainerWorkerInternal::LocateStudentMainLocation()
 {
 	//注册表查找 极域 路径
 	HKEY hKey;
-	LRESULT lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, SysHlp::Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learning Class V6.0" : L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learning Class V6.0", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
+	LRESULT lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, appSysHlp->Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learning Class V6.0" : L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learning Class V6.0", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
 	if (lastError == ERROR_SUCCESS) {
 
 		DWORD dwType = REG_SZ;
@@ -775,7 +808,8 @@ void TrainerWorkerInternal::SwitchFakeFull()
 	}
 }
 void TrainerWorkerInternal::FakeFull(bool fk) {
-	if (_CurrentBroadcastWnd) {
+	if (_CurrentBroadcastWnd)
+	{
 		if (fk) {
 			SetWindowLong(_CurrentBroadcastWnd, GWL_EXSTYLE, GetWindowLong(_CurrentBroadcastWnd, GWL_EXSTYLE) | WS_EX_TOPMOST);
 			SetWindowLong(_CurrentBroadcastWnd, GWL_STYLE, GetWindowLong(_CurrentBroadcastWnd, GWL_STYLE) ^ (WS_BORDER | WS_OVERLAPPEDWINDOW));
@@ -790,13 +824,14 @@ void TrainerWorkerInternal::FakeFull(bool fk) {
 		}
 		else {
 			_FakeBroadcastFull = false;
-			FixWindow(_CurrentBroadcastWnd, (LPWSTR)L"");
+			FixWindow(_CurrentBroadcastWnd, (LPWSTR)L"屏幕广播");
 			int w = (int)((double)screenWidth * (3.0 / 4.0)), h = (int)((double)screenHeight * (double)(4.0 / 5.0));
 			SetWindowPos(_CurrentBroadcastWnd, 0, (screenWidth - w) / 2, (screenHeight - h) / 2, w, h, SWP_NOZORDER | SWP_SHOWWINDOW);
 			currentLogger->Log(L"取消广播窗口假装全屏状态");
 		}
 	}
-	if (_CurrentBlackScreenWnd) {
+	if (_CurrentBlackScreenWnd) 
+	{
 		if (fk) {
 			SetWindowLong(_CurrentBlackScreenWnd, GWL_EXSTYLE, GetWindowLong(_CurrentBlackScreenWnd, GWL_EXSTYLE) | WS_EX_TOPMOST);
 			SetWindowLong(_CurrentBlackScreenWnd, GWL_STYLE, GetWindowLong(_CurrentBlackScreenWnd, GWL_STYLE) ^ (WS_BORDER | WS_OVERLAPPEDWINDOW));
@@ -815,6 +850,39 @@ void TrainerWorkerInternal::FakeFull(bool fk) {
 	if (!fk && !_CurrentBlackScreenWnd && !_CurrentBroadcastWnd && (_FakeBlackScreenFull || _FakeBroadcastFull)) {
 		_FakeBroadcastFull = false;
 		_FakeBlackScreenFull = false;
+	}
+}
+void TrainerWorkerInternal::ManualFull(bool fk)
+{
+	currentLogger->Log(L"receive ManualFull %s", fk ? L"true" : L"false");
+	if (_CurrentBroadcastWnd) 
+	{
+		if (fk) {
+			SetWindowLong(_CurrentBroadcastWnd, GWL_EXSTYLE, GetWindowLong(_CurrentBroadcastWnd, GWL_EXSTYLE) | WS_EX_TOPMOST);
+			SetWindowLong(_CurrentBroadcastWnd, GWL_STYLE, GetWindowLong(_CurrentBroadcastWnd, GWL_STYLE) ^ (WS_BORDER | WS_OVERLAPPEDWINDOW) | WS_SYSMENU);
+			SetWindowPos(_CurrentBroadcastWnd, HWND_TOPMOST, 0, 0, screenWidth, screenHeight, SWP_SHOWWINDOW);
+			SendMessage(_CurrentBroadcastWnd, WM_SIZE, 0, MAKEWPARAM(screenWidth, screenHeight));
+		}
+		else {
+			FixWindow(_CurrentBroadcastWnd, (LPWSTR)L"屏幕广播");
+			int w = (int)((double)screenWidth * (3.0 / 4.0)), h = (int)((double)screenHeight * (double)(4.0 / 5.0));
+			SetWindowPos(_CurrentBroadcastWnd, 0, (screenWidth - w) / 2, (screenHeight - h) / 2, w, h, SWP_NOZORDER | SWP_SHOWWINDOW);
+		}
+	}
+}
+void TrainerWorkerInternal::ManualTop(bool fk)
+{
+	currentLogger->Log(L"receive ManualTop %s", fk ? L"true" : L"false");
+	if (_CurrentBroadcastWnd)
+	{
+		if (fk) {
+			SetWindowLong(_CurrentBroadcastWnd, GWL_EXSTYLE, GetWindowLong(_CurrentBroadcastWnd, GWL_EXSTYLE) | WS_EX_TOPMOST);
+			SetWindowPos(_CurrentBroadcastWnd, HWND_TOPMOST, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+		}
+		else {
+			SetWindowLong(_CurrentBroadcastWnd, GWL_EXSTYLE, GetWindowLong(_CurrentBroadcastWnd, GWL_EXSTYLE) ^ WS_EX_TOPMOST);
+			SetWindowPos(_CurrentBroadcastWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_SHOWWINDOW | SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+		}
 	}
 }
 bool TrainerWorkerInternal::ChecIsJIYuWindow(HWND hWnd, LPDWORD outPid, LPDWORD outTid) {
@@ -851,19 +919,18 @@ void TrainerWorkerInternal::FixWindow(HWND hWnd, LPWSTR text)
 
 	LONG oldLong = GetWindowLong(hWnd, GWL_EXSTYLE);
 
-	//Set border and sizeable
-	SetWindowLong(hWnd, GWL_STYLE, GetWindowLong(hWnd, GWL_STYLE) | (WS_BORDER | WS_OVERLAPPEDWINDOW));
-
 	//Un top
 	if (StrEqual(text, L"屏幕广播") || StrEqual(text, L"屏幕演播室窗口")) 
 	{
-		if (!setAllowGbTop) 
+		if (!setAllowGbTop && (oldLong & WS_EX_TOPMOST) == WS_EX_TOPMOST)
 		{
-			if ((oldLong & WS_EX_TOPMOST) == WS_EX_TOPMOST)
-			{
-				SetWindowLong(hWnd, GWL_EXSTYLE, oldLong ^ WS_EX_TOPMOST);
-				SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
-			}
+			SetWindowLong(hWnd, GWL_EXSTYLE, oldLong ^ WS_EX_TOPMOST);
+			SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
+		}
+		if (!gbFullManual) 
+		{
+			//Set border and sizeable
+			SetWindowLong(hWnd, GWL_STYLE, GetWindowLong(hWnd, GWL_STYLE) | (WS_BORDER | WS_OVERLAPPEDWINDOW));
 		}
 	}
 	else if(setAutoIncludeFullWindow)
@@ -873,7 +940,12 @@ void TrainerWorkerInternal::FixWindow(HWND hWnd, LPWSTR text)
 			SetWindowLong(hWnd, GWL_EXSTYLE, oldLong ^ WS_EX_TOPMOST);
 			SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOMOVE | SWP_NOSIZE | SWP_NOACTIVATE);
 		}
+
+		//Set border and sizeable
+		SetWindowLong(hWnd, GWL_STYLE, GetWindowLong(hWnd, GWL_STYLE) | (WS_BORDER | WS_OVERLAPPEDWINDOW));
+
 	}
+
 	if (StrEqual(text, L"BlackScreen Window"))
 	{
 		oldLong = GetWindowLong(hWnd, GWL_EXSTYLE);
@@ -910,7 +982,7 @@ BOOL CALLBACK TrainerWorkerInternal::EnumWindowsProc(HWND hWnd, LPARAM lParam)
 	}
 	return TRUE;
 }
-VOID TrainerWorkerInternal::TimerProc(HWND hWnd, UINT message, UINT_PTR iTimerID, DWORD dwTime)
+VOID CALLBACK TrainerWorkerInternal::TimerProc(HWND hWnd, UINT message, UINT_PTR iTimerID, DWORD dwTime)
 {
 	if (currentTrainerWorker != nullptr) 
 	{
@@ -921,6 +993,33 @@ VOID TrainerWorkerInternal::TimerProc(HWND hWnd, UINT message, UINT_PTR iTimerID
 			currentTrainerWorker->RunCk();
 		}
 	}
+}
+LRESULT CALLBACK TrainerWorkerInternal::CBTProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	if (nCode < 0)
+		return CallNextHookEx(currentTrainerWorker->hMsgBoxHook, nCode, wParam, lParam);
+	switch (nCode)
+	{
+	case HCBT_ACTIVATE: {
+		// 现在wParam中就是message box的句柄
+		HWND hWnd = (HWND)wParam;
+		HWND hWndOwner = GetWindow(hWnd, GW_OWNER);
+
+		// 我们已经有了message box的句柄，在这里我们就可以定制message box了!
+		if (hWndOwner && hWndOwner  == currentTrainerWorker->hWndMain)
+		{
+			//窗口在父窗口居中
+			RECT rect; GetWindowRect(hWnd, &rect);
+			RECT rectParent; GetWindowRect(hWndOwner, &rectParent);
+			rect.left = ((rectParent.right - rectParent.left) - (rect.right - rect.left)) / 2 + rectParent.left;
+			rect.top = ((rectParent.bottom - rectParent.top) - (rect.bottom - rect.top)) / 2 + rectParent.top;
+			SetWindowPos(hWnd, 0, rect.left, rect.top, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
+		}
+		return 0;
+	}
+	}
+	// Call the next hook, if there is one
+	return CallNextHookEx(currentTrainerWorker->hMsgBoxHook, nCode, wParam, lParam);
 }
 
 bool UnDecryptJiyuKnock(BYTE* Data, DWORD cbData, WCHAR* ss)
