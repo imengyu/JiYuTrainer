@@ -541,7 +541,7 @@ void MainWindow::OnUpdateStudentMainInfo(bool running, LPCWSTR fullPath, DWORD p
 		status_jiyu_path.set_text(L"未找到极域电子教室");
 	}
 	else {
-		link_read_jiyu_password2.set_attribute("style", L"float: right;margin-right: 10px; margin-top: 7px");
+		link_read_jiyu_password2.set_attribute("style", L"");
 		std::wstring s1(fullPath);
 		s1 += L"<br/><small>点击运行极域电子教室</small>";
 		LPCSTR textMore2 = StringHlp::UnicodeToUtf8(s1.c_str());
