@@ -15,6 +15,7 @@ public:
 	bool _firstShow = true;
 
 	int RunLoop();
+	void Close();
 
 	static LRESULT CALLBACK	wndProc(HWND, UINT, WPARAM, LPARAM);
 	static HelpWindow* ptr(HWND hwnd);

@@ -5,6 +5,7 @@
 #include "MainWindow.h"
 #include "UpdaterWindow.h"
 #include "ConfigWindow.h"
+#include "BugReportWindow.h"
 #include "../JiYuTrainer/AppPublic.h"
 #include "../JiYuTrainer/JiYuTrainer.h"
 #include "JiYuTrainerUI.h"
@@ -41,5 +42,11 @@ UIEXPORT_CFUNC(int) JTUI_RunConfig()
 {
 	currentApp = (JTApp*)JTGetApp();
 	ShowMoreSettings(GetDesktopWindow());
+	return 0;
+}
+UIEXPORT_CFUNC(int) JTUI_RunBugReport()
+{
+	currentApp = (JTApp*)JTGetApp();
+	ShowBugReportWindow();
 	return 0;
 }

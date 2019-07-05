@@ -1,6 +1,5 @@
 #include "stdafx.h"
 #include "MainWindow.h"
-#include "HelpWindow.h"
 #include "UpdaterWindow.h"
 #include "ConfigWindow.h"
 #include "resource.h"
@@ -16,8 +15,6 @@
 #include "../JiYuTrainerUpdater/JiYuTrainerUpdater.h"
 
 using namespace std;
-
-#define WINDOW_CLASS_NAME L"sciter-jytrainer-main-window"		
 
 #define TIMER_AOP 2
 #define TIMER_RB_DELAY 3
@@ -146,7 +143,6 @@ sciter::value MainWindow::docunmentComplete()
 	check_allow_op = root.get_element_by_id(L"check_allow_op");
 	check_allow_top = root.get_element_by_id(L"check_allow_top");
 	check_auto_update = root.get_element_by_id(L"check_auto_update");
-	input_ckinterval = root.get_element_by_id(L"input_ckinterval");
 	check_allow_control = root.get_element_by_id(L"check_allow_control");
 	check_allow_monitor = root.get_element_by_id(L"check_allow_monitor");
 	link_read_jiyu_password2 = root.get_element_by_id(L"link_read_jiyu_password2");
@@ -218,12 +214,16 @@ void MainWindow::OnWmDestroy()
 	if (!isUserCancel && currentControlled)
 		currentSysHlp->RunApplicationPriviledge(currentApp->GetFullPath(), L"-r1");
 
+	CloseHelp();
+
 	UnregisterHotKey(_hWnd, hotkeyShowHide);
 	UnregisterHotKey(_hWnd, hotkeySwFull);
 
 	SetWindowLong(_hWnd, GWL_USERDATA, 0);
 
 	PostQuitMessage(0);
+
+	_hWnd = NULL;
 }
 void MainWindow::OnWmHotKey(WPARAM wParam)
 {
@@ -299,6 +299,9 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 		else if (cmd == L"ssss") currentApp->RunOperation(AppOperationKShutdown);
 		else if (cmd == L"sssr") currentApp->RunOperation(AppOperationKReboot);
 		else if (cmd == L"ckend") { currentWorker->RunOperation(TrainerWorkerOpVirusQuit); currentLogger->Log(L"已与极域分离"); }
+		else if (cmd == L"unloaddrv") {
+			currentApp->RunOperation(AppOperationUnLoadDriver);
+		}
 		else if (cmd == L"fuljydrv") {
 			currentApp->RunOperation(AppOperation2);
 		}
@@ -321,10 +324,7 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 		else if (cmd == L"testupdate") {
 			UpdaterWindow u(_hWnd);
 			u.RunLoop();
-		}
-		else if (cmd == L"unloaddrv") {
-			currentApp->RunOperation(AppOperationUnLoadDriver);
-		}
+		}	
 		else if (cmd == L"jypasswd") { 
 			LPCWSTR passwd;
 			int res = MessageBox(_hWnd, L"您是否希望使用解密模式读取极域密码？\n选择 [是]  使用解密模式读取极域密码，适用于极域6.0版本\n选择 [否]  则直接读取极域注册表密码，适用于极域老版本", L"JiYuTrainer - 提示", MB_ICONASTERISK | MB_YESNOCANCEL);
@@ -352,6 +352,15 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 		else if (cmd == L"test") currentLogger->Log(L"测试命令，无功能");
 		else if (cmd == L"test2") currentWorker->SendMessageToVirus(L"test2:f");
 		else if (cmd == L"test3") MessageBox(hWndMain, L"MessageBox", L"test3", 0);
+		else if (cmd == L"version") {
+			currentLogger->Log(L"当前版本是：%hs", CURRENT_VERSION);
+		}
+		else if (cmd == L"crash") {
+			currentLogger->Log(L"测试崩溃功能");
+			typedef int(*fnJTUI_RunMain)();
+			fnJTUI_RunMain JTUI_RunConfig = (fnJTUI_RunMain)GetProcAddress(GetModuleHandle(0), "crash");
+			JTUI_RunConfig();
+		}
 		else if (cmd == L"exit")  SendMessage(hWndMain, WM_COMMAND, IDM_EXIT, NULL);
 		else if (cmd == L"hide")  SendMessage(hWndMain, WM_COMMAND, IDM_SHOWMAIN, NULL);
 		else {
@@ -532,7 +541,7 @@ void MainWindow::OnUpdateStudentMainInfo(bool running, LPCWSTR fullPath, DWORD p
 		status_jiyu_path.set_text(L"未找到极域电子教室");
 	}
 	else {
-		link_read_jiyu_password2.set_attribute("style", L"float: right;");
+		link_read_jiyu_password2.set_attribute("style", L"float: right;margin-right: 10px; margin-top: 7px");
 		std::wstring s1(fullPath);
 		s1 += L"<br/><small>点击运行极域电子教室</small>";
 		LPCSTR textMore2 = StringHlp::UnicodeToUtf8(s1.c_str());
@@ -602,8 +611,20 @@ void MainWindow::OnAllowGbTop() {
 
 void MainWindow::ShowHelp()
 {
-	HelpWindow helpWindow(_hWnd);
-	helpWindow.RunLoop();
+	if (currentHelpWindow == nullptr) {
+		currentHelpWindow = new	HelpWindow(_hWnd);
+		currentHelpWindow->RunLoop();
+		delete currentHelpWindow;
+		currentHelpWindow = nullptr;
+	}
+}
+void MainWindow::CloseHelp()
+{
+	if (currentHelpWindow != nullptr) {
+		currentHelpWindow->Close();
+		delete currentHelpWindow;
+		currentHelpWindow = nullptr;
+	}
 }
 void MainWindow::ShowFastTip(LPCWSTR text) 
 {
@@ -656,14 +677,9 @@ void MainWindow::LoadSettingsToUi()
 	check_allow_control.set_value(sciter::value(setAllowControl));
 	check_allow_monitor.set_value(sciter::value(setAllowMonitor));
 	check_allow_top.set_value(sciter::value(setAllowGbTop));
-	input_ckinterval.set_value(sciter::value(setCkInterval));
 }
 void MainWindow::SaveSettings()
 {
-	LPCWSTR setCkIntervalStr = input_ckinterval.get_value().to_string().c_str();
-	setCkInterval = _wtoi(setCkIntervalStr);
-	if (setCkInterval < 1000 || setCkInterval>10000) setCkInterval = 3100;
-
 	setAutoIncludeFullWindow = check_auto_fck.get_value().get(false);
 	setAllowAllRunOp = !check_allow_op.get_value().get(true);
 	setAutoForceKill = check_auto_fkill.get_value().get(false);
@@ -681,7 +697,6 @@ void MainWindow::SaveSettings()
 	settings->SetSettingBool(L"AllowControl", setAllowControl);
 	settings->SetSettingBool(L"AllowMonitor", setAllowMonitor);
 	settings->SetSettingBool(L"AllowGbTop", setAllowGbTop);
-	settings->SetSettingInt(L"CKInterval", setCkInterval);
 
 	currentWorker->InitSettings();
 }
@@ -691,7 +706,6 @@ void MainWindow::ResetSettings()
 	setAllowAllRunOp = false;
 	setAutoForceKill = false;
 	setAutoUpdate = true;
-	setCkInterval = 3100;
 	setAllowControl = false;
 	setAllowMonitor = true;
 	setAllowGbTop = false;
@@ -738,7 +752,7 @@ int MainWindow::RunLoop()
 
 	// Main message loop:
 	MSG msg;
-	while (GetMessage(&msg, NULL, 0, 0))
+	while (GetMessage(&msg, NULL, 0, 0) && isValid())
 	{
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);

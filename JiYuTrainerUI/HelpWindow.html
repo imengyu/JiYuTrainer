@@ -11,6 +11,13 @@
             margin: 15px;
             padding: 0;
         }
+        body .img {
+            width: 100%;
+            text-align: center;
+        }
+        img {
+            max-width: 100%;
+        }
 
         .alert {
             display: block;
@@ -62,7 +69,10 @@
 
 <body>
     <a href="#"></a>
-    <h2 style="text-align: center; padding-top: 8px;">JiYu Trainer  简要帮助</h2>
+
+    <div style="text-align: center; padding-top: 8px;"><img src="res:logo-text.png" /></div>
+    <h2 style="text-align: center; padding-top: 0;margin-top: 0;">帮助文档</h2>
+
     <h3 style="color:#ff8b0d">简介</h3>
     <p>
         <span style="color:#006bef">本软件研发目的就是为了对抗极域电子教室，如果您的学校机房使用极域电子教室来控制学生电脑的话，本软件很可能会帮到你。</span><br />
@@ -71,14 +81,51 @@
     <h3 style="color:#ff8b0d">操作方法</h3>
     <p>
         <span style="color:#006bef">本软件专为小白设计，默认情况下，您不需要修改任何参数，直接运行exe，并最小化即可，软件会自动进行操作。</span><br />
-        如果默认模式无法满足您的需求，可点主界面右下角的“控制台”按钮打开控制台进行配置。
+        如果默认模式无法满足您的需求，可点主界面右下角的“<span class="mark">控制台</span>”按钮打开控制台进行配置。
     </p>
-    <!--<p>
-        此处仅仅是简要帮助，如果您希望了解完整的操作方法，请查看 <a href="#" id="link_help" class="link">完整软件操作帮助文档</a>。
-    </p>-->
     <div class="alert alert-warning">
         <b>附加说明</b>：本软件不依赖任何运行库，您只需复制一个 <b>JiYuTrainer.exe</b> 至目标电脑即可运行，本软件已将需要的DLL打包，它会自动进行安装。
     </div>
+    <h3 style="color:#ff8b0d">软件界面</h3>
+    <h5 style="color:#ff8b0d">主界面</h5>
+    <p>
+        主界面上半部分是控制极域的状态信息，下半部分是操作按钮：
+    </p>
+    <div class="img"><img src="res:JiYuTrainerHelp1.png" /></div>
+    <ul>
+        <li>1. 打开本帮助</li>
+        <li>2. 置顶/不置顶软件主窗口</li>
+        <li>3. 杀死/启动极域主进程</li>
+        <li>4. 打开<span class="mark">控制台</span></li>
+        <li>5. 计算机电源操作和退出软件</li>
+    </ul>
+    <h5 style="color:#ff8b0d">控制台界面</h5>
+    <div class="img"><img src="res:JiYuTrainerHelp2.png" /></div>
+    程序配置说明：
+    <ol>
+        <li>☆ 勾选此选项后可以允许屏幕广播窗口置顶（如果你需要屏幕广播窗口置顶，边看边操作的话），默认是不允许的。</li>
+        <li>△ (调试选项) 勾选此选项后将会加强对极域的窗口控制，广播窗口或黑屏窗口将不能全屏或置顶。</li>
+        <li>△ (调试选项) 基础控制器是否开启。如果不开启，将不会对极域进行任何操作，默认开启。</li>
+        <li>★ 是否监控极域运行进程。因为教师可以通过极域远程运行exe，这可能会对你造成影响，勾选此项以后教师远程执行任何exe都会提醒您是否允许操作。</li>
+        <li>△ (调试选项) 是否在控制极域失败时直接杀死进程，该项的目的是在软件设计初期功能不完善，为了防止软件控制极域失败，而被老师控制所控制，而设置的保险功能，现在软件功能已完善，因此此功能不推荐使用。</li>
+        <li>☆ 是否自动检测更新，更新到最新版本可以使您得到最好的软件使用体验，包括新功能和问题修复。</li>
+        <li>★ 是否允许教师通过极域控制你的电脑，不勾选此项时教师不能使用极域远程控制你的电脑。默认不允许。</li>
+        <li>★ 是否允许教师通过极域监视你的电脑，不勾选此项时教师在教师端所看到您的屏幕是黑色的，而且也不能使用“监视”功能监视您的电脑。默认允许。</li>
+        <li>☆ 保存或恢复默认设置，<b>注意，设置必须保存才能生效。</b></li>
+        <li>■ 设置，调试，以及关于</li>
+        <li>■ 高级配置：仅用于调试使用，请不要修改里面的参数</li>
+    </ol>
+    <h3 style="color:#ff8b0d">屏幕广播窗口的改动</h3>
+    <div class="img"><img src="res:JiYuTrainerHelp3.png" /></div>
+    <p style="color:#006bef">
+        为了保护您免受极域的控制，本软件默认接管了广播窗口的<b>全屏</b>与<b>置顶</b>的操作，所以原有广播窗口的“置顶”与“全屏”按钮已经无效，取而代之，
+        JiYuTrainer 添加了两个菜单项，点击图标或在广播窗口上右键打开此菜单，您可以点击它们操作屏幕广播窗口。
+    </p>
+    <p>
+        由于软件已接管极域广播窗口的WNDPROC与Hooks，假如教师使用“学生演示”功能（也就是请你操作老师电脑，演示给其他同学看）时，您是无法操作教师电脑的，因为老师一般不使用这个功能，
+        所以本软件并未修复此功能。您必须退出本软件再启动极域才能使用“学生演示”功能操作老师电脑。
+    </p>
+
     <h3 style="color:#ff8b0d">紧急全屏</h3>
     <p>
         <span class="mark">如果老师经过你的电脑，发现唯独只有你一个人没有被控制，这有点糟糕啊... </span> ，所以本软件有一个暂时全屏的功能：<br />
@@ -87,11 +134,11 @@
 
     <h3 style="color:#ff8b0d">其他</h3>
     <p>
-        如果您在使用软件过程中发现Bug，欢迎向我反馈！
+        如果您在使用软件过程中发现Bug，或是有意见和建议，欢迎向我反馈！
     </p>
     <ul>
         <!--<li>该项目 Github 地址：<a href="#" id="link_github" class="link">JiYu Trainer </a></li>-->
-        <li>作者 QQ：1501076885 （请备注 <input style="display:inline-block;text-decoration:underline; border: 1px solid #fff; width: 95px" value="来自JiYuTrainer"/>）</li>
+        <li>作者 QQ：1501076885 （请备注 <input style="display:inline-block;text-decoration:underline; border: 1px solid #fff; width: 95px" value="来自JiYuTrainer" />）</li>
     </ul>
     <div class="alert alert-success">
         如果你喜欢这个软件，不妨向你的好友推荐一下吧！
@@ -127,7 +174,6 @@
         const extend_area = $(#extend_area);
 
         $(#link_exit).onClick = function (){ view.close(); }
-        $(#link_help).onClick = function (){ view.goToFullHelp(); }
     </script>
 
 </body>

@@ -39,6 +39,9 @@
     <ClInclude Include="ConfigWindow.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="BugReportWindow.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -60,6 +63,9 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="ConfigWindow.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="BugReportWindow.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -130,6 +136,18 @@
       <Filter>资源文件</Filter>
     </Image>
     <Image Include="res\update_bg.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\JiYuTrainerBug.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\JiYuTrainerHelp1.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\JiYuTrainerHelp2.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\JiYuTrainerHelp3.png">
       <Filter>资源文件</Filter>
     </Image>
   </ItemGroup>

@@ -75,6 +75,7 @@ LRESULT UpdaterWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lP
 	}
 	case WM_DESTROY: {
 		KillTimer(hWnd, 12);
+		SetWindowLong(hWnd, GWL_USERDATA, 0);
 		PostQuitMessage(0);
 		break;
 	}

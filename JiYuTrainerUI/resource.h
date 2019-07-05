@@ -9,6 +9,9 @@
 #define IDR_HTML_UPDATER                121
 #define IDD_ABOUTBOX                    126
 #define IDD_SETTINGS                    127
+#define IDD_BUGREPORT                   129
+#define IDI_BUG                         131
+#define IDB_PNG3                        134
 #define IDC_CHECK_INI_0                 1001
 #define IDC_CHECK_INI_1                 1002
 #define IDC_CHECK_INI_3                 1003
@@ -23,6 +26,10 @@
 #define IDC_KILLPROC_NTP                1012
 #define IDC_KILLPROC_PPTP_APC           1013
 #define IDC_ABOUT                       1014
+#define IDC_REBOOT                      1015
+#define IDC_BUGREPORT_CONTENT           1017
+#define IDC_CKINTERVAL                  1018
+#define IDC_SAVE                        1019
 #define IDM_HELP                        32774
 #define IDM_EXIT                        32775
 #define IDM_SHOWMAIN                    32776
@@ -31,9 +38,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        129
+#define _APS_NEXT_RESOURCE_VALUE        135
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1015
+#define _APS_NEXT_CONTROL_VALUE         1020
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

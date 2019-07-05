@@ -549,7 +549,7 @@
         /*Status area*/
         #status_area {
             width: 100%;
-            height: 190px;
+            height: 180px;
             overflow: scroll;
             font-size: 12px;
             font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
@@ -678,8 +678,8 @@
             <div class="window-title-area" id="title-area">
                 <img src="res:icon-main-small.png" id="title-icon" />
                 <h5 id="title">JiYu Trainer Main Window</h5>
-                <a class="title-min" id="btn_min" href="#"></a>
-                <a class="title-close" id="btn_close" href="#"></a>
+                <a class="title-min" id="btn_min" href="#" title="最小化"></a>
+                <a class="title-close" id="btn_close" href="#" title="关闭"></a>
             </div>
             <!--主状态图标-->
             <div class="main-state">
@@ -765,11 +765,9 @@
                         <label for="check_auto_update">自动更新软件</label>
                     </div>
                 </div>
-                <div class="from-group" style="margin-top:10px; margin-left: 5px;">
-                    <label for="input_ckinterval">监控时间间隔(毫秒)</label><br />
-                    <input style="width: 50px;margin-top: 5px;" type="text" id="input_ckinterval" />
-                    <a href="#" id="link_read_jiyu_password2" style="float: right;margin-right: 10px; margin-top: 7px" class="text-info" title="本软件可尝试破解极域电子教室的卸载和解锁密码">破解极域解锁、卸载密码</a>
-                    <a href="#" id="link_more_settings" style="float: right;margin-right: 20px; margin-top: 7px;" class="text-info">高级配置</a>
+                <div class="from-group" style="margin-top:30px; margin-left: 5px;">
+                    <a href="#" id="link_more_settings" style="margin-top: 7px;" class="text-info">高级配置</a>
+                    <a href="#" id="link_read_jiyu_password2" style="float: right;margin-right: 10px; margin-top: 7px" class="text-info" title="本软件可尝试破解极域电子教室的卸载和解锁密码">破解极域密码</a>
                     <br />
                 </div>
                 <div class="text-center" style="margin-top:10px;">
@@ -792,7 +790,7 @@
                     <img src="res:logo128.png" style="width:100px; height:100px;border-radius: 30px; box-shadow: 0 0 13px rgba(0,0,0,.5); background-color: #fff;" />
                 </div>
                 <div style="margin-top: 70px">
-                    <img src="res:logo-text.png" style="width:250px; height:50px;" />
+                    <img src="res:logo-text.png" style="width:230px; height:auto" />
                 </div>
                 <img src="res:version-detail.png" />
                 <br />

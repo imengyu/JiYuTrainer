@@ -4,3 +4,4 @@ JTUI_GetMainWindow @1 NONAME
 JTUI_RunMain @2 NONAME
 JTUI_RunUpdate @3 NONAME
 JTUI_RunConfig @4 NONAME
+JTUI_RunBugReport @5 NONAME

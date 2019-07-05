@@ -40,6 +40,10 @@ int HelpWindow::RunLoop()
 
 	return msg.lParam;
 }
+void HelpWindow::Close()
+{
+	DestroyWindow(_hWnd);
+}
 
 LRESULT HelpWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
 {
@@ -53,6 +57,7 @@ LRESULT HelpWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 	switch (message)
 	{
 	case WM_DESTROY: {
+		SetWindowLong(hWnd, GWL_USERDATA, 0);
 		PostQuitMessage(0);
 		break;
 	}

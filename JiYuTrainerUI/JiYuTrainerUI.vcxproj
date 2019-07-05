@@ -159,6 +159,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BugReportWindow.h" />
     <ClInclude Include="ConfigWindow.h" />
     <ClInclude Include="HelpWindow.h" />
     <ClInclude Include="JiYuTrainerUI.h" />
@@ -169,6 +170,7 @@
     <ClInclude Include="UpdaterWindow.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="BugReportWindow.cpp" />
     <ClCompile Include="ConfigWindow.cpp" />
     <ClCompile Include="dllmain.cpp" />
     <ClCompile Include="HelpWindow.cpp" />
@@ -186,6 +188,7 @@
     <ResourceCompile Include="JiYuTrainerUI.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\JiYuTrainerBug.ico" />
     <Image Include="..\JiYuTrainerLogo.ico" />
     <Image Include="..\JiYuTrainer\JiYuKillerLoader.ico" />
     <Image Include="res\bg-area.png" />
@@ -201,6 +204,9 @@
     <Image Include="res\footer-xwarn.png" />
     <Image Include="res\footer-xwork.png" />
     <Image Include="res\icon-main-small.png" />
+    <Image Include="res\JiYuTrainerHelp1.png" />
+    <Image Include="res\JiYuTrainerHelp2.png" />
+    <Image Include="res\JiYuTrainerHelp3.png" />
     <Image Include="res\logo-text.png" />
     <Image Include="res\logo128.png" />
     <Image Include="res\states.png" />

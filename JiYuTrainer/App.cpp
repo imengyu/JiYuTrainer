@@ -302,6 +302,7 @@ bool JTAppInternal::RunMd5ShowDialog()
 int JTAppInternal::RunInternal()
 {
 	setlocale(LC_ALL, "chs");
+	SetUnhandledExceptionFilter(NULL);
 	SetUnhandledExceptionFilter(UnhandledExceptionFilter);
 
 	MLoadNt();
@@ -331,6 +332,10 @@ int JTAppInternal::RunInternal()
 		return CheckMd5();
 	if (!appArgInstallMode && !appArgeementArgeed && !RunArgeementDialog())
 		return 0;
+	if (appIsBugReportMode) {
+		appStartType = AppStartTypeBugReport;
+		goto CONFIG;
+	}
 	if (appIsConfigMode) {
 		appStartType = AppStartTypeConfig;
 		goto CONFIG;
@@ -354,6 +359,7 @@ int JTAppInternal::RunInternal()
 			return 0;
 	}
 
+	//appLogger->Log(L"SetUnhandledExceptionFilter Prevented: %d", PreventSetUnhandledExceptionFilter());
 	appWorker = new TrainerWorkerInternal();
 	appLogger->Log(L"初始化正常");
 
@@ -396,6 +402,11 @@ int JTAppInternal::RunInternal()
 				appLogger->Log(L"启动程序配置模式");
 				return JTUI_RunConfig();
 			}
+			else return APP_FAIL_MAIN_PART_BROKED;
+		}
+		else if (appStartType == AppStartTypeBugReport) {
+			fnJTUI_RunMain JTUI_RunConfig = (fnJTUI_RunMain)GetProcAddress(hMain, (LPCSTR)5);
+			if (JTUI_RunConfig) return JTUI_RunConfig();
 			else return APP_FAIL_MAIN_PART_BROKED;
 		}
 	}
@@ -513,10 +524,13 @@ void JTAppInternal::InitArgs()
 	if (FindArgInCommandLine(appArgList, appArgCount, L"-rt") != -1) appArgForceTemp = true;
 	if (FindArgInCommandLine(appArgList, appArgCount, L"-wf") != -1) appArgForceCheckFileMd5 = true;
 	if (FindArgInCommandLine(appArgList, appArgCount, L"-b") != -1) appArgBreak = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"-break") != -1) appArgBreak = true;
 	if (FindArgInCommandLine(appArgList, appArgCount, L"-r1") != -1) appIsRecover = true;
 	if (FindArgInCommandLine(appArgList, appArgCount, L"-md5ck") != -1) appIsMd5CalcMode = true;
 	if (FindArgInCommandLine(appArgList, appArgCount, L"-h") != -1) appIsHiddenMode = true;
-	if (FindArgInCommandLine(appArgList, appArgCount, L"-c") != -1) appIsConfigMode = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"-hidden") != -1) appIsHiddenMode = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"-config") != -1) appIsConfigMode = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"-bugreport") != -1) appIsBugReportMode = true;
 
 	int argFIndex = FindArgInCommandLine(appArgList, appArgCount, L"-f");
 	if (argFIndex >= 0 && (argFIndex + 1) < appArgCount) {
@@ -643,12 +657,42 @@ INT_PTR CALLBACK JTAppInternal::Md5ShowWndProc(HWND hDlg, UINT message, WPARAM w
 	return lResult;
 }
 
+extern "C" int WINAPI MessageBoxTimeoutW(IN HWND hWnd, IN LPCWSTR lpText, IN LPCWSTR lpCaption, IN UINT uType, IN WORD wLanguageId, IN DWORD dwMilliseconds);
+
+BOOL appGenerateMiniDumpLock = FALSE;
+
+LPTOP_LEVEL_EXCEPTION_FILTER WINAPI JTAppInternal::MyDummySetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter)
+{
+	return NULL;
+}
+BOOL JTAppInternal::PreventSetUnhandledExceptionFilter()
+{
+	HMODULE hKernel32 = LoadLibrary(L"kernel32.dll");
+	if (hKernel32 == NULL) return FALSE;
+	void *pOrgEntry = GetProcAddress(hKernel32, "SetUnhandledExceptionFilter");
+	if (pOrgEntry == NULL) return FALSE;
+	unsigned char newJump[100];
+	DWORD dwOrgEntryAddr = (DWORD)pOrgEntry;
+	dwOrgEntryAddr += 5; // add 5 for 5 op-codes for jmp far
+	void *pNewFunc = &MyDummySetUnhandledExceptionFilter;
+	DWORD dwNewEntryAddr = (DWORD)pNewFunc;
+	DWORD dwRelativeAddr = dwNewEntryAddr - dwOrgEntryAddr;
+	newJump[0] = 0xE9;  // JMP absolute
+	memcpy(&newJump[1], &dwRelativeAddr, sizeof(pNewFunc));
+	SIZE_T bytesWritten;
+	BOOL bRet = WriteProcessMemory(GetCurrentProcess(), pOrgEntry, newJump, sizeof(pNewFunc) + 1, &bytesWritten);
+	return bRet;
+}
 LONG WINAPI JTAppInternal::UnhandledExceptionFilter(PEXCEPTION_POINTERS pExInfo)
 {
 	// 这里做一些异常的过滤或提示
 	if (IsDebuggerPresent())
 		return EXCEPTION_CONTINUE_SEARCH;
-	return GenerateMiniDump(pExInfo);
+	if (!appGenerateMiniDumpLock) {
+		appGenerateMiniDumpLock = TRUE;
+		return GenerateMiniDump(pExInfo);
+	}
+	return EXCEPTION_CONTINUE_SEARCH;
 }
 LONG JTAppInternal::GenerateMiniDump(PEXCEPTION_POINTERS pExInfo)
 {
@@ -660,37 +704,69 @@ LONG JTAppInternal::GenerateMiniDump(PEXCEPTION_POINTERS pExInfo)
 	TCHAR file_name[128];
 	swprintf_s(file_name, L"%s\\JiYuTrainerCrashDump%d%02d%02d-%02d%02d%02d.dmp", dmp_path,
 		tm.wYear, tm.wMonth, tm.wDay, tm.wHour, tm.wMinute, tm.wSecond);//设置dmp文件名称
+	TCHAR info_file_name[128];
+	swprintf_s(info_file_name, L"%s\\JiYuTrainerCrashInfo%d%02d%02d-%02d%02d%02d.txt", dmp_path,
+		tm.wYear, tm.wMonth, tm.wDay, tm.wHour, tm.wMinute, tm.wSecond);
+
+	//Create file
 	HANDLE hFile = CreateFile(file_name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
 		FILE_ATTRIBUTE_NORMAL, NULL);
+
+	//Generate Crash info
+	BOOL hasCrashInfo = GenerateCrashInfo(pExInfo, info_file_name, file_name, tm, dmp_path);
+
+	//Gen Dump File and show dialog
+
+	TCHAR expInfo[128];
+	swprintf_s(expInfo, L"Exception !!! Address : 0x%08x  Code : 0x%08X  (0x%08X)",
+		(ULONG_PTR)pExInfo->ExceptionRecord->ExceptionAddress, pExInfo->ExceptionRecord->ExceptionCode,
+		pExInfo->ExceptionRecord->ExceptionFlags);
+
 	if (hFile != INVALID_HANDLE_VALUE)
 	{
 		MINIDUMP_EXCEPTION_INFORMATION expParam;
 		expParam.ThreadId = GetCurrentThreadId();
 		expParam.ExceptionPointers = pExInfo;
 		expParam.ClientPointers = FALSE;
-
 		MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, MiniDumpWithDataSegs, (pExInfo ? &expParam : NULL), NULL, NULL);
-
 		CloseHandle(hFile);
+		
+		TCHAR info[300];
+		swprintf_s(info, L"应用程序出现了一个错误，%s。\n%s", (hasCrashInfo ? L"需要关闭，已生成关于此错误的报告" : L"并且无法生成错误转储文件"), expInfo);
+		MessageBoxTimeoutW(NULL, info, L"JiYuTrainer 应用程序错误", MB_ICONERROR | MB_SYSTEMMODAL, 0, 3600);
 
-		const TCHAR *fmt =
+		if (hasCrashInfo) 
 		{
-			L"软件遇到问题需要关闭,您的数据有可能丢失,\n\n"
-			L"我们对此引起的不便表示抱歉;请将\n\n"
-			L"\"%s\"\n\n"
-			L"发送给我们以便快速查找问题之所在,谢谢。\n\n"
-		};
-		TCHAR msg[400];
-		swprintf_s(msg, fmt, file_name);
-		MessageBox(NULL, msg, L"程序异常报告", MB_ICONERROR | MB_SYSTEMMODAL);
+			WCHAR arg[320];
+			swprintf_s(arg, L"-bugreport -bugfile \"%s\"", info_file_name);
+			ShellExecute(NULL, L"open", currentApp->GetFullPath(), arg, NULL, SW_NORMAL);
+		}
 	}
 	else
 	{
-		TCHAR info[300] = { L"fail to create dump file:" };
-		wcscat_s(info, file_name);
-		MessageBox(NULL, info, L"程序异常报告", MB_ICONERROR | MB_SYSTEMMODAL);
+		TCHAR info[300];
+		swprintf_s(info, L"应用程序出现了一个错误，并且无法生成错误转储文件。\n%s\nFail to create dump file: %s \nLast Error : %d\n现在应用程序即将关闭。", expInfo, file_name, GetLastError());
+		MessageBox(NULL, info, L"JiYuTrainer 应用程序错误", MB_ICONERROR | MB_SYSTEMMODAL);
 	}
 	return EXCEPTION_EXECUTE_HANDLER;
 }
-
+BOOL JTAppInternal::GenerateCrashInfo(PEXCEPTION_POINTERS pExInfo, LPCWSTR info_file_name, LPCWSTR file_name, SYSTEMTIME tm, LPCWSTR dir) {
+	FILE*fp = NULL;
+	_wfopen_s(&fp, info_file_name, L"w");
+	if (fp) {
+		fwprintf_s(fp, L"=== JiYuTrainer ===== %04d/%02d/%02d %02d:%02d:%02d ===========", tm.wYear, tm.wMonth, tm.wDay, tm.wHour, tm.wMinute, tm.wSecond);
+		fwprintf_s(fp, L"\r\n应用程序错误 ：Address : 0x%08x  Code : 0x%08X  (0x%08X)",
+			(ULONG_PTR)pExInfo->ExceptionRecord->ExceptionAddress, pExInfo->ExceptionRecord->ExceptionCode,
+			pExInfo->ExceptionRecord->ExceptionFlags);
+		fwprintf_s(fp, L"\r\n=== JiYuTrainer =====================================");
+		fwprintf_s(fp, L"\r\n我们生成了关于描述这个错误的错误报告(不包含您的个人信息)：");
+		fwprintf_s(fp, L"\r\n=== 文件内容 =====================================");
+		fwprintf_s(fp, L"\r\n[错误转储文件] %s", file_name);
+		fwprintf_s(fp, L"\r\n[程序运行日志] %s\\%s", dir, L"JiYuTrainer.log");
+		fwprintf_s(fp, L"\r\n=== %hs =================================", CURRENT_VERSION);
+		fclose(fp);
+		return TRUE;
+	}
+	return FALSE;
+}
 

@@ -6,6 +6,7 @@
 #include "../JiYuTrainer/TrainerWorker.h"
 #include "../JiYuTrainer/Logger.h"
 #include "../JiYuTrainer/SysHlp.h"
+#include "HelpWindow.h"
 #include <list>
 
 extern HINSTANCE hInst;
@@ -77,6 +78,8 @@ private:
 
 	int setCkInterval = 3100;
 
+	HelpWindow*currentHelpWindow = nullptr;
+
 	Logger* currentLogger = nullptr;
 	TrainerWorker * currentWorker = nullptr;
 	TrainerStatus currentStatus;
@@ -112,7 +115,6 @@ private:
 	sciter::dom::element check_allow_monitor;
 	sciter::dom::element check_auto_update;
 	sciter::dom::element check_allow_top;
-	sciter::dom::element input_ckinterval;
 
 	sciter::dom::element cmds_message;
 	sciter::dom::element common_message;
@@ -140,6 +142,7 @@ private:
 	void OnAllowGbTop();
 
 	void ShowHelp();
+	void CloseHelp();
 
 	void ShowFastTip(LPCWSTR text);
 	void ShowFastMessage(LPCWSTR title, LPCWSTR text);

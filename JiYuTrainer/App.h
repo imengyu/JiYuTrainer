@@ -120,6 +120,7 @@ private:
 		AppStartTypeInTemp,
 		AppStartTypeUpdater,
 		AppStartTypeConfig,
+		AppStartTypeBugReport,
 	};
 
 	int appResult = 0;
@@ -142,6 +143,7 @@ private:
 	bool appIsMd5CalcMode = false;
 	bool appIsConfigMode = false;
 	bool appIsHiddenMode = false;
+	bool appIsBugReportMode = false;
 
 	int appShowCmd = 0;
 	std::wstring updaterPath;
@@ -177,8 +179,11 @@ private:
 	static INT_PTR CALLBACK ArgeementWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 	static INT_PTR CALLBACK Md5ShowWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
+	static LPTOP_LEVEL_EXCEPTION_FILTER __stdcall MyDummySetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter);
+	static BOOL PreventSetUnhandledExceptionFilter();
 	static LONG WINAPI UnhandledExceptionFilter(PEXCEPTION_POINTERS pExInfo);
 	static LONG GenerateMiniDump(PEXCEPTION_POINTERS pExInfo);
+	static BOOL GenerateCrashInfo(PEXCEPTION_POINTERS pExInfo, LPCWSTR info_file_name, LPCWSTR file_name, SYSTEMTIME tm, LPCWSTR);
 };
 
 #endif
