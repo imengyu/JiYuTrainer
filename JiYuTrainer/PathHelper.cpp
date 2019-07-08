@@ -140,7 +140,6 @@ std::wstring Path::GetFileName(std::wstring path)
 {
 	if (!StringHlp::StrEmeptyW(path.c_str()))
 	{
-		if (Path::CheckInvalidPathChars(path))return NULL;
 		size_t length = path.size();
 		size_t num = length;
 		while (--num >= 0)

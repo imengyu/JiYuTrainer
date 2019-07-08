@@ -33,13 +33,7 @@
     <ClInclude Include="JiYuTrainer.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="PathHelper.h">
-      <Filter>头文件\Utils</Filter>
-    </ClInclude>
     <ClInclude Include="StringHlp.h">
-      <Filter>头文件\Utils</Filter>
-    </ClInclude>
-    <ClInclude Include="StringSplit.hpp">
       <Filter>头文件\Utils</Filter>
     </ClInclude>
     <ClInclude Include="SysHlp.h">
@@ -78,11 +72,20 @@
     <ClInclude Include="MD5Utils.h">
       <Filter>头文件\Utils</Filter>
     </ClInclude>
-    <ClInclude Include="PartsMD5.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
     <ClInclude Include="AppPublic.h">
       <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="PathHelper.h">
+      <Filter>头文件\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="TxtUtils.h">
+      <Filter>头文件\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="StringSplit.h">
+      <Filter>头文件\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="MemoryModule.h">
+      <Filter>头文件\Utils</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -91,9 +94,6 @@
     </ClCompile>
     <ClCompile Include="JiYuTrainer.cpp">
       <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="PathHelper.cpp">
-      <Filter>源文件\Utils</Filter>
     </ClCompile>
     <ClCompile Include="StringHlp.cpp">
       <Filter>源文件\Utils</Filter>
@@ -131,6 +131,18 @@
     <ClCompile Include="md5.cpp">
       <Filter>源文件\Utils</Filter>
     </ClCompile>
+    <ClCompile Include="PathHelper.cpp">
+      <Filter>源文件\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="TxtUtils.cpp">
+      <Filter>源文件\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="StringSplit.cpp">
+      <Filter>源文件\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="MemoryModule.cpp">
+      <Filter>源文件\Utils</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="JiYuTrainer.rc">
@@ -154,16 +166,9 @@
   <ItemGroup>
     <None Include="..\Debug\JiYuTrainerDriver.sys" />
     <None Include="..\Debug\JiYuTrainerHooks.dll" />
-    <None Include="..\Debug\JiYuTrainerUI.dll" />
-    <None Include="..\Debug\JiYuTrainerUpdater.dll" />
     <None Include="..\Debug\sciter.dll" />
     <None Include="..\Release\JiYuTrainerDriver.sys" />
     <None Include="..\Release\JiYuTrainerHooks.dll" />
-    <None Include="..\Release\JiYuTrainerUI.dll" />
-    <None Include="..\Release\JiYuTrainerUpdater.dll" />
     <None Include="..\Release\sciter.dll" />
-    <None Include="Source.def">
-      <Filter>源文件</Filter>
-    </None>
   </ItemGroup>
 </Project>

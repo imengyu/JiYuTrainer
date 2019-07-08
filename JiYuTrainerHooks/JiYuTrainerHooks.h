@@ -18,8 +18,6 @@ void VLoadRealVirus();
 void VLoadMainProtect();
 void VParamInit();
 
-void VCreateFakeDesktop();
-
 void VCreateMsgCenter();
 DWORD WINAPI VMsgCenterRunThread(LPVOID lpThreadParameter);
 void VCloseMsgCenter();
@@ -172,6 +170,11 @@ typedef HDC (WINAPI *fnCreateDCW)(__in_opt LPCWSTR pwszDriver, __in_opt LPCWSTR 
 typedef BOOL(WINAPI *fnEnableMenuItem)(HMENU hMenu, UINT  uIDEnableItem, UINT  uEnable);
 typedef DWORD (WINAPI *fnSetClassLongA)(__in HWND hWnd, __in int nIndex, __in LONG dwNewLong);
 typedef DWORD (WINAPI *fnSetClassLongW)(__in HWND hWnd, __in int nIndex, __in LONG dwNewLong);
+typedef BOOL (WINAPI *fnUnhookWindowsHookEx)(HHOOK hhk);
+typedef BOOL (WINAPI *fnPostMessageW)(__in_opt HWND hWnd, __in UINT Msg, __in WPARAM wParam, __in LPARAM lParam);
+typedef LRESULT (WINAPI *fnSendMessageW)(__in HWND hWnd, __in UINT Msg, __in WPARAM wParam, __in LPARAM lParam);
+typedef BOOL (WINAPI *fnTerminateProcess)(__in HANDLE hProcess,	__in UINT uExitCode);
+typedef HRESULT (WINAPI *fnFilterConnectCommunicationPort)(LPCWSTR lpPortName, DWORD dwOptions, LPCVOID lpContext, WORD wSizeOfContext, LPSECURITY_ATTRIBUTES lpSecurityAttributes, HANDLE *hPort);
 
 //Hooks
 
@@ -288,6 +291,11 @@ HDC WINAPI hkCreateDCW(__in_opt LPCWSTR pwszDriver, __in_opt LPCWSTR pwszDevice,
 BOOL WINAPI hkEnableMenuItem(HMENU hMenu,	UINT  uIDEnableItem,	 UINT  uEnable);
 DWORD WINAPI hkSetClassLongA(__in HWND hWnd, __in int nIndex,	__in LONG dwNewLong);
 DWORD WINAPI hkSetClassLongW(__in HWND hWnd, __in int nIndex,	__in LONG dwNewLong);
+BOOL WINAPI hkUnhookWindowsHookEx(HHOOK hhk);
+BOOL WINAPI hkPostMessageW(	__in_opt HWND hWnd,	__in UINT Msg,	__in WPARAM wParam,	__in LPARAM lParam);
+LRESULT WINAPI hkSendMessageW(	__in HWND hWnd,	__in UINT Msg,	__in WPARAM wParam,	__in LPARAM lParam);
+BOOL WINAPI hkTerminateProcess(__in HANDLE hProcess,	__in UINT uExitCode);
+HRESULT WINAPI hkFilterConnectCommunicationPort(LPCWSTR lpPortName,	DWORD dwOptions,	LPCVOID lpContext,	WORD wSizeOfContext,	LPSECURITY_ATTRIBUTES lpSecurityAttributes,	HANDLE *hPort);
 
 INT_PTR CALLBACK VShowOpConfirmWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 

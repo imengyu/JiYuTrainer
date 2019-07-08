@@ -762,17 +762,4 @@
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <ResourceCompile Include="JiYuTrainerUpdater.rc">
-      <Filter>资源文件</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <Image Include="small.ico">
-      <Filter>资源文件</Filter>
-    </Image>
-    <Image Include="JiYuTrainerUpdater.ico">
-      <Filter>资源文件</Filter>
-    </Image>
-  </ItemGroup>
 </Project>

@@ -5,8 +5,8 @@
 #include "JiYuTrainerUpdater.h"
 #include "../JiYuTrainer/AppPublic.h"
 #include "../JiYuTrainer/JiYuTrainer.h"
-#include "../JiYuTrainer/PathHelper.h"
 #include "../JiYuTrainer/StringHlp.h"
+#include "../JiYuTrainer/PathHelper.h"
 #include "../JiYuTrainer/SysHlp.h"
 #include <time.h>
 #include <Wininet.h>
@@ -16,24 +16,6 @@ using namespace std;
 
 #define UPDATE_HOST "http://update.imyzc.com/JiYuTrainer/" 
 //#define UPDATE_HOST "http://localhost/JiYuTrainer/" 
-
-HINSTANCE hInst;
-
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD  ul_reason_for_call, LPVOID lpReserved)
-{
-	switch (ul_reason_for_call)
-	{
-	case DLL_PROCESS_ATTACH:
-		hInst = hModule;
-		break;
-	case DLL_THREAD_ATTACH:
-	case DLL_THREAD_DETACH:
-		break;
-	case DLL_PROCESS_DETACH:
-		break;
-	}
-	return TRUE;
-}
 
 JTApp* appCurrent = nullptr;
 Logger * appLogger = nullptr;
@@ -46,7 +28,7 @@ UPEXPORT_CFUNC(BOOL) JUpdater_CheckInternet()
 }
 UPEXPORT_CFUNC(BOOL) JUpdater_CheckUpdate(bool byUser)
 {
-	appCurrent = (JTApp*)JTGetApp();
+	appCurrent = (JTApp*)GetApp();
 	appLogger = appCurrent->GetLogger();
 
 	if (!byUser && CheckLastUpdateDate(appCurrent->GetPartFullPath(PART_INI)))
@@ -210,7 +192,7 @@ UPEXPORT_CFUNC(BOOL) JUpdater_RunInstallion()
 		if(appCurrent->GetTrainerWorker())
 			appCurrent->GetTrainerWorker()->RunOperation(TrainerWorkerOpForceUnLoadVirus);
 		//运行更新
-		if (!((SysHlp*)appCurrent->GetUtils(UTILS_SYSHLP))->RunApplicationPriviledge(updateFilePath, appCurrent->MakeFromSourceArg(L"-install-full")) && GetLastError() == ERROR_CANCELLED) {
+		if (SysHlp::RunApplicationPriviledge(updateFilePath, appCurrent->MakeFromSourceArg(L"-install-full")) && GetLastError() == ERROR_CANCELLED) {
 			MessageBox(nullptr, L"您取消了更新", L"", MB_ICONEXCLAMATION);
 			return FALSE;
 		}else return TRUE;

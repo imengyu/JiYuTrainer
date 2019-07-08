@@ -6,7 +6,7 @@
 #include "../JiYuTrainer/JiYuTrainer.h"
 #include "../JiYuTrainer/AppPublic.h"
 #include "../JiYuTrainer/StringHlp.h"
-#include "../JiYuTrainer/StringSplit.hpp"
+#include "../JiYuTrainer/StringSplit.h"
 #include "../JiYuTrainer/KernelUtils.h"
 #include "../JiYuTrainer/DriverLoader.h"
 #include "../JiYuTrainer/SysHlp.h"
@@ -29,16 +29,15 @@ int screenWidth, screenHeight;
 MainWindow::MainWindow()
 {
 	currentLogger = currentApp->GetLogger();
-	currentSysHlp = (SysHlp*)currentApp->GetUtils(UTILS_SYSHLP);
 
-	swprintf_s(wndClassName, L"sciter-jytrainer-main-window");
+	swprintf_s(wndClassName, MAIN_WND_CLS_NAME);
 
 	if (!initClass()) return;
 
 	screenWidth = GetSystemMetrics(SM_CXSCREEN);
 	screenHeight = GetSystemMetrics(SM_CYSCREEN);
 
-	hWndMain = CreateWindow(wndClassName, L"JiYu Trainer Main Window", WS_POPUP, 0, 0, 430, 520, NULL, NULL, hInst, this);
+	hWndMain = CreateWindow(wndClassName, MAIN_WND_NAME, WS_POPUP, 0, 0, 430, 520, NULL, NULL, currentApp->GetInstance(), this);
 	if (!hWndMain)
 		return;
 
@@ -61,8 +60,8 @@ bool MainWindow::initClass()
 	wcex.lpfnWndProc = wndProc;
 	wcex.cbClsExtra = 0;
 	wcex.cbWndExtra = 0;
-	wcex.hInstance = hInst;
-	wcex.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_APP));
+	wcex.hInstance = currentApp->GetInstance();
+	wcex.hIcon = LoadIcon(currentApp->GetInstance(), MAKEINTRESOURCE(IDI_APP));
 	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 	wcex.lpszMenuName = 0;//MAKEINTRESOURCE(IDC_PLAINWIN);
@@ -98,13 +97,13 @@ bool MainWindow::init()
 	currentApp->LoadDriver();
 	
 	BOOL result = FALSE;
-	HRSRC hResource = FindResource(hInst, MAKEINTRESOURCE(IDR_HTML_MAIN), RT_HTML);
+	HRSRC hResource = FindResource(currentApp->GetInstance(), MAKEINTRESOURCE(IDR_HTML_MAIN), RT_HTML);
 	if (hResource) {
-		HGLOBAL hg = LoadResource(hInst, hResource);
+		HGLOBAL hg = LoadResource(currentApp->GetInstance(), hResource);
 		if (hg) {
 			LPVOID pData = LockResource(hg);
 			if (pData)
-				result = load_html((LPCBYTE)pData, SizeofResource(hInst, hResource));
+				result = load_html((LPCBYTE)pData, SizeofResource(currentApp->GetInstance(), hResource));
 		}
 	}
 
@@ -169,7 +168,6 @@ sciter::value MainWindow::exitClick()
 	return sciter::value::null();
 }
 sciter::value MainWindow::toGithub() {
-	currentSysHlp->RunApplication(L"https://github.com/717021/JiYuTrainer", NULL);
 	return sciter::value::null();
 }
 
@@ -212,7 +210,10 @@ BOOL MainWindow::OnWmCreate()
 void MainWindow::OnWmDestroy()
 {
 	if (!isUserCancel && currentControlled)
-		currentSysHlp->RunApplicationPriviledge(currentApp->GetFullPath(), L"-r1");
+		SysHlp::RunApplicationPriviledge(currentApp->GetFullPath(), L"-r1");
+
+	//Save some settings
+	SaveSettingsOnQuit();
 
 	CloseHelp();
 
@@ -302,6 +303,9 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 		else if (cmd == L"unloaddrv") {
 			currentApp->RunOperation(AppOperationUnLoadDriver);
 		}
+		else if (cmd == L"floaddrv") {
+			currentApp->RunOperation(AppOperationForceLoadDriver);
+		}
 		else if (cmd == L"fuljydrv") {
 			currentApp->RunOperation(AppOperation2);
 		}
@@ -310,7 +314,7 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 			if (len >= 2) {
 				LPCWSTR filePath = (cmds)[1].c_str();
 				if (Path::Exists(filePath)) {
-					std::wstring *md5Sting = ((MD5Utils*)currentApp->GetUtils(UTILS_MD5UTILS))->GetFileMD5(filePath);
+					std::wstring *md5Sting = MD5Utils::GetFileMD5(filePath);
 					currentLogger->Log(L"MD5 : %s", md5Sting->c_str());
 					FreeStringPtr(md5Sting);
 				}
@@ -383,7 +387,7 @@ void MainWindow::OnFirstShow()
 	//托盘图标
 	WM_TASKBARCREATED = RegisterWindowMessage(TEXT("TaskbarCreated"));
 	CreateTrayIcon(_hWnd);
-	hMenuTray = LoadMenu(hInst, MAKEINTRESOURCE(IDR_MAINMENU));
+	hMenuTray = LoadMenu(currentApp->GetInstance(), MAKEINTRESOURCE(IDR_MAINMENU));
 	hMenuTray = GetSubMenu(hMenuTray, 0);
 
 	//初始化控制器
@@ -499,7 +503,14 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 				OnRunCmd(L"ssr");
 		}
 		else if (ele.get_attribute("id") == L"link_more_settings") ShowMoreSettings(_hWnd);
-		
+		else if (ele.get_attribute("id") == L"link_locate_jiyu_position") {
+			TCHAR strFilename[MAX_PATH] = { 0 };
+			if (SysHlp::ChooseFileSingal(_hWnd, NULL, L"请选择极域主进程 StudentMain.exe 的位置", L"StudentMain.exe\0*.exe\0所有文件(*.*)\0*.*\0\0\0",
+				strFilename, NULL, strFilename, MAX_PATH)) {		
+				if (currentWorker->AppointStudentMainLocation(strFilename)) ShowFastTip(L"已更改极域主进程位置");
+				else MessageBox(hWndMain, L"您选择的主进程位置无效。", L"JiYuTrainer - 提示", MB_ICONEXCLAMATION);
+			}
+		}
 	}
 	else if (type == BUTTON_CLICK)
 	{
@@ -641,7 +652,7 @@ void MainWindow::ShowFastMessage(LPCWSTR title, LPCWSTR text)
 }
 void MainWindow::CloseCmdsTip() {
 	sciter::dom::element root(get_root());
-	root.call_function("common_close_extend_area", sciter::value(cmds_message));
+	root.call_function("close_cmds_tip");
 }
 void MainWindow::GetUpdateInfo() {
 	CHAR newUpdateMessage[256];
@@ -654,11 +665,11 @@ void MainWindow::GetUpdateInfo() {
 void MainWindow::LoadSettings()
 {
 	SettingHlp *settings = currentApp->GetSettings();
-	setTopMost = settings->GetSettingBool(L"TopMost");
+	setTopMost = settings->GetSettingBool(L"TopMost", false);
 	setAutoUpdate = settings->GetSettingBool(L"AutoUpdate ", true);
-	setAutoIncludeFullWindow = settings->GetSettingBool(L"AutoIncludeFullWindow");
-	setAllowAllRunOp = settings->GetSettingBool(L"AllowAllRunOp");
-	setAutoForceKill = settings->GetSettingBool(L"AutoForceKill");
+	setAutoIncludeFullWindow = settings->GetSettingBool(L"AutoIncludeFullWindow", false);
+	setAllowAllRunOp = settings->GetSettingBool(L"AllowAllRunOp", true);
+	setAutoForceKill = settings->GetSettingBool(L"AutoForceKill", false);
 	setAllowMonitor = settings->GetSettingBool(L"AllowMonitor", true);
 	setAllowControl = settings->GetSettingBool(L"AllowControl", false);
 	setAllowGbTop = settings->GetSettingBool(L"AllowGbTop", false);
@@ -699,6 +710,12 @@ void MainWindow::SaveSettings()
 	settings->SetSettingBool(L"AllowGbTop", setAllowGbTop);
 
 	currentWorker->InitSettings();
+}
+void MainWindow::SaveSettingsOnQuit() 
+{
+	SettingHlp *settings = currentApp->GetSettings();
+	settings->SetSettingBool(L"TopMost", setTopMost);
+	settings->SetSettingBool(L"AllowGbTop", setAllowGbTop);
 }
 void MainWindow::ResetSettings()
 {
@@ -773,7 +790,7 @@ void MainWindow::CreateTrayIcon(HWND hDlg) {
 	nid.uID = 0;
 	nid.uFlags = NIF_ICON | NIF_MESSAGE | NIF_INFO | NIF_TIP;
 	nid.uCallbackMessage = WM_USER;
-	nid.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_APP));
+	nid.hIcon = LoadIcon(currentApp->GetInstance(), MAKEINTRESOURCE(IDI_APP));
 	lstrcpy(nid.szTip, L"JiYuTrainer");
 	Shell_NotifyIcon(NIM_ADD, &nid);
 }
@@ -872,6 +889,7 @@ LRESULT CALLBACK MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 		if (self->currentWorker) self->currentWorker->UpdateScreenSize();
 		break;
 	}
+	case WM_CLOSE: return TRUE;
 	}
 	return DefWindowProc(hWnd, message, wParam, lParam);
 }

@@ -546,6 +546,33 @@
             font-weight: bold;
         }
 
+        .cfg-right-link {
+            display: inline-block;
+            float: right;
+            width: 132px;
+            margin-top: 4px;
+        }
+        .cfg-right-link::after {
+            display: inline-block;
+            position: absolute;
+            right: 162px;
+            top: 1px;
+            width: 26px;
+            height: 26px;
+            background: url(res:link-icons.png) no-repeat 0px 0;
+        }
+        #link_locate_jiyu_position::after {
+            background-position: -52px 0px;
+        }
+        #link_read_jiyu_password2::after {
+            right: 162px;
+            top: 1px;
+            background-position: -26px 0px;
+        }
+        #link_more_settings::after {
+            background: url(res:link-icons.png) no-repeat 0px 0;
+        }
+
         /*Status area*/
         #status_area {
             width: 100%;
@@ -553,15 +580,15 @@
             overflow: scroll;
             font-size: 12px;
             font-family: SFMono-Regular,Menlo,Monaco,Consolas,"Liberation Mono","Courier New",monospace;
-            behavior: sticky-scroll; /* keep position of viewed element */
-            overflow: scroll-indicator;
+            vertical-scrollbar: my-v-scrollbar;
+            horizontal-scrollbar: my-h-scrollbar;
+            overflow: scroll;
             padding-bottom: 5px;
             padding-right: 5px;
         }
         #status_area div {
             width: auto;
-            word-break: keep-all;
-            white-space: nowrap;
+            white-space: pre;
         }
 
         /* Utitles*/
@@ -635,10 +662,7 @@
         .form-group {
             margin-bottom: 15px;
         }
-        .form-check {
-            position: relative;
-            display: block;
-        }
+
 
         #page_about {
             text-align:center;
@@ -657,6 +681,29 @@
             /*border-color: #c3e6cb;*/
         }
 
+        /* Check box */
+        .form-check {
+            position: relative;
+            display: block;
+        }
+        .form-check label  {
+            vertical-align: middle;
+            height: 26px;
+            line-height: 26px;
+            margin-bottom: 0;
+        }
+        .form-check input[type=checkbox] {
+            background: url(res:checkboxs.png) no-repeat 0px 0;
+            background-position: 0 0px;
+            width: 26px;
+            height: 26px;
+        }
+        .form-check input[type=checkbox]:hover {  background-position:  -26px 0;   }
+        .form-check input[type=checkbox]:checked {  background-position:  -52px 0;  }
+        .form-check input[type=checkbox]:checked:hover { background-position:  -78px 0;  }
+        .form-check input[type=checkbox]:disabled { background-position:  -104px 0;   }
+        .form-check input[type=checkbox]:checked:disabled { background-position:  -130px 0;   }
+        
         /* Tooltip */
         * popup[role="tooltip"] {
             display: inline-block;
@@ -667,9 +714,81 @@
             padding: 8px;
             max-width: 300px;
         }
+
+        @set my-v-scrollbar {
+            .prev {
+                display: none;
+            }
+            .next {
+                display: none;
+            }
+            .base,
+            .next-page,
+            .prev-page {
+                background: white;
+                border-left: none;
+            }
+            .slider {
+                background: #ddd;
+                border-radius: 6px;
+                border: 2px solid #fff;
+            }
+            .slider:hover {
+                background: #999;
+            }
+            .slider:active {
+                background: #888;
+            }
+            .base:disabled {
+                background: none;
+            }
+            .base {
+                width: 10dip;
+            }
+            /* explicit declaration of its width */
+            .corner {
+                background: transparent;
+            }
+        }
+        @set my-h-scrollbar {
+            .prev {
+                display: none;
+            }
+            .next {
+                display: none;
+            }
+            .base,
+            .next-page,
+            .prev-page {
+                background: white;
+                border-left: none;
+            }
+            .slider {
+                background: #ddd;
+                border-radius: 6px;
+                border: 2px solid #fff;
+            }
+            .slider:hover {
+                background: #999;
+            }
+            .slider:active {
+                background: #888;
+            }
+            .base:disabled {
+                background: none;
+            }
+            .base {
+                height: 10dip;
+            }
+            /* explicit declaration of its width */
+            .corner {
+                background: transparent;
+            }
+        }
     </style>
 </head>
 <body class="window-shadow">
+
     <div class="window-box" id="wnd">
 
         <!--窗口-->
@@ -755,22 +874,20 @@
                     <div class="form-check" title="取消勾选此选项后教师将无法通过极域查看你的电脑屏幕。本软件默认允许此选项">
                         <input type="checkbox" id="check_allow_monitor" />
                         <label for="check_allow_monitor">允许教师监视你的电脑</label>
+                        <a href="#" id="link_read_jiyu_password2" style="" class="cfg-right-link text-info" title="本软件可尝试破解极域电子教室的卸载和解锁密码">破解极域的密码</a><br />
                     </div>
                     <div class="form-check" title="勾选此选项后教师可通过极域控制您的电脑。本软件默认不允许此选项">
                         <input type="checkbox" id="check_allow_control" />
                         <label for="check_allow_control">允许教师控制你的电脑</label>
+                        <a href="#" id="link_locate_jiyu_position" style="" class="cfg-right-link text-info" title="如果本软件并没有找到极域电子教室或者是寻找的路径不正确，您可以手动选择">选择极域主进程位置</a><br />
                     </div>
                     <div class="form-check">
                         <input type="checkbox" id="check_auto_update">
                         <label for="check_auto_update">自动更新软件</label>
+                        <a href="#" id="link_more_settings" class="cfg-right-link text-info">软件高级配置</a>
                     </div>
                 </div>
-                <div class="from-group" style="margin-top:20px; margin-left: 5px;">
-                    <a href="#" id="link_read_jiyu_password2" style="" class="text-info" title="本软件可尝试破解极域电子教室的卸载和解锁密码">破解极域密码</a><br/>
-                    <a href="#" id="link_more_settings" style="margin-top: 7px;" class="text-info">高级配置</a>
-                    <br />
-                </div>
-                <div class="text-center" style="margin-top:10px;">
+                <div class="text-center" style="margin-top:28px;">
                     <a href="#" id="link_save_setting" class="btn-common">保存设置</a>&nbsp;
                     <a href="#" id="link_setto_default" class="btn-common">恢复默认</a>&nbsp;
                 </div>
@@ -928,6 +1045,7 @@
         $(#link_more_cmd).onClick = function (){ $(#cmds_message).attributes.addClass("shown");  }
         $(#link_close_power_message).onClick = function (){ common_close_extend_area($(#power_message));  }
         $(#link_close_hello_message).onClick = function (){ common_close_extend_area($(#hello_message));  }
+        function close_cmds_tip(){common_close_extend_area($(#cmds_message));}
 
         function common_close_extend_area(area){
             if(area.attributes.hasClass("shown")) {
@@ -1101,5 +1219,6 @@
         });
 
     </script>
+
 </body>
 </html>

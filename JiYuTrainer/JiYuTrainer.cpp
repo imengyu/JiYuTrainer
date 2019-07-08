@@ -17,21 +17,25 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, HINSTANCE hPrevInstance, LPWSTR 
 	currentApp = new JTAppInternal(hInstance);
 	currentApp->Run(nCmdShow);
 	int rs = currentApp->GetResult();
-	JTShowAppStartupFail(rs);
+	ShowAppStartupFail(rs);
 	delete currentApp;
 	delete currentLogger;
 	return rs;
 }
 
-EXPORT_CFUNC(VOID) JTShowAppStartupFail(int rs) {
+EXPORT_CFUNC(void*) GetSciterAPI()
+{
+	return currentApp->GetSciterAPI();
+}
+EXPORT_CFUNC(VOID) ShowAppStartupFail(int rs) {
 	if (rs == APP_FAIL_SYSTEM_NOT_SUPPORT)
 		MessageBox(NULL, L"运行本程序最低要求 Windows XP，请使用更高版本的系统", L"JiYuTrainer - 错误", MB_ICONERROR);
-	else if (rs == APP_FAIL_MAIN_PART_BROKED)
-		MessageBox(NULL, L"加载主部件发生错误。主部件损坏", L"JiYuTrainer - 错误", MB_ICONERROR);
-	else if (rs == APP_FAIL_MAIN_PART_LOADERR)
-		MessageBox(NULL, currentApp->GetStartupErr(), L"JiYuTrainer - 错误", MB_ICONERROR);
 	else if (rs == APP_FAIL_ALEDAY_RUN)
 		MessageBox(0, L"已经有一个程序正在运行，同时只能运行一个实例，请关闭之前那个", L"JiYuTrainer - 错误", MB_ICONERROR);
+	else if (rs == APP_FAIL_INSTALL) {
+		FAST_STR_BINDER(err, L"安装失败，具体错误请查看日志文件 : %s", 300, currentApp->GetPartFullPath(PART_LOG));
+		MessageBox(0, err, L"JiYuTrainer - 错误", MB_ICONERROR);
+	}
 }
-EXPORT_CFUNC(void*) JTGetApp() { return currentApp; }
-EXPORT_CFUNC(void) JTForceExit() { currentApp->Exit(0); }
+EXPORT_CFUNC(void*) GetApp() { return currentApp; }
+EXPORT_CFUNC(void) ForceExit() { currentApp->Exit(0); }

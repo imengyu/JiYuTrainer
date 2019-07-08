@@ -7,15 +7,14 @@
 
 #include "targetver.h"
 
-#define CINTERFACE
 #define WIN32_LEAN_AND_MEAN             // 从 Windows 头文件中排除极少使用的内容
 // Windows 头文件
 #include <windows.h>
 
 #ifdef JIYUTRAINERUI_EXPORTS
-#define UIEXPORT __declspec(dllexport)
+#define UIEXPORT
 #else
-#define UIEXPORT __declspec(dllimport)
+#define UIEXPORT 
 #endif
 
 #define UIEXPORT_CFUNC(x) EXTERN_C UIEXPORT x 

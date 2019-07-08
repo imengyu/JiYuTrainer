@@ -29,8 +29,11 @@ ObUnRegisterCallbacks_ _ObUnRegisterCallbacks = NULL;
 ObGetFilterVersion_ _ObGetFilterVersion = NULL;
 PsSetCreateProcessNotifyRoutineEx_ _PsSetCreateProcessNotifyRoutineEx = NULL;
 NtShutdownSystem_ _NtShutdownSystem = NULL;
+extern fnZwOpenProcess _ZwOpenProcess;
+extern fnZwTerminateProcess _ZwTerminateProcess;
 
 BOOLEAN isWin7 = FALSE, isWinXP = FALSE;
+ULONG systemVersion;
 
 extern PspTerminateThreadByPointer_ PspTerminateThreadByPointer;
 extern PspExitThread_ PspExitThread;
@@ -146,11 +149,24 @@ NTSTATUS IOControlDispatch(IN PDEVICE_OBJECT DeviceObject, IN PIRP Irp)
 		JDRV_INITPARAM* param = (JDRV_INITPARAM*)InputData;
 		isWin7 = param->IsWin7;
 		isWinXP = param->IsWinXP;
+		systemVersion = param->systemVersion;
 		LoadUnExpFunctions();
+		if (isWinXP) KxHookInXP();
+		Status = STATUS_SUCCESS;
+		break;
+	}
+	case CTL_CLIENT_QUIT: {
+		KxUnProtectProcessWithPid(PsGetCurrentProcessId());
+		Status = STATUS_SUCCESS;
+		break;
+	}
+	case CTL_UNINIT: {
+		KxShadowSSDTUnHook();
 		Status = STATUS_SUCCESS;
 		break;
 	}
 	case CTL_INITSELFPROTECT: {
+		KxShadowSSDTHook();
 		ULONG_PTR pid = *(ULONG_PTR*)InputData;
 		if (protectInited)
 		{
@@ -309,7 +325,9 @@ VOID LoadFunctions()
 	UNICODE_STRING ObGetFilterVersionName;
 	UNICODE_STRING PsSetCreateProcessNotifyRoutineExName;
 	UNICODE_STRING NtShutdownSystemName;
+	UNICODE_STRING ZwOpenProcessName;
 
+	RtlInitUnicodeString(&ZwOpenProcessName, L"ZwOpenProcess");
 	RtlInitUnicodeString(&NtShutdownSystemName, L"NtShutdownSystem");
 	RtlInitUnicodeString(&PsSetCreateProcessNotifyRoutineExName, L"PsSetCreateProcessNotifyRoutineEx");
 	RtlInitUnicodeString(&ObGetFilterVersionName, L"ObGetFilterVersion");
@@ -328,6 +346,8 @@ VOID LoadFunctions()
 	RtlInitUnicodeString(&StrcpysName, L"strcpy");
 	RtlInitUnicodeString(&StrcatsName, L"strcat");
 
+	_ZwTerminateProcess = (fnZwTerminateProcess)MmGetSystemRoutineAddress(&ZwTerminateProcessName);
+	_ZwOpenProcess = (fnZwOpenProcess)MmGetSystemRoutineAddress(&ZwOpenProcessName);
 	_NtShutdownSystem = (NtShutdownSystem_)MmGetSystemRoutineAddress(&NtShutdownSystemName);
 	_PsLookupProcessByProcessId = (PsLookupProcessByProcessId_)MmGetSystemRoutineAddress(&PsLookupProcessByProcessIdName);
 	_PsLookupThreadByThreadId = (PsLookupThreadByThreadId_)MmGetSystemRoutineAddress(&PsLookupThreadByThreadIdName);
@@ -445,7 +465,7 @@ NTSTATUS KxTerminateThreadApc(PETHREAD Thread)
 {
 	NTSTATUS Status = STATUS_SUCCESS;
 	PKAPC ExitApc = NULL;
-	ULONG    OldMask;
+	//ULONG    OldMask;
 
 	if (!Thread) return STATUS_INVALID_PARAMETER;
 

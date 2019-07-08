@@ -17,6 +17,7 @@
 #include <CommCtrl.h>
 #include <windowsx.h>
 #include <dwmapi.h>
+#include <TlHelp32.h>
 
 #define TIMER_WATCH_DOG_SRV 10011
 #define TIMER_AUTO_HIDE 10012
@@ -42,6 +43,9 @@
 #define IDM_TOPMOST 25600
 #define IDM_FULL 25601
 
+#define INVALID_HHOOK_MOUSE 0x0001
+#define INVALID_HHOOK_KEYBOARD 0x0002
+
 using namespace std;
 
 extern HINSTANCE hInst;
@@ -57,6 +61,7 @@ HWND hWndMsgCenter = NULL;
 HWND hListBoxStatus = NULL;
 
 HWND desktopWindow, fakeDesktopWindow;
+HWND mainWindow;
 
 HANDLE hThreadMain = NULL;
 LRESULT hWndOpConformRs = 0;
@@ -64,7 +69,7 @@ LRESULT hWndOutOfControlConformRs = 0;
 INT screenWidth, screenHeight;
 bool outlineEndJiy = false;
 HWND hWndOpConformNoBtn = NULL;
-bool bandAllRunOp = false, allowNextRunOp = false, allowAllRunOp  = false;
+bool bandAllRunOp = false, allowNextRunOp = false, allowAllRunOp  = false, ProhibitKillProcess = false, ProhibitCloseWindow = false;
 bool allowMonitor = false, allowControl = false, allowGbTop = false, fakeFull = false, gbFullManual = false,
 doNotShowVirusWindow = false, forceDisableWatchDog = false;
 bool isLocked = false, gbCurrentIsTop = false, isGbFounded = false;
@@ -77,6 +82,7 @@ WCHAR mainDir[MAX_PATH];
 WCHAR currOpCfPath[MAX_PATH];
 WCHAR currOpCfPararm[MAX_PATH];
 HWND gbWindow = NULL;
+DWORD currentPid = 0;
 
 fnTDAjustCreateInstance faTDAjustCreateInstance = NULL;
 
@@ -116,10 +122,18 @@ fnCreateDCW faCreateDCW = NULL;
 fnEnableMenuItem faEnableMenuItem = NULL;
 fnSetClassLongA faSetClassLongA = NULL;
 fnSetClassLongW faSetClassLongW = NULL;
+fnUnhookWindowsHookEx faUnhookWindowsHookEx = NULL;
+fnPostMessageW  faPostMessageW = NULL;
+fnSendMessageW faSendMessageW = NULL;
+fnTerminateProcess faTerminateProcess = NULL;
+fnFilterConnectCommunicationPort faFilterConnectCommunicationPort = NULL;
+
 
 bool loaded = false;
 
 HHOOK g_hhook = NULL;
+
+HMODULE hLibTDMaster;
 
 BOOL hk1 = 0, hk2 = 0, hk3 = 0, hk4 = 0,
 hk5 = 0, hk6 = 0, hk7 = 0, hk8 = 0,
@@ -242,6 +256,7 @@ DWORD WINAPI VMsgCenterRunThread(LPVOID lpThreadParameter) {
 void VParamInit() {
 	screenWidth = GetSystemMetrics(SM_CXSCREEN);
 	screenHeight = GetSystemMetrics(SM_CYSCREEN);
+	currentPid = GetCurrentProcessId();
 }
 void VInitSettings()
 {
@@ -255,7 +270,13 @@ void VInitSettings()
 	GetPrivateProfileString(L"JTSettings", L"BandAllRunOp", L"TRUE", w, 32, mainIniPath);
 	if (!StrEqual(w, L"TRUE") && !StrEqual(w, L"true") && !StrEqual(w, L"1")) bandAllRunOp = false;
 	else bandAllRunOp = true;
-
+	GetPrivateProfileString(L"JTSettings", L"ProhibitKillProcess", L"TRUE", w, 32, mainIniPath);
+	if (!StrEqual(w, L"TRUE") && !StrEqual(w, L"true") && !StrEqual(w, L"1")) ProhibitKillProcess = false;
+	else ProhibitKillProcess = true;
+	GetPrivateProfileString(L"JTSettings", L"ProhibitCloseWindow", L"TRUE", w, 32, mainIniPath);
+	if (!StrEqual(w, L"TRUE") && !StrEqual(w, L"true") && !StrEqual(w, L"1")) ProhibitCloseWindow = false;
+	else ProhibitCloseWindow = true;
+	
 	GetPrivateProfileString(L"JTSettings", L"DoNotShowVirusWindow", L"FALSE", w, 32, mainIniPath);
 	if (!StrEqual(w, L"TRUE") && !StrEqual(w, L"true") && !StrEqual(w, L"1")) doNotShowVirusWindow = false;
 	else doNotShowVirusWindow = true;
@@ -300,6 +321,11 @@ void VHandleMsg(LPWSTR buff) {
 	if (arr.size() >= 2) {
 		if (arr[0] == L"hw")  VHookWindow(arr[1].c_str());
 		else if (arr[0] == L"hwf") VHookFWindow(arr[1].c_str());
+		else if (arr[0] == L"sh") {
+			HWND hWnd = (HWND)_wtol(arr[1].c_str());
+			if (IsWindow(hWnd)) mainWindow = hWnd;
+			VOutPutStatus(L"[S] %s", buff);
+		}
 		else if (arr[0] == L"ss") VBoom();
 		else if (arr[0] == L"ss2") {
 			PostQuitMessage(0);
@@ -308,6 +334,7 @@ void VHandleMsg(LPWSTR buff) {
 		else if (arr[0] == L"hk") {
 			VOutPutStatus(L"[V] %s", buff);
 			if (arr[1] == L"ckstat") {
+			
 				VSendMessageBack(L"hkb:succ", hWndMsgCenter);
 				SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_MAIN, NULL);
 				SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_RB_FLASH, 0);
@@ -469,6 +496,9 @@ bool VIsInIllegalCanSizeWindows(HWND hWnd) {
 			return true;
 	}
 	return false;
+}
+bool VIsInIllegalWindowMessage(UINT msg) {
+	return msg == WM_CLOSE || msg == WM_DESTROY;
 }
 void VBoom() {
 
@@ -801,6 +831,9 @@ void VInstallHooks(VirusMode mode) {
 	HMODULE hGdi32 = GetModuleHandle(L"gdi32.dll");
 	HMODULE hLibJPEG20 = GetModuleHandle(L"LibJPEG20.dll");
 	HMODULE hLibAVCodec52 = GetModuleHandle(L"LibAVCodec52.dll");
+	HMODULE hFltLib = GetModuleHandle(L"FltLib.dll");
+
+	hLibTDMaster = GetModuleHandle(L"LibTDMaster.dll");
 
 	raSetWindowPos = (fnSetWindowPos)GetProcAddress(hUser32, "SetWindowPos");
 	raMoveWindow = (fnMoveWindow)GetProcAddress(hUser32, "MoveWindow");
@@ -815,12 +848,17 @@ void VInstallHooks(VirusMode mode) {
 	faSetWindowLongW = (fnSetWindowLongW)GetProcAddress(hUser32, "SetWindowLongW");
 	faShowWindow = (fnShowWindow)GetProcAddress(hUser32, "ShowWindow");
 	faCallNextHookEx = (fnCallNextHookEx)GetProcAddress(hUser32, "CallNextHookEx");
+	faUnhookWindowsHookEx = (fnUnhookWindowsHookEx)GetProcAddress(hUser32, "UnhookWindowsHookEx");
 	faGetDesktopWindow = (fnGetDesktopWindow)GetProcAddress(hUser32, "GetDesktopWindow");
 	faGetWindowDC = (fnGetWindowDC)GetProcAddress(hUser32, "GetDesktopWindow");
 	faGetForegroundWindow = (fnGetForegroundWindow)GetProcAddress(hUser32, "GetForegroundWindow");
 	faEnableMenuItem = (fnEnableMenuItem)GetProcAddress(hUser32, "EnableMenuItem");
 	faSetClassLongA = (fnSetClassLongA)GetProcAddress(hUser32, "SetClassLongA");
 	faSetClassLongW = (fnSetClassLongW)GetProcAddress(hUser32, "SetClassLongW");
+
+	faPostMessageW = (fnPostMessageW)GetProcAddress(hUser32, "PostMessageW");
+	faSendMessageW = (fnSendMessageW)GetProcAddress(hUser32, "SendMessageW");
+	faTerminateProcess = (fnTerminateProcess)GetProcAddress(hKernel32, "TerminateProcess");
 
 	raDeviceIoControl = (fnDeviceIoControl)GetProcAddress(hKernel32, "DeviceIoControl");
 	faCreateFileA = (fnCreateFileA)GetProcAddress(hKernel32, "CreateFileA");
@@ -835,10 +873,10 @@ void VInstallHooks(VirusMode mode) {
 
 	faCreateDCW = (fnCreateDCW)GetProcAddress(hGdi32, "CreateDCW");
 
-	if(hDwmApi) faDwmEnableComposition = (fnDwmEnableComposition)GetProcAddress(hDwmApi, "DwmEnableComposition");
-	if(hLibJPEG20) faEncodeToJPEGBuffer = (fnEncodeToJPEGBuffer)GetProcAddress(hLibJPEG20, "EncodeToJPEGBuffer");
-	//if(hLibAVCodec52) faavcodec_encode_video = (fnavcodec_encode_video)GetProcAddress(hLibAVCodec52, "avcodec_encode_video");
-	
+	if (hDwmApi) faDwmEnableComposition = (fnDwmEnableComposition)GetProcAddress(hDwmApi, "DwmEnableComposition");
+	if (hLibJPEG20) faEncodeToJPEGBuffer = (fnEncodeToJPEGBuffer)GetProcAddress(hLibJPEG20, "EncodeToJPEGBuffer");
+	if (hFltLib) faFilterConnectCommunicationPort = (fnFilterConnectCommunicationPort)GetProcAddress(hFltLib, "FilterConnectCommunicationPort");
+
 	//HMODULE hTDDesk2 = GetModuleHandle(L"libtddesk2.dll");
 	//if (hTDDesk2) {
 	//	faTDDeskCreateInstance = (fnTDDeskCreateInstance)GetProcAddress(hTDDesk2, "TDDeskCreateInstance");
@@ -849,6 +887,11 @@ void VInstallHooks(VirusMode mode) {
 		//HMODULE hTDMaster = GetModuleHandle(L"libTDMaster.dll");
 		//UnHookLocalInput = (fnUnHookLocalInput)GetProcAddress(hTDMaster, "UnHookLocalInput");
 		//if (UnHookLocalInput) UnHookLocalInput();
+
+		if (hLibTDMaster == NULL) {
+			VUnloadAll();
+			return;
+		}
 
 		hk1 = Mhook_SetHook((PVOID*)&raSetWindowPos, hkSetWindowPos);
 		hk2 = Mhook_SetHook((PVOID*)&raMoveWindow, hkMoveWindow);
@@ -876,26 +919,32 @@ void VInstallHooks(VirusMode mode) {
 		hk22 = Mhook_SetHook((PVOID*)&faCreateProcessW, hkCreateProcessW);
 
 		if (faDwmEnableComposition) hk23 = Mhook_SetHook((PVOID*)&faDwmEnableComposition, hkDwmEnableComposition);
-		
+
 		hk24 = Mhook_SetHook((PVOID*)&faWinExec, hkWinExec);
-		
+		hk25 = Mhook_SetHook((PVOID*)&faCallNextHookEx, hkCallNextHookEx);
 		hk26 = Mhook_SetHook((PVOID*)&faGetWindowDC, hkGetWindowDC);
 		hk27 = Mhook_SetHook((PVOID*)&faGetDesktopWindow, hkGetDesktopWindow);
-		
-		if(faEncodeToJPEGBuffer) hk28 = Mhook_SetHook((PVOID*)&faEncodeToJPEGBuffer, hkEncodeToJPEGBuffer);
+
+		if (faEncodeToJPEGBuffer) hk28 = Mhook_SetHook((PVOID*)&faEncodeToJPEGBuffer, hkEncodeToJPEGBuffer);
+		hk29 = Mhook_SetHook((PVOID*)&faUnhookWindowsHookEx, hkUnhookWindowsHookEx);
 
 		hk30 = Mhook_SetHook((PVOID*)&faCreateProcessA, hkCreateProcessA);
 		hk31 = Mhook_SetHook((PVOID*)&faGetForegroundWindow, hkGetForegroundWindow);
 
-	    hk33 = Mhook_SetHook((PVOID*)&faCreateDCW, hkCreateDCW);
+		hk33 = Mhook_SetHook((PVOID*)&faCreateDCW, hkCreateDCW);
 		hk34 = Mhook_SetHook((PVOID*)&faEnableMenuItem, hkEnableMenuItem);
 
 		hk35 = Mhook_SetHook((PVOID*)&faSetClassLongA, hkSetClassLongA);
 		hk36 = Mhook_SetHook((PVOID*)&faSetClassLongW, hkSetClassLongW);
 
+		hk37 = Mhook_SetHook((PVOID*)&faPostMessageW, hkPostMessageW);
+		hk38 = Mhook_SetHook((PVOID*)&faSendMessageW, hkSendMessageW);
+		hk39 = Mhook_SetHook((PVOID*)&faTerminateProcess, hkTerminateProcess);
+
+		if(faFilterConnectCommunicationPort) hk40 = Mhook_SetHook((PVOID*)&faFilterConnectCommunicationPort, hkFilterConnectCommunicationPort);
 	}
 	if (mode == VirusModeMaster) {
-		
+
 		g_hhook = SetWindowsHookExA(WH_CBT, VCBTProc, hInst, GetCurrentThreadId());
 
 		hk8 = Mhook_SetHook((PVOID*)&faSetWindowsHookExA, hkSetWindowsHookExA);
@@ -942,6 +991,10 @@ void VUnInstallHooks() {
 	if (hk34) Mhook_Unhook((PVOID*)&faEnableMenuItem);
 	if (hk35) Mhook_Unhook((PVOID*)&faSetClassLongA);
 	if (hk36) Mhook_Unhook((PVOID*)&faSetClassLongW);
+	if (hk37) Mhook_Unhook((PVOID*)&faPostMessageW);
+	if (hk38) Mhook_Unhook((PVOID*)&faSendMessageW);
+	if (hk39) Mhook_Unhook((PVOID*)&faTerminateProcess);
+	if (hk40) Mhook_Unhook((PVOID*)&faFilterConnectCommunicationPort);
 
 
 	if (g_hhook) {
@@ -953,15 +1006,43 @@ void VUnInstallHooks() {
 //Fuck driver devices
 HANDLE hDeviceTDKeybd = NULL;
 HANDLE hDeviceTDProcHook = NULL;
+HANDLE hDeviceTDNetFilter = NULL;
 
 void VOpenFuckDrivers() {
-	hDeviceTDKeybd = CreateFile(L"\\\\.\\TDKeybd", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-	hDeviceTDProcHook = CreateFile(L"\\\\.\\TDProcHook", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	hDeviceTDNetFilter = CreateFileW(L"\\\\.\\TDNetFilter", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	hDeviceTDKeybd = CreateFileW(L"\\\\.\\TDKeybd", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+	hDeviceTDProcHook = CreateFileW(L"\\\\.\\TDProcHook", GENERIC_READ | GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
 }
 void VCloseFuckDrivers()
 {
+	if (hDeviceTDNetFilter) CloseHandle(hDeviceTDNetFilter);
 	if (hDeviceTDProcHook) CloseHandle(hDeviceTDProcHook);
 	if (hDeviceTDKeybd) CloseHandle(hDeviceTDKeybd);
+}
+
+//Fake hook for TDMaster
+
+
+HHOOK hMouseHook;
+HHOOK hKeyboardHook;
+
+HOOKPROC lpMouseHookfn = NULL;
+HOOKPROC lpKeyboardHookfn = NULL;
+
+LRESULT WINAPI LowLevelMouseProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	LRESULT result = faCallNextHookEx(hMouseHook, nCode, wParam, lParam);
+	if (lpMouseHookfn)
+		lpMouseHookfn(nCode, wParam, lParam);
+	return result;
+}
+LRESULT WINAPI LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
+{
+	LRESULT result = faCallNextHookEx(hKeyboardHook, nCode, wParam, lParam);
+	if (lpKeyboardHookfn)
+		lpKeyboardHookfn(nCode, wParam, lParam);
+	return result;
 }
 
 //Hook stubs
@@ -1073,6 +1154,12 @@ BOOL WINAPI hkDeviceIoControl(HANDLE hDevice, DWORD dwIoControlCode, LPVOID lpIn
 			return FALSE;
 		}
 	}
+	if (hDeviceTDNetFilter) {
+		if (hDevice == hDeviceTDNetFilter) {
+			SetLastError(ERROR_ACCESS_DENIED);
+			return FALSE;
+		}
+	}
 	return raDeviceIoControl(hDevice, dwIoControlCode, lpInBuffer, nInBufferSize, lpOutBuffer, nOutBufferSize, lpBytesReturned, lpOverlapped);
 }
 HANDLE WINAPI hkCreateFileA(LPCSTR lpFileName,  DWORD dwDesiredAccess, DWORD dwShareMode, LPSECURITY_ATTRIBUTES lpSecurityAttributes, DWORD dwCreationDisposition, DWORD dwFlagsAndAttributes, HANDLE hTemplateFile ) {
@@ -1083,6 +1170,10 @@ HANDLE WINAPI hkCreateFileA(LPCSTR lpFileName,  DWORD dwDesiredAccess, DWORD dwS
 			return INVALID_HANDLE_VALUE;
 		}
 		if (StringHlp::StrEqualA(lpFileName, "\\\\.\\TDProcHook")) {
+			SetLastError(ERROR_ACCESS_DENIED);
+			return INVALID_HANDLE_VALUE;
+		}
+		if (StringHlp::StrEqualA(lpFileName, "\\\\.\\TDNetFilter")) {
 			SetLastError(ERROR_ACCESS_DENIED);
 			return INVALID_HANDLE_VALUE;
 		}
@@ -1100,19 +1191,12 @@ HANDLE WINAPI hkCreateFileW(LPCWSTR lpFileName, DWORD dwDesiredAccess,  DWORD dw
 			SetLastError(ERROR_ACCESS_DENIED);
 			return INVALID_HANDLE_VALUE;
 		}
-	}
-	return faCreateFileW(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
-}
-HHOOK WINAPI hkSetWindowsHookExA(int idHook, HOOKPROC lpfn, HINSTANCE hmod, DWORD dwThreadId)
-{
-	if (loaded)
-	{
-		if (idHook == WH_CBT || idHook == WH_MOUSE_LL || idHook == WH_MOUSE) {
+		if (StringHlp::StrEqualW(lpFileName, L"\\\\.\\TDNetFilter")) {
 			SetLastError(ERROR_ACCESS_DENIED);
-			return FALSE;
+			return INVALID_HANDLE_VALUE;
 		}
 	}
-	return faSetWindowsHookExA(idHook, lpfn, hmod, dwThreadId);
+	return faCreateFileW(lpFileName, dwDesiredAccess, dwShareMode, lpSecurityAttributes, dwCreationDisposition, dwFlagsAndAttributes, hTemplateFile);
 }
 VOID WINAPI hkmouse_event(DWORD dwFlags, DWORD dx, DWORD dy, DWORD dwData,  ULONG_PTR dwExtraInfo)
 {
@@ -1273,6 +1357,7 @@ HDESK WINAPI hkOpenInputDesktop(DWORD dwFlags,BOOL fInherit, ACCESS_MASK dwDesir
 LONG WINAPI hkSetWindowLongA(HWND hWnd, int nIndex, LONG dwNewLong)
 {
 	if (loaded) {
+		if (hWnd == mainWindow) return 0;
 		if (fakeFull && VIsWindowGbOrHp(hWnd))
 			return faSetWindowLongA(hWnd, nIndex, dwNewLong);
 		if (VIsInIllegalWindows(hWnd))
@@ -1283,6 +1368,7 @@ LONG WINAPI hkSetWindowLongA(HWND hWnd, int nIndex, LONG dwNewLong)
 LONG WINAPI hkSetWindowLongW(HWND hWnd, int nIndex, LONG dwNewLong)
 {
 	if (loaded) {
+		if (hWnd == mainWindow) return 0;
 		if(fakeFull && VIsWindowGbOrHp(hWnd))
 			return faSetWindowLongW(hWnd, nIndex, dwNewLong);
 		if (VIsInIllegalWindows(hWnd))
@@ -1314,9 +1400,100 @@ HRESULT WINAPI hkDwmEnableComposition(UINT uCompositionAction)
 		return  S_OK;
 	return faDwmEnableComposition(uCompositionAction);
 }
+HHOOK WINAPI hkSetWindowsHookExA(int idHook, HOOKPROC lpfn, HINSTANCE hmod, DWORD dwThreadId)
+{
+	if (loaded)
+	{
+		if (idHook == WH_CBT) {
+			SetLastError(ERROR_ACCESS_DENIED);
+			return FALSE;
+		}
+		if (idHook == WH_MOUSE_LL || idHook == WH_MOUSE || idHook == WH_KEYBOARD_LL) {
+			if (hmod == hLibTDMaster) {
+				switch (idHook)
+				{
+				case WH_MOUSE_LL:
+					lpMouseHookfn = lpfn;
+					hMouseHook = faSetWindowsHookExA(idHook, LowLevelMouseProc, hmod, dwThreadId);
+					VOutPutStatus(L"hMouseHook WH_MOUSE_LL hooked 0x%08x", hMouseHook);
+					VOutPutStatus(L"lpfn : 0x%08x hmod :  0x%08x dwThreadId : %d", hMouseHook, hmod, dwThreadId);
+					return (HHOOK)INVALID_HHOOK_MOUSE;
+				case WH_MOUSE:
+					lpMouseHookfn = lpfn;
+					hMouseHook = faSetWindowsHookExA(idHook, LowLevelMouseProc, hmod, dwThreadId);
+					VOutPutStatus(L"hMouseHook WH_MOUSE hooked 0x%08x", hMouseHook);
+					VOutPutStatus(L"lpfn : 0x%08x hmod :  0x%08x dwThreadId : %d", hMouseHook, hmod, dwThreadId);
+					return (HHOOK)INVALID_HHOOK_MOUSE;
+				case WH_KEYBOARD_LL:
+					lpKeyboardHookfn = lpfn;
+					hKeyboardHook = faSetWindowsHookExA(idHook, LowLevelKeyboardProc, hmod, dwThreadId);
+					VOutPutStatus(L"hMouseHook WH_KEYBOARD_LL hooked 0x%08x", hKeyboardHook);
+					VOutPutStatus(L"lpfn : 0x%08x hmod :  0x%08x dwThreadId : %d", hMouseHook, hmod, dwThreadId);
+					return (HHOOK)INVALID_HHOOK_KEYBOARD;
+				}
+			}
+			return FALSE;
+		}
+	}
+	return faSetWindowsHookExA(idHook, lpfn, hmod, dwThreadId);
+}
 LRESULT WINAPI hkCallNextHookEx(HHOOK hhk, int nCode, WPARAM wParam, LPARAM lParam) 
 {
+	if (hhk == (HHOOK)INVALID_HHOOK_MOUSE) return 0;
+	if (hhk == (HHOOK)INVALID_HHOOK_KEYBOARD) return 0;
 	return faCallNextHookEx(hhk, nCode, wParam, lParam);
+}
+BOOL WINAPI hkUnhookWindowsHookEx(HHOOK hhk)
+{
+	if (hhk == (HHOOK)INVALID_HHOOK_MOUSE) {
+		BOOL rs = faUnhookWindowsHookEx(hMouseHook);
+		hMouseHook = NULL;
+		VOutPutStatus(L"hMouseHook Unkooked !");
+		return rs;
+	}
+	if (hhk == (HHOOK)INVALID_HHOOK_KEYBOARD) {
+		BOOL rs = faUnhookWindowsHookEx(hKeyboardHook);
+		hMouseHook = hKeyboardHook;
+		VOutPutStatus(L"hKeyboardHook Unkooked !");
+		return rs;
+	}
+	return faUnhookWindowsHookEx(hhk);
+}
+BOOL WINAPI hkPostMessageW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+	if (loaded && hWnd == mainWindow) return 0;
+	if (loaded && VIsInIllegalWindowMessage(Msg)  && ProhibitCloseWindow) {
+		DWORD pid;
+		GetWindowThreadProcessId(hWnd, &pid);
+		if(pid != currentPid)
+			return 0;
+	}
+	return faPostMessageW(hWnd, Msg, wParam, lParam);
+}
+LRESULT WINAPI hkSendMessageW(HWND hWnd, UINT Msg, WPARAM wParam, LPARAM lParam)
+{
+	if (loaded && hWnd == mainWindow) return 0;
+	if (loaded && VIsInIllegalWindowMessage(Msg) && ProhibitCloseWindow) {
+		DWORD pid;
+		GetWindowThreadProcessId(hWnd, &pid);
+		if (pid != currentPid)
+			return 0;
+	}
+	return faSendMessageW(hWnd, Msg,  wParam,  lParam);
+}
+BOOL WINAPI hkTerminateProcess(HANDLE hProcess, UINT uExitCode)
+{
+	if (loaded && ProhibitKillProcess  && hProcess != GetCurrentProcess()) {
+		SetLastError(ERROR_ACCESS_DENIED);
+		return FALSE;
+	}
+	return faTerminateProcess(hProcess, uExitCode);
+}
+HRESULT WINAPI hkFilterConnectCommunicationPort(LPCWSTR lpPortName, DWORD dwOptions, LPCVOID lpContext, WORD wSizeOfContext, LPSECURITY_ATTRIBUTES lpSecurityAttributes, HANDLE * hPort)
+{
+	if (loaded && StrEqual(lpPortName, L"\\TDFileFilterPort"))
+		return S_FALSE;
+	return faFilterConnectCommunicationPort(lpPortName, dwOptions, lpContext, wSizeOfContext, lpSecurityAttributes,  hPort);
 }
 HWND WINAPI hkGetDesktopWindow(VOID)
 {
@@ -1682,9 +1859,12 @@ INT_PTR CALLBACK JiYuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		HMENU hMenu = GetSystemMenu(hWnd, FALSE);
 		pos.x = GET_X_LPARAM(lParam);
 		pos.y = GET_Y_LPARAM(lParam);
-		ClientToScreen(hWnd, &pos);
-		int id  = TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN, pos.x + 30, pos.y + 10, NULL, hWnd, NULL);
-		SendMessage(hWnd, WM_SYSCOMMAND, id, NULL);
+		if (pos.x > 20 && pos.y > 20)
+		{
+			ClientToScreen(hWnd, &pos);
+			int id = TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN, pos.x + 30, pos.y + 10, NULL, hWnd, NULL);
+			SendMessage(hWnd, WM_SYSCOMMAND, id, NULL);
+		}
 	}
 
 	JOUT:
@@ -1704,4 +1884,5 @@ INT_PTR CALLBACK JiYuTDDeskWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 	if (jiYuTDDeskWndProc) return jiYuTDDeskWndProc(hWnd, message, wParam, lParam);
 	else return DefWindowProc(hWnd, message, wParam, lParam);
 }
+
 

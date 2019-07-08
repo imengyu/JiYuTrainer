@@ -1,10 +1,11 @@
 ﻿<html>
 <head>
-    <title>JiYu Trainer 简要帮助</title>
+    <title>JiYu Trainer 帮助文档</title>
     <style>
         html {
             overflow: hidden;
             overflow-y: scroll;
+            vertical-scrollbar: my-v-scrollbar;
         }
         body {
             font-family: "Microsoft YaHei", Tahoma, sans-serif;
@@ -47,6 +48,14 @@
             background-color: #cce5ff;
             border-color: #b8daff;
         }
+        .alert-hollow {
+            background-color: #fff;
+        }
+        .alert-blcak {
+            background-color: #fff;
+            border-color: #999;
+            color: #000;
+        }
 
         .mark {
             background-color: #ffd04c;
@@ -62,6 +71,43 @@
         .btn:hover,.btn:active {
             background-color: #006bef;
             text-decoration: none;
+        }
+
+        /* style block defining vertical scrollbar */
+        @set my-v-scrollbar {
+            .prev {
+                display: none;
+            }
+            .next {
+                display: none;
+            }
+            .base,
+            .next-page,
+            .prev-page {
+                background-color: #f3f3f3;
+                border: none;
+            }
+            .slider {
+                background: #ccc;
+                border-radius: 6px;
+                border: 2px solid #f3f3f3;
+            }
+            .slider:hover {
+                background: #999;
+            }
+            .slider:active {
+                background: #888;
+            }
+            .base:disabled {
+                background: #aaa;
+            }
+            .base {
+                width: 10px;
+            }
+            /* explicit declaration of its width */
+            .corner {
+                background: transparent;
+            }
         }
     </style>
 
@@ -92,38 +138,35 @@
         主界面上半部分是控制极域的状态信息，下半部分是操作按钮：
     </p>
     <div class="img"><img src="res:JiYuTrainerHelp1.png" /></div>
-    <ul>
-        <li>1. 打开本帮助</li>
-        <li>2. 置顶/不置顶软件主窗口</li>
-        <li>3. 杀死/启动极域主进程</li>
-        <li>4. 打开<span class="mark">控制台</span></li>
-        <li>5. 计算机电源操作和退出软件</li>
-    </ul>
+    <ol>
+        <li>打开此帮助窗口</li>
+        <li>置顶/不置顶本软件主窗口</li>
+        <li>杀死/启动极域主进程</li>
+        <li>打开<span class="mark">控制台</span></li>
+        <li>计算机电源操作和退出软件</li>
+    </ol>
     <h5 style="color:#ff8b0d">控制台界面</h5>
     <div class="img"><img src="res:JiYuTrainerHelp2.png" /></div>
     程序配置说明：
     <ol>
-        <li>☆ 勾选此选项后可以允许屏幕广播窗口置顶（如果你需要屏幕广播窗口置顶，边看边操作的话），默认是不允许的。</li>
         <li>△ (调试选项) 勾选此选项后将会加强对极域的窗口控制，广播窗口或黑屏窗口将不能全屏或置顶。</li>
         <li>△ (调试选项) 基础控制器是否开启。如果不开启，将不会对极域进行任何操作，默认开启。</li>
         <li>★ 是否监控极域运行进程。因为教师可以通过极域远程运行exe，这可能会对你造成影响，勾选此项以后教师远程执行任何exe都会提醒您是否允许操作。</li>
         <li>△ (调试选项) 是否在控制极域失败时直接杀死进程，该项的目的是在软件设计初期功能不完善，为了防止软件控制极域失败，而被老师控制所控制，而设置的保险功能，现在软件功能已完善，因此此功能不推荐使用。</li>
+        <li>★ 本软件可以破解极域的解锁、卸载密码，支持已加密的新版极域。</li>
+        <li>★ 本软件默认会去寻找极域主进程的位置，但是假如您所在电脑上的极域安装在非默认位置时，软件就可能无法定位极域的默认位置，您可以点击此项定义极域主进程的位置。</li>
         <li>☆ 是否自动检测更新，更新到最新版本可以使您得到最好的软件使用体验，包括新功能和问题修复。</li>
         <li>★ 是否允许教师通过极域控制你的电脑，不勾选此项时教师不能使用极域远程控制你的电脑。默认不允许。</li>
         <li>★ 是否允许教师通过极域监视你的电脑，不勾选此项时教师在教师端所看到您的屏幕是黑色的，而且也不能使用“监视”功能监视您的电脑。默认允许。</li>
+        <li>☆ 勾选此选项后可以允许屏幕广播窗口置顶（如果你需要屏幕广播窗口置顶，边看边操作的话），默认是不允许的。</li>
         <li>☆ 保存或恢复默认设置，<b>注意，设置必须保存才能生效。</b></li>
-        <li>■ 设置，调试，以及关于</li>
-        <li>■ 高级配置：仅用于调试使用，请不要修改里面的参数</li>
+        <li>■ 高级配置：用于调试使用，如果您不理解，请不要修改里面的参数。您可咨询软件作者了解高级配置的信息。</li>
     </ol>
     <h3 style="color:#ff8b0d">屏幕广播窗口的改动</h3>
     <div class="img"><img src="res:JiYuTrainerHelp3.png" /></div>
     <p style="color:#006bef">
         为了保护您免受极域的控制，本软件默认接管了广播窗口的<b>全屏</b>与<b>置顶</b>的操作，所以原有广播窗口的“置顶”与“全屏”按钮已经无效，取而代之，
         JiYuTrainer 添加了两个菜单项，点击图标或在广播窗口上右键打开此菜单，您可以点击它们操作屏幕广播窗口。
-    </p>
-    <p>
-        由于软件已接管极域广播窗口的WNDPROC与Hooks，假如教师使用“学生演示”功能（也就是请你操作老师电脑，演示给其他同学看）时，您是无法操作教师电脑的，因为老师一般不使用这个功能，
-        所以本软件并未修复此功能。您必须退出本软件再启动极域才能使用“学生演示”功能操作老师电脑。
     </p>
 
     <h3 style="color:#ff8b0d">紧急全屏</h3>
@@ -133,9 +176,21 @@
     </p>
 
     <h3 style="color:#ff8b0d">其他</h3>
-    <p>
-        如果您在使用软件过程中发现Bug，或是有意见和建议，欢迎向我反馈！
-    </p>
+    <div class="alert alert-primary alert-hollow">
+        <b>说明：</b>如果您在使用本软件的内核驱动时出现蓝屏的错误，表明驱动不适用于您的系统，我们会努力改进程序以尽快支持您的系统，
+        目前您可以在“软件高级配置”中勾选“禁用软件内核驱动”以解决蓝屏问题。
+    </div>
+    <div class="alert alert-primary">
+        <b>提示：</b>如果您在可移动介质（比如U盘）中直接运行 JiYuTrainer ，为了防止长时间占用您的 U 盘，我们默认会
+        将主程序安装至 C 盘的临时目录下，运行程序后您依然可以弹出 U 盘。
+    </div>
+    <div class="alert alert-primary alert-hollow">
+        <b>说明：</b>由于本软件需要对极域电子教室进行操作，可能会被某些杀毒软件误识别为病毒，<b>您可能需要关闭杀毒软件或者添加本软件到白名单</b>。
+</div>
+    <br />
+    <div class="alert alert-blcak">
+        <b>如果您在使用软件过程中发现Bug，或是有意见和建议，欢迎向我反馈！</b>
+    </div>
     <ul>
         <!--<li>该项目 Github 地址：<a href="#" id="link_github" class="link">JiYu Trainer </a></li>-->
         <li>作者 QQ：1501076885 （请备注 <input style="display:inline-block;text-decoration:underline; border: 1px solid #fff; width: 95px" value="来自JiYuTrainer" />）</li>
@@ -154,9 +209,7 @@
         <li>本软件最低最低也要在 Windows XP SP3上运行，上古版本的系统不支持 </li>
         <li>极域电子教室 推荐在 4.0/6.0 版本，其他版本可能无法达到最好的防御效果 </li>
     </ul>
-    <div class="alert alert-primary">
-        <b>提示：</b>由于本软件需要对极域电子教室进行操作，可能会被某些杀毒软件误识别为病毒，您可能需要关闭杀毒软件或者添加本软件到白名单。
-    </div>
+
     <h3 style="color:#ff0000">免责声明</h3>
     <div class="alert alert-warning">
         <b>注意：</b>本软件研发之初仅供学习交流使用，<span style="color:red;font-weight:bold;">严禁将该软件用于不符合法律、道德的行为，本软件仅供技术交流，擅自用于不正当行为所造成的后果将由您自行承担！</span>自您使用本软件起，即表明您同意了该声明。

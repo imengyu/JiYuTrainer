@@ -1,6 +1,8 @@
 #pragma once
 #include "stdafx.h"
 #include <string>
+#include "StringHlp.h"
+#include <shlwapi.h>
 
 class EXPORT Path
 {
@@ -47,5 +49,3 @@ public:
 	static bool Exists(LPCSTR path1);
 	static bool Exists(std::string path1);
 };
-
-

@@ -6,6 +6,11 @@
 
 using namespace std;
 
+#undef LogError2
+#undef LogWarn2
+#undef LogInfo2
+#undef Log2
+
 LoggerInternal::LoggerInternal()
 {
 }
@@ -38,7 +43,7 @@ void LoggerInternal::LogError(const wchar_t * str, ...)
 		va_list arg;
 		va_start(arg, str);
 		LogInternal(LogLevelError, str, arg);
-		va_end(arg);
+		va_end(arg); 
 	}
 }
 void LoggerInternal::LogInfo(const wchar_t * str, ...)
@@ -51,19 +56,59 @@ void LoggerInternal::LogInfo(const wchar_t * str, ...)
 	}
 }
 
+void LoggerInternal::Log2(const wchar_t * str, const char * file, int line, const char * functon, ...)
+{
+	if (level <= LogLevelText) {
+		va_list arg;
+		va_start(arg, functon);
+		LogInternalWithCodeAndLine(LogLevelText, str, file, line, functon, arg);
+		va_end(arg);
+	}
+}
+void LoggerInternal::LogWarn2(const wchar_t * str, const char * file, int line, const char * functon, ...)
+{
+	if (level <= LogLevelWarn) {
+		va_list arg;
+		va_start(arg, functon);
+		LogInternalWithCodeAndLine(LogLevelWarn, str, file, line, functon, arg);
+		va_end(arg);
+	}
+}
+void LoggerInternal::LogError2(const wchar_t * str, const char * file, int line, const char * functon, ...)
+{
+	if (level <= LogLevelError) {
+		va_list arg;
+		va_start(arg, functon);
+		LogInternalWithCodeAndLine(LogLevelError, str, file, line, functon, arg);
+		va_end(arg);
+	}
+}
+void LoggerInternal::LogInfo2(const wchar_t * str, const char * file, int line, const  char * functon, ...)
+{
+	if (level <= LogLevelInfo) {
+		va_list arg;
+		va_start(arg, functon);
+		LogInternalWithCodeAndLine(LogLevelInfo, str, file, line, functon, arg);
+		va_end(arg);
+	}
+}
+
 void LoggerInternal::SetLogLevel(LogLevel level)
 {
 	this->level = level;
 }
 void LoggerInternal::SetLogOutPut(LogOutPut output)
 {
+	if (this->outPut == LogOutPutFile && output != LogOutPutFile)
+		CloseLogFile();
 	this->outPut = output;
 }
 void LoggerInternal::SetLogOutPutFile(const wchar_t * filePath)
 {
-	wcsncpy_s(logFilePath, filePath, MAX_PATH);
-	if (Path::Exists(logFilePath)) {
+	if (!StrEqual(logFilePath, filePath))
+	{
 		CloseLogFile();
+		wcsncpy_s(logFilePath, filePath, MAX_PATH);
 		_wfopen_s(&logFile, logFilePath, L"w");
 	}
 }
@@ -88,6 +133,11 @@ void LoggerInternal::WritePendingLog(const wchar_t * str, LogLevel level)
 	logPendingBuffer.push_back(sla);
 }
 
+void LoggerInternal::LogInternalWithCodeAndLine(LogLevel level, const wchar_t * str, const char * file, int line, const char * functon, va_list arg)
+{
+	wstring format1 = FormatString(L"%s\n[In] %hs (%d) : %hs", str, file, line, functon);
+	LogInternal(level, format1.c_str(), arg);
+}
 void LoggerInternal::LogInternal(LogLevel level, const wchar_t * str, va_list arg)
 {
 	const wchar_t*levelStr = L"";
@@ -105,18 +155,22 @@ void LoggerInternal::LogInternal(LogLevel level, const wchar_t * str, va_list ar
 	wstring format1 = FormatString(L"[%02d:%02d:%02d] [%s] %s\n", tm_log.tm_hour, tm_log.tm_min, tm_log.tm_sec, levelStr, str);
 	wstring out = FormatString(format1.c_str(), arg);
 
+	LogOutput(level, out.c_str());
+}
+void LoggerInternal::LogOutput(LogLevel level, const wchar_t * str)
+{
 #if _DEBUG
-	OutputDebugString(out.c_str());
+	OutputDebugString(str);
 #else 
 	if (outPut == LogOutPutConsolne)
-		OutputDebugString(out.c_str());
+		OutputDebugString(str);
 #endif
 	if (outPut == LogOutPutFile && logFile)
-		fwprintf_s(logFile, out.c_str());
+		fwprintf_s(logFile, str);
 	else if (outPut == LogOutPutCallback && callBack)
-		callBack(out.c_str(), level, callBackData);
-	else 
-		WritePendingLog(out.c_str(), level);
+		callBack(str, level, callBackData);
+	else
+		WritePendingLog(str, level);
 }
 
 void LoggerInternal::CloseLogFile()

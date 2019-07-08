@@ -26,8 +26,12 @@ public:
 
 	virtual void Log(const wchar_t * str, ...) {}
 	virtual void LogWarn(const wchar_t * str, ...) {}
-	virtual void LogError(const wchar_t * str, ...) {}
+	virtual void LogError(const wchar_t * str, ...) {}	
 	virtual void LogInfo(const wchar_t * str, ...) {}
+	virtual void Log2(const wchar_t * str, const char*file, int line, const char*functon, ...) {}
+	virtual void LogWarn2(const wchar_t * str, const  char*file, int line, const char*functon, ...) {}
+	virtual void LogError2(const wchar_t * str, const char*file, int line, const char*functon, ...) {}
+	virtual void LogInfo2(const wchar_t * str, const char*file, int line, const char*functon, ...) {}
 
 	virtual LogLevel GetLogLevel() { return LogLevel::LogLevelDisabled; }
 	virtual void SetLogLevel(LogLevel level) {}
@@ -37,9 +41,6 @@ public:
 
 	virtual void ResentNotCaputureLog(){}
 	virtual void WritePendingLog(const wchar_t *str, LogLevel level) {}
-
-private:
-	virtual void LogInternal(LogLevel level, const wchar_t *str, va_list arg) { }
 };
 
 class LoggerInternal : public Logger
@@ -58,6 +59,10 @@ public:
 	void LogWarn(const wchar_t *str, ...) override;
 	void LogError(const wchar_t *str, ...) override;
 	void LogInfo(const wchar_t *str, ...) override;
+    void Log2(const wchar_t * str, const char*file, int line, const char*functon, ...);
+	void LogWarn2(const wchar_t * str, const char*file, int line, const char*functon, ...);
+	void LogError2(const wchar_t * str, const char*file, int line, const char*functon, ...);
+	void LogInfo2(const wchar_t * str, const char*file, int line, const char*functon, ...);
 
 	LogLevel GetLogLevel() { return level; }
 	void SetLogLevel(LogLevel level) override;
@@ -68,7 +73,9 @@ public:
 	void ResentNotCaputureLog();
 	void WritePendingLog(const wchar_t *str, LogLevel level);
 
+	void LogInternalWithCodeAndLine(LogLevel level, const wchar_t * str, const char*file, int line, const char*functon, va_list arg);
 	void LogInternal(LogLevel level, const wchar_t *str, va_list arg);
+	void LogOutput(LogLevel level, const wchar_t *str);
 	void CloseLogFile();
 
 private:
@@ -81,4 +88,9 @@ private:
 	LogCallBack callBack = nullptr;
 	LPARAM callBackData;
 };
+
+#define LogError2(str, ...) LogError2(str, __FILE__, __LINE__, __FUNCTION__,__VA_ARGS__)
+#define LogWarn2(str, ...) LogWarn2(str, __FILE__, __LINE__, __FUNCTION__,__VA_ARGS__)
+#define LogInfo2(str, ...) LogInfo2(str, __FILE__, __LINE__, __FUNCTION__,__VA_ARGS__)
+#define Log2(str, ...) Log2(str, __FILE__, __LINE__, __FUNCTION__,__VA_ARGS__)
 

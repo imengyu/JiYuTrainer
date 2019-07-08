@@ -21,3 +21,27 @@ NTSTATUS KxInitProtectProcess();
 VOID KxUnInitProtectProcess();
 
 OB_PREOP_CALLBACK_STATUS KxObPreCall(PVOID RegistrationContext, POB_PRE_OPERATION_INFORMATION pOperationInformation);
+
+VOID KxHookInXP();
+VOID KxUnHookInXP();
+
+NTSTATUS InstallSysServiceHook(ULONG oldService, ULONG newService);
+NTSTATUS UnInstallSysServiceHook(ULONG oldService);
+
+VOID BackupSysServicesTable();
+
+VOID KxShadowSSDTHook();
+VOID KxShadowSSDTUnHook();
+
+VOID DisableWriteProtect(ULONG oldAttr);
+VOID EnableWriteProtect(PULONG pOldAttr);
+
+typedef NTSTATUS(NTAPI *fnZwOpenProcess)(
+	_Out_ PHANDLE ProcessHandle,
+	_In_ ACCESS_MASK DesiredAccess,
+	_In_ POBJECT_ATTRIBUTES ObjectAttributes,
+	_In_opt_ PCLIENT_ID ClientId);
+typedef NTSTATUS(NTAPI*fnZwTerminateProcess)(
+	__in_opt HANDLE ProcessHandle,
+	__in NTSTATUS ExitStatus
+	);

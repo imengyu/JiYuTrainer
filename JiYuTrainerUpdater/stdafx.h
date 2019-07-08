@@ -17,9 +17,9 @@
 #include <memory.h>
 
 #ifdef JTUPDATE_EXPORT
-#define UPEXPORT __declspec(dllexport)
+#define UPEXPORT
 #else
-#define UPEXPORT __declspec(dllimport)
+#define UPEXPORT extern
 #endif
 
 #define UPEXPORT_CFUNC(x) EXTERN_C UPEXPORT x 

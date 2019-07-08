@@ -10,17 +10,10 @@
 #include "../JiYuTrainer/JiYuTrainer.h"
 #include "JiYuTrainerUI.h"
 
-JTApp* currentApp = nullptr;
 MainWindow *currentMainWindow = nullptr;
 
-UIEXPORT_CFUNC(void*) JTUI_GetMainWindow()
+int JiYuTrainerUIRunMain()
 {
-	return currentMainWindow;
-}
-UIEXPORT_CFUNC(int) JTUI_RunMain()
-{
-	currentApp = (JTApp*)JTGetApp();
-
 	SciterSetOption(NULL, SCITER_SET_SCRIPT_RUNTIME_FEATURES, ALLOW_FILE_IO | ALLOW_SOCKET_IO | ALLOW_EVAL | ALLOW_SYSINFO);
 #if _DEBUG
 	SciterSetOption(NULL, SCITER_SET_DEBUG_MODE, TRUE);
@@ -32,21 +25,30 @@ UIEXPORT_CFUNC(int) JTUI_RunMain()
 	delete currentMainWindow;
 	return result;
 }
-UIEXPORT_CFUNC(int) JTUI_RunUpdate() 
+int JiYuTrainerUIRunUpdate()
 {
-	currentApp = (JTApp*)JTGetApp();
 	UpdaterWindow updaterWindow(NULL);
 	return updaterWindow.RunLoop();
 }
-UIEXPORT_CFUNC(int) JTUI_RunConfig()
+int JiYuTrainerUIRunConfig()
 {
-	currentApp = (JTApp*)JTGetApp();
 	ShowMoreSettings(GetDesktopWindow());
 	return 0;
 }
-UIEXPORT_CFUNC(int) JTUI_RunBugReport()
+int JiYuTrainerUIRunBugReport()
 {
-	currentApp = (JTApp*)JTGetApp();
 	ShowBugReportWindow();
 	return 0;
+}
+
+UIEXPORT_CFUNC(int) JiYuTrainerUICommonEntry(int i)
+{
+	switch (i)
+	{
+	case 0: return JiYuTrainerUIRunMain();
+	case 1: return JiYuTrainerUIRunUpdate();
+	case 2: return JiYuTrainerUIRunConfig();
+	case 3: return JiYuTrainerUIRunBugReport();
+	default: return 0;
+	}
 }

@@ -50,9 +50,6 @@
     <ClCompile Include="JiYuTrainerUI.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
-    <ClCompile Include="dllmain.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
     <ClCompile Include="MainWindow.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
@@ -150,13 +147,22 @@
     <Image Include="res\JiYuTrainerHelp3.png">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="res\checkbox-checked.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\checkbox-uncheck.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\checkboxs.png">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\link-icons.png">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="MainWindow.html" />
     <None Include="HelpWindow.html" />
     <None Include="UpdaterWindow.html" />
-    <None Include="Source.def">
-      <Filter>源文件</Filter>
-    </None>
   </ItemGroup>
 </Project>

@@ -1,5 +1,11 @@
 #pragma once
 #include "stdafx.h"
+
+#define MAIN_WND_CLS_NAME L"JiYuTrainerWindow"
+#define MAIN_WND_NAME L"JiYu Trainer Main Window"
+
+#ifdef JIYUTRAINERUI_EXPORTS
+
 #include "sciter-x.h"
 #include "sciter-x-host-callback.h"
 #include <ShellAPI.h>
@@ -8,8 +14,9 @@
 #include "../JiYuTrainer/SysHlp.h"
 #include "HelpWindow.h"
 #include <list>
+#include "../JiYuTrainer/AppPublic.h"
 
-extern HINSTANCE hInst;
+extern JTApp* currentApp;
 
 class MainWindow : public sciter::host<MainWindow>, public sciter::event_handler, public TrainerWorkerCallback
 {
@@ -24,7 +31,7 @@ class MainWindow : public sciter::host<MainWindow>, public sciter::event_handler
 public:
 	// notification_handler traits:
 	HWND get_hwnd() { return _hWnd; }
-	HINSTANCE get_resource_instance() { return hInst; }
+	HINSTANCE get_resource_instance() { return currentApp->GetInstance(); }
 
 	WCHAR wndClassName[64];
 
@@ -83,7 +90,6 @@ private:
 	Logger* currentLogger = nullptr;
 	TrainerWorker * currentWorker = nullptr;
 	TrainerStatus currentStatus;
-	SysHlp * currentSysHlp = nullptr;
 
 	bool currentControlled = false;
 
@@ -153,6 +159,7 @@ private:
 	void LoadSettings();
 	void LoadSettingsToUi();
 	void SaveSettings();
+	void SaveSettingsOnQuit();
 	void ResetSettings();
 
 	static VOID WINAPI UpdateThread(LPVOID lpFiberParameter);
@@ -161,4 +168,5 @@ private:
 	void WritePendingLogs();
 };
 
+#endif
 

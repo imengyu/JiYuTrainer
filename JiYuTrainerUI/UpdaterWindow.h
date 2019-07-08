@@ -2,10 +2,11 @@
 #include "stdafx.h"
 #include "sciter-x.h"
 #include "sciter-x-host-callback.h"
+#include "../JiYuTrainer/AppPublic.h"
+
+extern JTApp* currentApp;
 
 #define IDC_UPDATE_CLOSE 40012
-
-extern HINSTANCE hInst;
 
 class UpdaterWindow : public sciter::host<UpdaterWindow>, public sciter::event_handler
 {
@@ -27,7 +28,7 @@ public:
 public:
 	// notification_handler traits:
 	HWND get_hwnd() { return _hWnd; }
-	HINSTANCE get_resource_instance() { return hInst; }
+	HINSTANCE get_resource_instance() { return currentApp->GetInstance(); }
 
 	bool on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UINT_PTR reason)  override;
 

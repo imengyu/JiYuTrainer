@@ -5,14 +5,40 @@
 #include <Shlwapi.h>
 #include <ShellAPI.h>
 #include <WinIoCtl.h>
+#include <CommDlg.h>
+#include <string>
 
 SHSTDAPI_(BOOL) SHGetSpecialFolderPathW(__reserved HWND hwnd, __out_ecount(MAX_PATH) LPWSTR pszPath, __in int csidl, __in BOOL fCreate);
 
 BOOL _Is64BitOS = -1;
 BOOL _IsRunasAdmin = -1;
 SystemVersion currentVersion = SystemVersionUnknow;
+DWORD currentWindowsMajor = 0;
+WCHAR szTempPath[MAX_PATH];
+std::wstring szErrorCodeBuffer;
 
-SystemVersion SysHlpInternal::GetSystemVersion()
+UINT  SysHlp::GetWindowsBulidVersion() {
+
+	if (currentWindowsMajor == 0) {
+		HKEY hKey;
+		DWORD err;
+
+		if (Is64BitOS()) err = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, KEY_READ, &hKey);
+		else err = RegOpenKeyEx(HKEY_LOCAL_MACHINE, L"SOFTWARE\\Microsoft\\Windows NT\\CurrentVersion", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
+
+		if (err == ERROR_SUCCESS)
+		{
+			TCHAR bulidver[MAX_PATH] = { 0 };
+			DWORD bulidverLength = MAX_PATH;
+			DWORD bulidverType = REG_SZ;
+			err = RegQueryValueEx(hKey, L"CurrentBuildNumber", 0, &bulidverType, (LPBYTE)&bulidver, &bulidverLength);
+			if (err == ERROR_SUCCESS)
+				currentWindowsMajor = static_cast<DWORD>(_wtoll(bulidver));
+		}
+	}
+	return currentWindowsMajor;
+}
+SystemVersion SysHlp::GetSystemVersion()
 {
 	if (currentVersion == SystemVersionUnknow) {
 		if (IsWindows7OrGreater())
@@ -26,23 +52,29 @@ SystemVersion SysHlpInternal::GetSystemVersion()
 	return currentVersion;
 }
 
-bool SysHlpInternal::RunApplication(LPCWSTR path, LPCWSTR cmd)
+bool SysHlp::RunApplication(LPCWSTR path, LPCWSTR cmd)
 {
 	return (INT)ShellExecute(NULL, L"open", path, cmd, NULL, SW_NORMAL) > 32;
 }
-bool SysHlpInternal::RunApplicationPriviledge(LPCWSTR path, LPCWSTR cmd)
+bool SysHlp::RunApplicationPriviledge(LPCWSTR path, LPCWSTR cmd)
 {
 	return (INT)ShellExecute(NULL, (currentVersion == SystemVersionWindowsXP ?  L"open" : L"runas"), path, cmd, NULL, SW_NORMAL) > 32;
 }
 
-LPCWSTR SysHlpInternal::ConvertErrorCodeToString(DWORD ErrorCode)
+LPCWSTR SysHlp::ConvertErrorCodeToString(DWORD ErrorCode)
 {
 	HLOCAL LocalAddress = NULL;
 	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
 		NULL, ErrorCode, 0, (LPWSTR)&LocalAddress, 0, NULL);
-	return (LPCWSTR)LocalAddress;
+	szErrorCodeBuffer = (LPCWSTR)LocalAddress;
+	LocalFree(LocalAddress);
+	return szErrorCodeBuffer.c_str();
 }
-bool  SysHlpInternal::CheckIsPortabilityDevice(LPCWSTR path) {
+LPCWSTR SysHlp::ConvertLasyErrorToString()
+{
+	return ConvertErrorCodeToString(GetLastError());
+}
+bool  SysHlp::CheckIsPortabilityDevice(LPCWSTR path) {
 	//
 //path: "\\\\?\\F:"
 #define IOCTL_STORAGE_QUERY_PROPERTY   CTL_CODE(IOCTL_STORAGE_BASE, 0x0500, METHOD_BUFFERED, FILE_ANY_ACCESS)
@@ -82,7 +114,7 @@ bool  SysHlpInternal::CheckIsPortabilityDevice(LPCWSTR path) {
 	}
 	return false;
 }
-bool SysHlpInternal::CheckIsDesktop(LPCWSTR path)
+bool SysHlp::CheckIsDesktop(LPCWSTR path)
 {
 	wchar_t desktopPath[MAX_PATH];
 	if (!SHGetSpecialFolderPathW(0, desktopPath, 0x0010, 0))
@@ -90,7 +122,13 @@ bool SysHlpInternal::CheckIsDesktop(LPCWSTR path)
 	return wcscmp(desktopPath, path) == 0;
 }
 
-bool SysHlpInternal::EnableDebugPriv(const wchar_t * name)
+LPCWSTR SysHlp::GetTempPath()
+{
+	::GetTempPath(MAX_PATH, szTempPath);
+	return szTempPath;
+}
+
+bool SysHlp::EnableDebugPriv(const wchar_t * name)
 {
 	HANDLE hToken;
 	TOKEN_PRIVILEGES tp;
@@ -106,7 +144,7 @@ bool SysHlpInternal::EnableDebugPriv(const wchar_t * name)
 	//调整权限
 	return AdjustTokenPrivileges(hToken, 0, &tp, sizeof(TOKEN_PRIVILEGES), NULL, NULL);
 }
-BOOL SysHlpInternal::IsRunasAdmin()
+bool SysHlp::IsRunasAdmin()
 {
 	if (_IsRunasAdmin = -1)
 	{
@@ -134,7 +172,7 @@ BOOL SysHlpInternal::IsRunasAdmin()
 	}
 	return _IsRunasAdmin;
 }
-BOOL SysHlpInternal::Is64BitOS()
+bool SysHlp::Is64BitOS()
 {
 	if (_Is64BitOS == -1)
 	{
@@ -150,3 +188,32 @@ BOOL SysHlpInternal::Is64BitOS()
 	return _Is64BitOS;
 }
 
+bool SysHlp::ChooseFileSingal(HWND hWnd, LPCWSTR startDir, LPCWSTR title, LPCWSTR fileFilter, LPCWSTR fileName, LPCWSTR defExt, LPCWSTR strrs, size_t bufsize)
+{
+	if (strrs) {
+		OPENFILENAME ofn;
+		TCHAR szFile[MAX_PATH];
+		if (fileName != 0 && wcslen(fileName) != 0)
+			wcscpy_s(szFile, fileName);
+		ZeroMemory(&ofn, sizeof(OPENFILENAME));
+		ofn.lStructSize = sizeof(OPENFILENAME);
+		ofn.hwndOwner = hWnd;
+		ofn.lpstrFile = szFile;
+		ofn.lpstrFile[0] = '\0';
+		ofn.nMaxFile = sizeof(szFile);
+		ofn.nFilterIndex = 1;
+		ofn.lpstrFilter = fileFilter;
+		ofn.lpstrDefExt = defExt;
+		ofn.lpstrFileTitle = (LPWSTR)title;
+		ofn.nMaxFileTitle = 0;
+		ofn.lpstrInitialDir = startDir;
+		ofn.Flags = OFN_PATHMUSTEXIST | OFN_FILEMUSTEXIST;
+		if (GetOpenFileName(&ofn))
+		{
+			//显示选择的文件。 szFile
+			wcscpy_s((LPWSTR)strrs, bufsize, szFile);
+			return TRUE;
+		}
+	}
+	return 0;
+}

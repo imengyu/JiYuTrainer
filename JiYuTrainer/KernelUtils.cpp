@@ -1,3 +1,5 @@
+#include "KernelUtils.h"
+#include "KernelUtils.h"
 #include "stdafx.h"
 #include "JiYuTrainer.h"
 #include "DriverLoader.h"
@@ -58,7 +60,7 @@ BOOL KForceKill(DWORD pid, NTSTATUS *pStatus)
 	else currentLogger->LogWarn(L"Çý¶¯Î´¼ÓÔØ£¡");
 	return false;
 }
-BOOL KFSendDriverinitParam(bool isXp, bool isWin7) {
+BOOL KFSendDriverinitParam(bool isXp, bool isWin7, ULONG sysBulidVer) {
 	if (XDriverLoaded())
 	{
 		DWORD ReturnLength = 0;
@@ -66,9 +68,21 @@ BOOL KFSendDriverinitParam(bool isXp, bool isWin7) {
 		JDRV_INITPARAM pidb = { 0 };
 		pidb.IsWin7 = isWin7;
 		pidb.IsWinXP = isXp;
+		pidb.systemVersion = sysBulidVer;
 		if (DeviceIoControl(hKDrv, CTL_INITPARAM, &pidb, sizeof(pidb), NULL, 0, &ReturnLength, NULL))
 			return TRUE;
 		else currentLogger->LogError(L"DeviceIoControl CTL_INITPARAM ´íÎó£º%d", GetLastError());
+	}
+	return false;
+}
+BOOL KFBeforeUnInitDriver()
+{
+	if (XDriverLoaded())
+	{
+		DWORD ReturnLength = 0;
+		if (DeviceIoControl(hKDrv, CTL_UNINIT, NULL, NULL, NULL, NULL, &ReturnLength, NULL))
+			return TRUE;
+		else currentLogger->LogError(L"DeviceIoControl CTL_UNINIT ´íÎó£º%d", GetLastError());
 	}
 	return false;
 }
@@ -84,6 +98,18 @@ BOOL KFInstallSelfProtect()
 	}
 	return false;
 }
+BOOL KFUnInstallSelfProtect()
+{
+	if (XDriverLoaded())
+	{
+		DWORD ReturnLength = 0;
+		if (DeviceIoControl(hKDrv, CTL_CLIENT_QUIT, NULL, NULL, NULL, NULL, &ReturnLength, NULL))
+			return TRUE;
+		else currentLogger->LogError(L"DeviceIoControl CTL_CLIENT_QUIT ´íÎó£º%d", GetLastError());
+	}
+	return false;
+}
+
 BOOL KFInjectDll(DWORD pid, LPWSTR dllPath) {
 	if (XDriverLoaded())
 	{

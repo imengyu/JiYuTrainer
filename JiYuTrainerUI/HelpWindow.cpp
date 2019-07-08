@@ -11,7 +11,7 @@ HelpWindow::HelpWindow(HWND parentHWnd)
 
 	if (!initClass()) return;
 
-	_hWnd = CreateWindowExW(0, L"sciter-jytrainer-help-window", L"JiYu Trainer Help Window", WS_OVERLAPPEDWINDOW ^ (WS_SIZEBOX | WS_MAXIMIZEBOX), CW_USEDEFAULT, CW_USEDEFAULT, 470, 520, nullptr, nullptr, hInst, this);
+	_hWnd = CreateWindowExW(0, L"JiYuTrainerHelpWindow", L"JiYu Trainer Help Window", WS_OVERLAPPEDWINDOW ^ (WS_MAXIMIZEBOX), CW_USEDEFAULT, CW_USEDEFAULT, 470, 520, nullptr, nullptr, currentApp->GetInstance(), this);
 	if (!_hWnd) return;
 	
 	init();
@@ -56,6 +56,12 @@ LRESULT HelpWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPara
 
 	switch (message)
 	{
+	case WM_GETMINMAXINFO: {
+		MINMAXINFO* lpmm = (MINMAXINFO*)lParam;
+		lpmm->ptMaxTrackSize = { 625, 660 };
+		lpmm->ptMinTrackSize = { 360, 360 };
+		return 0;
+	}
 	case WM_DESTROY: {
 		SetWindowLong(hWnd, GWL_USERDATA, 0);
 		PostQuitMessage(0);
@@ -94,12 +100,12 @@ bool HelpWindow::initClass()
 	wcex.lpfnWndProc = wndProc;
 	wcex.cbClsExtra = 0;
 	wcex.cbWndExtra = 0;
-	wcex.hInstance = hInst;
-	wcex.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_APP));
+	wcex.hInstance = currentApp->GetInstance();
+	wcex.hIcon = LoadIcon(currentApp->GetInstance(), MAKEINTRESOURCE(IDI_APP));
 	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 	wcex.lpszMenuName = 0;//MAKEINTRESOURCE(IDC_PLAINWIN);
-	wcex.lpszClassName = L"sciter-jytrainer-help-window";
+	wcex.lpszClassName = L"JiYuTrainerHelpWindow";
 	wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_APP));
 
 	if (RegisterClassExW(&wcex) || GetLastError() == ERROR_CLASS_ALREADY_EXISTS)
@@ -115,13 +121,13 @@ bool HelpWindow::init()
 	SetWindowLongPtr(_hWnd, GWLP_USERDATA, LONG_PTR(this));
 	setup_callback(); // to receive SC_LOAD_DATA, SC_DATA_LOADED, etc. notification
 	BOOL result = FALSE;
-	HRSRC hResource = FindResource(hInst, MAKEINTRESOURCE(IDR_HTML_ABOUT), RT_HTML);
+	HRSRC hResource = FindResource(currentApp->GetInstance(), MAKEINTRESOURCE(IDR_HTML_ABOUT), RT_HTML);
 	if (hResource) {
-		HGLOBAL hg = LoadResource(hInst, hResource);
+		HGLOBAL hg = LoadResource(currentApp->GetInstance(), hResource);
 		if (hg) {
 			LPVOID pData = LockResource(hg);
 			if (pData)
-				result = load_html((LPCBYTE)pData, SizeofResource(hInst, hResource));
+				result = load_html((LPCBYTE)pData, SizeofResource(currentApp->GetInstance(), hResource));
 		}
 	}
 	return result;

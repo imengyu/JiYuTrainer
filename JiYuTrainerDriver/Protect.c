@@ -4,11 +4,21 @@ PPROTECT_PROC_STORAGE protectProcsStart = NULL;
 PPROTECT_PROC_STORAGE protectProcsEnd = NULL;
 PVOID obHandle = NULL;
 BOOLEAN protectInited = FALSE;
+BOOLEAN protectXPHooked = FALSE;
+BOOLEAN shadowSsdtHooked = FALSE;
+
+PKSERVICE_TABLE_DESCRIPTOR KeServiceDescriptorTableShadow = NULL;
 
 extern ObRegisterCallbacks_ _ObRegisterCallbacks;
 extern ObUnRegisterCallbacks_ _ObUnRegisterCallbacks;
 extern ObGetFilterVersion_ _ObGetFilterVersion;
 extern memset_ _memset;
+fnZwOpenProcess _ZwOpenProcess;
+fnZwTerminateProcess _ZwTerminateProcess;
+fnZwOpenProcess OldZwOpenProcess;
+fnZwTerminateProcess OldZwTerminateProcess;
+
+extern ULONG systemVersion;
 
 //存放保护进程的一个链表
 VOID KxInitProtectProcessList()
@@ -95,12 +105,12 @@ NTSTATUS KxInitProtectProcess()
 {
 	if (!protectInited) {
 
-		if (!_ObRegisterCallbacks || !_ObGetFilterVersion)
-			return STATUS_NOT_SUPPORTED;
+		protectInited = TRUE;
 
 		KxInitProtectProcessList();
 
-		protectInited = TRUE;
+		if (!_ObRegisterCallbacks || !_ObGetFilterVersion)
+			return STATUS_NOT_SUPPORTED;
 
 		OB_CALLBACK_REGISTRATION obReg;
 		OB_OPERATION_REGISTRATION opReg;
@@ -127,6 +137,9 @@ VOID KxUnInitProtectProcess()
 		KxDestroyProtectProcessList();
 		protectInited = FALSE;
 	}
+	if (protectXPHooked) {
+		KxUnHookInXP();
+	}
 }
 
 //回调函数
@@ -151,4 +164,136 @@ OB_PREOP_CALLBACK_STATUS KxObPreCall(PVOID RegistrationContext, POB_PRE_OPERATIO
 		}
 	}
 	return OB_PREOP_SUCCESS;
+}
+
+//Hook functions
+
+NTSTATUS NTAPI Hook_ZwOpenProcess(_Out_ PHANDLE ProcessHandle, _In_ ACCESS_MASK DesiredAccess, _In_ POBJECT_ATTRIBUTES ObjectAttributes, _In_opt_ PCLIENT_ID ClientId) {
+	if (KxIsProcessProtect(ClientId->UniqueProcess)) 
+		return STATUS_ACCESS_DENIED;
+	return OldZwOpenProcess(ProcessHandle, DesiredAccess, ObjectAttributes, ClientId);
+}
+NTSTATUS NTAPI Hook_ZwTerminateProcess(__in_opt HANDLE ProcessHandle, __in NTSTATUS ExitStatus)
+{
+	HANDLE uPID = 0;
+	NTSTATUS ntStatus = 0;
+
+	PROCESS_BASIC_INFORMATION pbi;
+	ntStatus = ZwQueryInformationProcess(ProcessHandle, ProcessBasicInformation, (PVOID)&pbi, sizeof(pbi), NULL);
+	if (!NT_SUCCESS(ntStatus))
+		return ntStatus;
+
+	uPID = (HANDLE)pbi.UniqueProcessId;
+	if (KxIsProcessProtect(uPID))//不是当前进程PID，为了客户端自己关自己
+	{
+		if (uPID != PsGetProcessId(PsGetCurrentProcess()))
+			return STATUS_ACCESS_DENIED;
+	}
+
+	ntStatus = OldZwTerminateProcess(ProcessHandle, ExitStatus);
+	return ntStatus;
+}
+
+//SSDT HOOK For process in xp
+
+VOID KxHookInXP() 
+{
+	if (!protectXPHooked && systemVersion == SYS_BULID_VERSION_XP) {
+
+		DbgPrint("KxHookInXP\n");
+
+		OldZwTerminateProcess = (fnZwTerminateProcess)KeServiceDescriptorTable[0].Base[SYSCALL_INDEX(ZwTerminateProcess)];
+		OldZwOpenProcess = (fnZwOpenProcess)KeServiceDescriptorTable[0].Base[SYSCALL_INDEX(ZwOpenProcess)];
+
+		DbgPrint("SSTD ZwTerminateProcess old:  0x%08X\nSSTD ZwOpenProcess old:  0x%08X\n", 
+			OldZwTerminateProcess, OldZwOpenProcess);
+
+		ULONG uOldAttr = 0;
+		EnableWriteProtect(&uOldAttr);
+		KeServiceDescriptorTable[0].Base[SYSCALL_INDEX(ZwTerminateProcess)] = (ULONG)Hook_ZwTerminateProcess;
+		DisableWriteProtect(uOldAttr);
+		EnableWriteProtect(&uOldAttr);
+		KeServiceDescriptorTable[0].Base[SYSCALL_INDEX(ZwOpenProcess)] = (ULONG)Hook_ZwOpenProcess;
+		DisableWriteProtect(uOldAttr);
+
+		protectXPHooked = TRUE;
+		protectInited = TRUE;
+	}
+}
+VOID KxUnHookInXP()
+{
+	if (protectXPHooked) {
+
+		ULONG uOldAttr = 0;
+		EnableWriteProtect(&uOldAttr);
+		KeServiceDescriptorTable[0].Base[SYSCALL_INDEX(ZwTerminateProcess)] = (ULONG)OldZwTerminateProcess;
+		DisableWriteProtect(uOldAttr);
+		EnableWriteProtect(&uOldAttr);
+		KeServiceDescriptorTable[0].Base[SYSCALL_INDEX(ZwOpenProcess)] = (ULONG)OldZwOpenProcess;
+		DisableWriteProtect(uOldAttr);
+
+		DbgPrint("KxUnHookInXP\n");
+
+		protectXPHooked = FALSE;
+	}
+}
+
+//Shadow SSDT HOOK For window protect 
+
+VOID KxShadowSSDTHook() 
+{
+	if (!shadowSsdtHooked) {
+
+		DbgPrint("KxShadowSSDTHook\n");
+
+		if(systemVersion == SYS_BULID_VERSION_XP)
+			KeServiceDescriptorTableShadow = (ULONG_PTR)(KeServiceDescriptorTable - 0x40);
+		else if (systemVersion == SYS_BULID_VERSION_XP)
+			KeServiceDescriptorTableShadow = (ULONG_PTR)(KeServiceDescriptorTable - 0x40);
+
+		DbgPrint("KeServiceDescriptorTableShadow : 0x%08X\n", KeServiceDescriptorTableShadow);
+
+		if (KeServiceDescriptorTableShadow) {
+
+
+
+			shadowSsdtHooked = TRUE;
+		}
+	}
+}
+VOID KxShadowSSDTUnHook()
+{
+	if (shadowSsdtHooked) {
+
+
+		shadowSsdtHooked = FALSE;
+	}
+}
+
+//
+//HOOKS
+//
+
+VOID DisableWriteProtect(ULONG oldAttr)
+{
+	_asm
+	{
+		mov eax, oldAttr
+		mov cr0, eax
+		sti;
+	}
+}
+VOID EnableWriteProtect(PULONG pOldAttr)
+{
+	ULONG uAttr;
+	_asm
+	{
+		cli;
+		mov  eax, cr0;
+		mov  uAttr, eax;
+		and  eax, 0FFFEFFFFh; // CR0 16 BIT = 0 
+		mov  cr0, eax;
+	};
+	//保存原有的 CRO 属性 
+	*pOldAttr = uAttr;
 }

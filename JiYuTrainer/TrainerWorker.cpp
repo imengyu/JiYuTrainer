@@ -6,7 +6,7 @@
 #include "PathHelper.h"
 #include "StringHlp.h"
 #include "MsgCenter.h"
-#include "StringSplit.hpp"
+#include "StringSplit.h"
 #include "DriverLoader.h"
 #include "KernelUtils.h"
 #include "SysHlp.h"
@@ -29,7 +29,6 @@ PSYSTEM_PROCESSES current_system_process = NULL;
 TrainerWorkerInternal::TrainerWorkerInternal()
 {
 	currentTrainerWorker = this;
-	appSysHlp = (SysHlp*)currentApp->GetUtils(UTILS_SYSHLP);
 
 	//For message box center
 	hMsgBoxHook = SetWindowsHookEx(
@@ -136,6 +135,10 @@ void TrainerWorkerInternal::HandleMessageFromVirus(LPCWSTR buf)
 				currentLogger->LogInfo(L"Receive ctl success message ");
 				if (_Callback) _Callback->OnBeforeSendStartConf();
 				UpdateState();
+
+				//HS 
+				FAST_STR_BINDER(str, L"hs:%ld", 32, (ULONG_PTR)hWndMain);
+				SendMessageToVirus(str);
 			}
 			else if (arr[1] == L"immck") {
 				RunCk();
@@ -278,7 +281,7 @@ bool TrainerWorkerInternal::Rerun(bool autoWork)
 			_Callback->OnSimpleMessageCallback(L"<h5>我们无法在此计算机上找到极域电子教室，您需要手动启动</h5>");
 		return false;
 	}
-	return  appSysHlp->RunApplication(_StudentMainPath.c_str(), NULL);
+	return  SysHlp::RunApplication(_StudentMainPath.c_str(), NULL);
 }
 void* TrainerWorkerInternal::RunOperation(TrainerWorkerOp op) 
 {
@@ -403,7 +406,7 @@ bool TrainerWorkerInternal::FlushProcess()
 		current_system_process = (PSYSTEM_PROCESSES)malloc(dwSize);
 		status = NtQuerySystemInformation(SystemProcessInformation, current_system_process, dwSize, 0);
 		if (!NT_SUCCESS(status)) {
-			currentLogger->LogError(L"NtQuerySystemInformation failed ! 0x%08X", status);
+			currentLogger->LogError2(L"NtQuerySystemInformation failed ! 0x%08X", status);
 			return false;
 		}
 	}
@@ -427,11 +430,11 @@ bool TrainerWorkerInternal::KillProcess(DWORD pid, bool force)
 	NTSTATUS status = MOpenProcessNt(_StudentMainPid, &hProcess);
 	if (!NT_SUCCESS(status)) {
 		if (status == STATUS_INVALID_CID || status == STATUS_INVALID_HANDLE) {
-			currentLogger->LogError(L"找不到进程 [%d] ", pid);
+			currentLogger->LogError2(L"找不到进程 [%d] ", pid);
 			return true;
 		}
 		else {
-			currentLogger->LogError(L"打开进程 [%d] 错误：0x%08X，请手动结束", pid);
+			currentLogger->LogError2(L"打开进程 [%d] 错误：0x%08X，请手动结束", pid);
 			return false;
 		}
 	}
@@ -444,16 +447,16 @@ bool TrainerWorkerInternal::KillProcess(DWORD pid, bool force)
 	else {
 		if (status == STATUS_ACCESS_DENIED) {
 			if (force) goto FORCEKILL;
-			else currentLogger->LogError(L"结束进程 [%d] 错误：拒绝访问。可尝试使用驱动结束", pid);
+			else currentLogger->LogError2(L"结束进程 [%d] 错误：拒绝访问。可尝试使用驱动结束", pid);
 			CloseHandle(hProcess);
 		}
 		else if (status != STATUS_INVALID_CID && status != STATUS_INVALID_HANDLE) {
-			currentLogger->LogError(L"结束进程 [%d] 错误：0x%08X，请手动结束", pid);
+			currentLogger->LogError2(L"结束进程 [%d] 错误：0x%08X，请手动结束", pid);
 			CloseHandle(hProcess);
 			return false;
 		}
 		else if (status == STATUS_INVALID_CID || status == STATUS_INVALID_HANDLE) {
-			currentLogger->LogError(L"找不到进程 [%d] ", pid);
+			currentLogger->LogError2(L"找不到进程 [%d] ", pid);
 			CloseHandle(hProcess);
 			return true;
 		}
@@ -467,7 +470,7 @@ FORCEKILL:
 			return true;
 		}
 		else {
-			currentLogger->LogError(L"驱动强制结束进程 [%d] 错误：0x%08X", pid);
+			currentLogger->LogError2(L"驱动强制结束进程 [%d] 错误：0x%08X", pid);
 		}
 	}
 	else currentLogger->Log(L"驱动未加载，无法强制结束进程");
@@ -484,7 +487,7 @@ bool TrainerWorkerInternal::ReadTopDomanPassword(BOOL forceKnock)
 	if (forceKnock) goto READ_EX;
 	//普通注册表读取，适用于4.0版本
 	
-	lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, appSysHlp->Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\TopDomain\\e-Learning Class Standard\\1.00" : L"SOFTWARE\\TopDomain\\e-Learning Class Standard\\1.00", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
+	lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, SysHlp::Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\TopDomain\\e-Learning Class Standard\\1.00" : L"SOFTWARE\\TopDomain\\e-Learning Class Standard\\1.00", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
 	if (lastError == ERROR_SUCCESS) {
 		DWORD dwType = REG_SZ;
 		WCHAR Data[32];
@@ -504,7 +507,7 @@ bool TrainerWorkerInternal::ReadTopDomanPassword(BOOL forceKnock)
 
 	//HKEY_LOCAL_MACHINE\SOFTWARE\TopDomain\e-Learning Class\Student Knock1
 READ_EX:
-	lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, appSysHlp->Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\TopDomain\\e-Learning Class\\Student" : L"SOFTWARE\\TopDomain\\e-Learning Class\\Student", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
+	lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, SysHlp::Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\TopDomain\\e-Learning Class\\Student" : L"SOFTWARE\\TopDomain\\e-Learning Class\\Student", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
 	if (lastError == ERROR_SUCCESS) {
 
 		DWORD dwType = REG_BINARY;
@@ -522,17 +525,33 @@ READ_EX:
 			}
 			else return false;
 		}
-		else currentLogger->LogWarn(L"RegQueryValueEx Failed : %d [in %s]", lastError, L"ReadTopDomanUnInstallPassword RegQueryValueEx(hKey, L\"Knock1\", 0, &dwType, (LPBYTE)szData, &dwSize);");
+		else currentLogger->LogWarn2(L"RegQueryValueEx Failed : %d", lastError);
 		RegCloseKey(hKey);
 	}
-	else currentLogger->LogWarn(L"RegOpenKeyEx Failed : %d [in %s]", lastError, L"ReadTopDomanUnInstallPassword");
+	else currentLogger->LogWarn2(L"RegOpenKeyEx Failed : %d", lastError);
+	return false;
+}
+bool TrainerWorkerInternal::AppointStudentMainLocation(LPCWSTR fullPath) {
+	if (Path::GetFileName(fullPath) != L"StudentMain.exe")	
+		return false;
+	if (Path::Exists(fullPath)) 
+	{
+		_StudentMainPath = fullPath;
+		_StudentMainFileLocated = true;
+
+		currentApp->GetSettings()->SetSettingStr(L"StudentMainPath", fullPath);
+		currentLogger->Log(L"手动定位极域电子教室位置： %s", fullPath);
+
+		UpdateStudentMainInfo(false);
+		return true;
+	}
 	return false;
 }
 bool TrainerWorkerInternal::LocateStudentMainLocation()
 {
 	//注册表查找 极域 路径
 	HKEY hKey;
-	LRESULT lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, appSysHlp->Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learning Class V6.0" : L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learning Class V6.0", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
+	LRESULT lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, SysHlp::Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learning Class V6.0" : L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learning Class V6.0", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
 	if (lastError == ERROR_SUCCESS) {
 
 		DWORD dwType = REG_SZ;
@@ -547,17 +566,28 @@ bool TrainerWorkerInternal::LocateStudentMainLocation()
 			}
 			else currentLogger->Log(L"读取注册表 [DisplayIcon] 获得了一个无效的极域电子教室路径 : %s", szData);
 		}
-		else currentLogger->LogWarn(L"RegQueryValueEx Failed : %d [in %s]", lastError, L"LocateStudentMainLocation RegQueryValueEx(hKey, L\"DisplayIcon\", 0, &dwType, (LPBYTE)szData, &dwSize);");
+		else currentLogger->LogWarn2(L"RegQueryValueEx Failed : %d", lastError);
 
 		RegCloseKey(hKey);
 	}
-	else currentLogger->LogWarn(L"RegOpenKeyEx Failed : %d [in %s]", lastError, L"LocateStudentMainLocation");
+	else currentLogger->LogWarn2(L"RegOpenKeyEx Failed : %d", lastError);
+
+	//读取用户指定的路径
+	wstring appointStudentMainPath  = currentApp->GetSettings()->GetSettingStr(L"StudentMainPath", L"", MAX_PATH);
+	if (!StrEmepty(appointStudentMainPath.c_str()) && Path::Exists(appointStudentMainPath)) {
+		wstring fileName = Path::GetFileName(appointStudentMainPath);
+		if (StrEqual(fileName.c_str(), L"StudentMain.exe")) {
+			_StudentMainPath = appointStudentMainPath;
+			_StudentMainFileLocated = true;
+			return true;
+		}
+	}
 
 	//直接尝试查找
 	LPCWSTR mabeInHere[6] = {
 		L"c:\\Program Files\\Mythware\\极域课堂管理系统软件V6.0 2016 豪华版\\StudentMain.exe",
 		L"C:\\Program Files\\Mythware\\e-Learning Class\\StudentMain.exe",
-		L"C:\\Program Files (x86)\\Mythware\\极域课堂管理系统软件V6.0 2016 豪华版",
+		L"C:\\Program Files (x86)\\Mythware\\极域课堂管理系统软件V6.0 2016 豪华版\\StudentMain.exe",
 		L"C:\\Program Files (x86)\\Mythware\\e - Learning Class\\StudentMain.exe",
 		L"C:\\e-Learning Class\\StudentMain.exe",
 		L"c:\\极域课堂管理系统软件V6.0 2016 豪华版\\StudentMain.exe",
@@ -701,7 +731,7 @@ bool TrainerWorkerInternal::InjectDll(DWORD pid, LPCWSTR dllPath)
 	//打开进程
 	NTSTATUS ntStatus = MOpenProcessNt(pid, &hRemoteProcess);
 	if (!NT_SUCCESS(ntStatus)) {
-		currentLogger->LogError(L"注入病毒失败！打开进程失败：0x%08X", ntStatus);
+		currentLogger->LogError2(L"注入病毒失败！打开进程失败：0x%08X", ntStatus);
 		return FALSE;
 	}
 
@@ -722,7 +752,7 @@ bool TrainerWorkerInternal::InjectDll(DWORD pid, LPCWSTR dllPath)
 	HANDLE hRemoteThread;
 	if ((hRemoteThread = CreateRemoteThread(hRemoteProcess, NULL, 0, pfnStartAddr, pszLibFileRemote, 0, NULL)) == NULL)
 	{
-		currentLogger->LogError(L"注入线程失败! 错误：CreateRemoteThread %d", GetLastError());
+		currentLogger->LogError2(L"注入线程失败! 错误：CreateRemoteThread %d", GetLastError());
 		return FALSE;
 	}
 
@@ -739,7 +769,7 @@ bool TrainerWorkerInternal::UnInjectDll(DWORD pid, LPCWSTR moduleName)
 	//打开进程
 	NTSTATUS ntStatus = MOpenProcessNt(pid, &hProcess);
 	if (!NT_SUCCESS(ntStatus)) {
-		currentLogger->LogError(L"卸载病毒失败！打开进程失败：0x%08X", ntStatus);
+		currentLogger->LogError2(L"卸载病毒失败！打开进程失败：0x%08X", ntStatus);
 		return FALSE;
 	}
 	DWORD pszLibFileRemoteSize = sizeof(wchar_t) * (lstrlen(moduleName) + 1);
@@ -754,7 +784,7 @@ bool TrainerWorkerInternal::UnInjectDll(DWORD pid, LPCWSTR moduleName)
 	LPVOID pFunc = GetProcAddress(GetModuleHandle(TEXT("Kernel32")), "GetModuleHandleW");
 	HANDLE hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)pFunc, pszLibFileRemote, 0, &dwID);
 	if (!hThread) {
-		currentLogger->LogError(L"卸载病毒失败！创建远程线程失败：%d", GetLastError());
+		currentLogger->LogError2(L"卸载病毒失败！创建远程线程失败：%d", GetLastError());
 		return FALSE;
 	}
 
@@ -769,7 +799,7 @@ bool TrainerWorkerInternal::UnInjectDll(DWORD pid, LPCWSTR moduleName)
 	pFunc = GetProcAddress(GetModuleHandle(TEXT("Kernel32")), "FreeLibrary"); ;
 	hThread = CreateRemoteThread(hProcess, NULL, 0, (LPTHREAD_START_ROUTINE)pFunc, (LPVOID)dwHandle, 0, &dwID);
 	if (!hThread) {
-		currentLogger->LogError(L"卸载病毒失败！创建远程线程失败：%d", GetLastError());
+		currentLogger->LogError2(L"卸载病毒失败！创建远程线程失败：%d", GetLastError());
 		return FALSE;
 	}
 	

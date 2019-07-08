@@ -86,6 +86,25 @@ typedef enum _KAPC_ENVIRONMENT
 	InsertApcEnvironment
 } KAPC_ENVIRONMENT;
 
+#define NUMBER_SERVICE_TABLES 4
+
+typedef struct _KSERVICE_TABLE_DESCRIPTOR {
+	PULONG_PTR Base;
+	PULONG Count;
+	ULONG Limit;
+	PUCHAR Number;
+} KSERVICE_TABLE_DESCRIPTOR, *PKSERVICE_TABLE_DESCRIPTOR;
+
+
+extern __declspec(dllimport) KSERVICE_TABLE_DESCRIPTOR KeServiceDescriptorTable[NUMBER_SERVICE_TABLES];
+
+
+//根据 ZwServiceFunction 获取 ZwServiceFunction 在 SSDT 中所对应的服务的索引号 
+#define SYSCALL_INDEX(ServiceFunction) (*(PULONG)((PUCHAR)ServiceFunction + 1))
+
+//根据ZwServiceFunction 来获得服务在 SSDT 中的索引号，然后再通过该索引号来获取ntServiceFunction的地址 
+#define SYSCALL_FUNCTION(ServiceFunction) KeServiceDescriptorTable->ntoskrnl.ServiceTableBase[SYSCALL_INDEX(ServiceFunction)]
+
 typedef VOID(*PKNORMAL_ROUTINE) (IN PVOID NormalContext, IN PVOID SystemArgument1, IN PVOID SystemArgument2);
 typedef VOID(*PKKERNEL_ROUTINE) (IN struct _KAPC *Apc, IN OUT PKNORMAL_ROUTINE *NormalRoutine, IN OUT PVOID *NormalContext, IN OUT PVOID *SystemArgument1, IN OUT PVOID *SystemArgument2);
 typedef VOID(*PKRUNDOWN_ROUTINE) (IN struct _KAPC *Apc);
@@ -120,10 +139,23 @@ typedef NTSTATUS (NTAPI *NtShutdownSystem_)(IN SHUTDOWN_ACTION Action);
 
 extern VOID NTAPI KeInitializeApc(__in PKAPC Apc, __in PKTHREAD Thread, __in KAPC_ENVIRONMENT   TargetEnvironment, __in PKKERNEL_ROUTINE KernelRoutine, __in_opt PKRUNDOWN_ROUTINE RundownRoutine, __in PKNORMAL_ROUTINE NormalRoutine, __in KPROCESSOR_MODE Mode, __in PVOID Context);
 extern BOOLEAN NTAPI KeInsertQueueApc(IN PKAPC Apc, IN PVOID SystemArgument1, IN PVOID SystemArgument2, IN KPRIORITY PriorityBoost);
+extern NTSTATUS NTAPI ZwQueryInformationProcess(
+	_In_      HANDLE           ProcessHandle,
+	_In_      PROCESSINFOCLASS ProcessInformationClass,
+	_Out_     PVOID            ProcessInformation,
+	_In_      ULONG            ProcessInformationLength,
+	_Out_opt_ PULONG           ReturnLength
+);
 
 
 
 
+
+#define SYS_BULID_VERSION_XP 2600
+#define SYS_BULID_VERSION_VISTA 6000
+
+#define SYS_BULID_VERSION_7 7600
+#define SYS_BULID_VERSION_7_SP1 7601
 
 
 

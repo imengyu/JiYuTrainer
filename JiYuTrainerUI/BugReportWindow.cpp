@@ -7,11 +7,10 @@
 #include "../JiYuTrainerUpdater/JiYuTrainerUpdater.h"
 
 extern JTApp* currentApp;
-extern HINSTANCE hInst;
 
 void ShowBugReportWindow() 
 {
-	DialogBox(hInst, MAKEINTRESOURCE(IDD_BUGREPORT), NULL, BugReportDlgFunc);
+	DialogBox(currentApp->GetInstance(), MAKEINTRESOURCE(IDD_BUGREPORT), NULL, BugReportDlgFunc);
 }
 
 INT_PTR CALLBACK BugReportDlgFunc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -20,8 +19,8 @@ INT_PTR CALLBACK BugReportDlgFunc(HWND hDlg, UINT message, WPARAM wParam, LPARAM
 	{
 	case WM_INITDIALOG: {
 
-		SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)LoadIcon(hInst, MAKEINTRESOURCE(IDI_BUG)));
-		SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)LoadIcon(hInst, MAKEINTRESOURCE(IDI_BUG)));
+		SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)LoadIcon(currentApp->GetInstance(), MAKEINTRESOURCE(IDI_BUG)));
+		SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)LoadIcon(currentApp->GetInstance(), MAKEINTRESOURCE(IDI_BUG)));
 		SetDlgItemText(hDlg, IDC_BUGREPORT_CONTENT, L"无法获取程序错误日志");
 		CheckDlgButton(hDlg, IDC_REBOOT, BST_CHECKED);
 
@@ -64,12 +63,12 @@ INT_PTR CALLBACK BugReportDlgFunc(HWND hDlg, UINT message, WPARAM wParam, LPARAM
 				MessageBox(hDlg, L"无法提交错误报告，可能是网络未连接？", L"JiYuTrainer", MB_ICONEXCLAMATION);
 			}
 			if (IsDlgButtonChecked(hDlg, IDC_REBOOT))
-				((SysHlp*)currentApp->GetUtils(UTILS_SYSHLP))->RunApplication(currentApp->GetFullPath(), L"-r3");
+				SysHlp::RunApplication(currentApp->GetFullPath(), L"-r3");
 			return TRUE;
 		}
 		case IDCANCEL: {
 			if (IsDlgButtonChecked(hDlg, IDC_REBOOT))
-				((SysHlp*)currentApp->GetUtils(UTILS_SYSHLP))->RunApplication(currentApp->GetFullPath(), L"-r3");
+				SysHlp::RunApplication(currentApp->GetFullPath(), L"-r3");
 			EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
 		}		   

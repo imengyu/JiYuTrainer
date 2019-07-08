@@ -60,6 +60,7 @@ public:
 	virtual void SetUpdateInfoCallback(TrainerWorkerCallback *callback) {}
 	virtual void HandleMessageFromVirus(LPCWSTR buf) {}
 	virtual void SendMessageToVirus(LPCWSTR buf) {}
+	virtual bool AppointStudentMainLocation(LPCWSTR fullPath) { return false; }
 };
 
 #ifdef JTEXPORT
@@ -84,6 +85,7 @@ public:
 	void SetUpdateInfoCallback(TrainerWorkerCallback *callback);
 	void HandleMessageFromVirus(LPCWSTR buf);
 	void SendMessageToVirus(LPCWSTR buf);
+	bool AppointStudentMainLocation(LPCWSTR fullPath);
 
 	bool Kill(bool autoWork = false);
 	bool Rerun(bool autoWork = false);
@@ -92,7 +94,6 @@ private:
 	TrainerWorkerCallback *_Callback = nullptr;
 	bool _Running = false;
 	HDESK hDesktop = NULL;
-	SysHlp*appSysHlp = nullptr;
 
 	bool _VirusInstalled = false;
 	DWORD _StudentMainPid = 0;

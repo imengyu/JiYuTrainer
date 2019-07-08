@@ -10,15 +10,11 @@
 
 #define PART_INI -1
 #define PART_MAIN 0
-#define PART_RUN 1
-#define PART_UNINSTALL 2
-#define PART_UI 3
-#define PART_HOOKER 4
-#define PART_DRIVER 5
-#define PART_COUNT 8
+#define PART_LOG 1
+#define PART_HOOKER 3
+#define PART_DRIVER 4
+#define PART_SCITER 5
 
-#define UTILS_SYSHLP 0
-#define UTILS_MD5UTILS 1
 
 enum EXTRACT_RES {
 	ExtractUnknow,
@@ -27,26 +23,19 @@ enum EXTRACT_RES {
 	ExtractReadResError,
 	ExtractSuccess
 };
-enum APP_INSTALL_MODE {
-	AppInstallCheck,
-	AppInstallNew,
-};
 enum AppOperation {
 	AppOperation1,
 	AppOperation2,
 	AppOperationKShutdown,
 	AppOperationKReboot,
 	AppOperationUnLoadDriver,
+	AppOperationForceLoadDriver,
 };
 
 class JTApp
 {
 public:
 
-	/*
-		检查程序完整性并开始安装
-	*/
-	virtual int CheckInstall(APP_INSTALL_MODE mode) { return 0; }
 	/*
 		卸载
 	*/
@@ -113,9 +102,9 @@ public:
 
 	virtual LPCWSTR GetStartupErr() { return nullptr; }
 
-	virtual void* GetUtils(int utilsId) { return nullptr; }
 	virtual Logger* GetLogger() { return nullptr; };
 	virtual SettingHlp* GetSettings() { return nullptr; };
 	virtual bool GetSelfProtect() { return false; }
 	virtual TrainerWorker* GetTrainerWorker() { return nullptr; };
+	virtual void*GetSciterAPI() { return nullptr; }
 };

@@ -12,9 +12,9 @@
 #include <windows.h>
 
 #ifdef JTEXPORT
-#define EXPORT __declspec(dllexport)
+#define EXPORT
 #else
-#define EXPORT __declspec(dllimport)
+#define EXPORT
 #endif
 
 #define EXPORT_CFUNC(x) EXTERN_C EXPORT x 

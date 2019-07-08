@@ -2,8 +2,9 @@
 #include "stdafx.h"
 #include "sciter-x.h"
 #include "sciter-x-host-callback.h"
+#include "../JiYuTrainer/AppPublic.h"
 
-extern HINSTANCE hInst;
+extern JTApp* currentApp;
 
 class HelpWindow  : public sciter::host<HelpWindow>, public sciter::event_handler
 {
@@ -23,6 +24,8 @@ public:
 
 	sciter::value goToFullHelp();
 
+	bool init();
+
 	BEGIN_FUNCTION_MAP
 		FUNCTION_0("goToFullHelp", goToFullHelp);
 	END_FUNCTION_MAP
@@ -30,9 +33,8 @@ public:
 public:
 	// notification_handler traits:
 	HWND get_hwnd() { return _hWnd; }
-	HINSTANCE get_resource_instance() { return hInst; }
+	HINSTANCE get_resource_instance() { return currentApp->GetInstance(); }
 
-	bool init(); // instance
 	bool isValid() const { return _hWnd != 0; }
 };
 

@@ -1,5 +1,5 @@
 #pragma once
+#include "stdafx.h"
 
-UIEXPORT_CFUNC(void *) JTUI_GetMainWindow();
-UIEXPORT_CFUNC(int) JTUI_RunMain();
-UIEXPORT_CFUNC(int) JTUI_RunMainWindow();
+UIEXPORT_CFUNC(int) JiYuTrainerUICommonEntry(int i);
+

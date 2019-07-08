@@ -4,17 +4,21 @@
 #include "resource.h"
 #include <string>
 #include "AppPublic.h"
-#include "PartsMD5.h"
 #include "SysHlp.h"
 #include "MD5Utils.h"
-#endif
+#include "MemoryModule.h"
 
+extern "C" int JiYuTrainerUICommonEntry(int i);
+
+#endif
 
 #define APP_TITLE L"JiYuTrainer"
 #define APP_FAIL_SYSTEM_NOT_SUPPORT -2
-#define APP_FAIL_MAIN_PART_BROKED -3
-#define APP_FAIL_MAIN_PART_LOADERR -4
+#define APP_FAIL_INSTALL -6
 #define APP_FAIL_ALEDAY_RUN -5
+
+typedef INT_PTR(WINAPI *fnDialogBoxParamW)(HINSTANCE hInstance, LPCWSTR lpTemplateName, HWND hWndParent, DLGPROC lpDialogFunc, LPARAM dwInitParam);
+extern "C" int WINAPI MessageBoxTimeoutW(IN HWND hWnd, IN LPCWSTR lpText, IN LPCWSTR lpCaption, IN UINT uType, IN WORD wLanguageId, IN DWORD dwMilliseconds);
 
 #ifdef JTEXPORT
 
@@ -25,8 +29,7 @@ public:
 	JTAppInternal(HINSTANCE hInstance);
 	~JTAppInternal();
 
-	int CheckInstall(APP_INSTALL_MODE mode);
-	int CheckMd5();
+	int CheckAndInstall();
 	void UnInstall();
 
 	EXTRACT_RES InstallResFile(HINSTANCE resModule, LPWSTR resId, LPCWSTR resType, LPCWSTR extractTo);
@@ -62,7 +65,7 @@ public:
 	SettingHlp* GetSettings() { return appSetting; };
 	bool GetSelfProtect() { return !appForceNoSelfProtect; }
 	TrainerWorker* GetTrainerWorker() { return appWorker; };
-	void* GetUtils(int utilsId);
+	void*GetSciterAPI() {	return pSciterAPI;}
 
 	LPVOID RunOperation(AppOperation op);
 private:
@@ -71,49 +74,11 @@ private:
 	std::wstring fullDir;
 	std::wstring fullSourceInstallerPath;
 	std::wstring fullIniPath;
+	std::wstring fullLogPath;
 	std::wstring fullArgBuffer;
 
-	std::wstring parts[PART_COUNT] = {
-		std::wstring(L"JiYuTrainer.exe"),
-		std::wstring(L"JiYuTrainer.bat"),
-		std::wstring(L"JiYuTrainerUInstall.bat"),
-		std::wstring(L"JiYuTrainerUI.dll"),
-		std::wstring(L"JiYuTrainerHooks.dll"), 
-		std::wstring(L"JiYuTrainerDriver.sys"),
-		std::wstring(L"JiYuTrainerUpdater.dll"),
-		std::wstring(L"sciter.dll"),
-	};
-	int partsResId[PART_COUNT] = {
-		0,
-		0,
-		0,
-		IDR_DLL_UI,
-		IDR_DLL_HOOKS,
-		IDR_DLL_DRIVER,
-		IDR_DLL_UPDATER,
-		IDR_DLL_SCITER,
-	};
-	LPCWSTR partsMd5Checks[PART_COUNT] = {
-		L"",
-		L"",
-		L"",
-		PART_MD5_UI,
-		PART_MD5_HOOKS,
-		PART_MD5_DRIVER,
-		PART_MD5_UPDATER,
-		PART_MD5_SCITER
-	};
-	LPCWSTR partsMd5CheckNames[PART_COUNT] = {
-		L"",
-		L"",
-		L"",
-		L"PART_MD5_UI",
-		L"PART_MD5_HOOKS",
-		L"PART_MD5_DRIVER",
-		L"PART_MD5_UPDATER",
-		L"PART_MD5_SCITER"
-	};
-	LPVOID utilsPointer[16];
+	std::wstring fullDriverPath;
+	std::wstring fullHookerPath;
 
 	enum AppStartType {
 		AppStartTypeNormal,
@@ -127,20 +92,21 @@ private:
 	static HINSTANCE hInstance;
 	int appStartType = AppStartTypeNormal;
 	std::wstring appStartErr;
+	HMEMORYMODULE pMemSciterdll = NULL;
+	PVOID pSciterAPI = NULL;
+	fnDialogBoxParamW _DialogBoxParamW = NULL;
 
 	bool appArgeementArgeed = false;
 	bool appForceNoSelfProtect = false;
-	bool appForceInstallInCurrentDir = false;
-	bool appForceNoDriver = false;
-	bool appArgForceNoInstall = false;
-	bool appArgForceCheckFileMd5 = false;
-	bool appArgForceTemp = false;
 	bool appArgInstallMode = false;
+	bool appForceNoDriver = false;
+	bool appForceIntallInCurrentDir = false;
+	bool appArgForceCheckFileMd5 = false;
 	bool appArgRemoveUpdater = false;
 	bool appArgBreak = false;
 	bool appNeedInstallIniTemple = false;
+	bool appIsInstaller = false;
 	bool appIsRecover = false;
-	bool appIsMd5CalcMode = false;
 	bool appIsConfigMode = false;
 	bool appIsHiddenMode = false;
 	bool appIsBugReportMode = false;
@@ -154,21 +120,17 @@ private:
 	Logger *appLogger = nullptr;
 	SettingHlp *appSetting = nullptr;
 	TrainerWorker *appWorker = nullptr;
-	SysHlp *appSysHlp = nullptr;
-	MD5Utils* appMD5Utils = nullptr;
 
-	void MergePathString(LPCWSTR path);
+	void MergePathString();
 	void InitPath();
 	void InitCommandLine();
 	void InitArgs();
 	void InitLogger();
 	void InitPrivileges();
 	void InitSettings();
-	void InitUtils();
 
 	int RunCheckRunningApp();
 	bool RunArgeementDialog();
-	bool RunMd5ShowDialog();
 
 	int RunInternal();
 	bool ExitInternal();
@@ -177,7 +139,6 @@ private:
 	static HFONT hFontRed;
 
 	static INT_PTR CALLBACK ArgeementWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-	static INT_PTR CALLBACK Md5ShowWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 
 	static LPTOP_LEVEL_EXCEPTION_FILTER __stdcall MyDummySetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter);
 	static BOOL PreventSetUnhandledExceptionFilter();
@@ -185,5 +146,6 @@ private:
 	static LONG GenerateMiniDump(PEXCEPTION_POINTERS pExInfo);
 	static BOOL GenerateCrashInfo(PEXCEPTION_POINTERS pExInfo, LPCWSTR info_file_name, LPCWSTR file_name, SYSTEMTIME tm, LPCWSTR);
 };
+
 
 #endif

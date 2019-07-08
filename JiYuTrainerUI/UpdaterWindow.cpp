@@ -7,6 +7,7 @@
 #include "JiYuTrainerUI.h"
 
 extern int screenWidth, screenHeight;
+extern MainWindow *currentMainWindow;
 
 UpdaterWindow::UpdaterWindow(HWND parentHWnd)
 {
@@ -14,7 +15,7 @@ UpdaterWindow::UpdaterWindow(HWND parentHWnd)
 
 	if(!initClass()) return;
 
-	_hWnd = CreateWindowExW(0, L"sciter-jytrainer-update-window", L"JiYu Trainer Update Window", WS_OVERLAPPEDWINDOW ^ (WS_SIZEBOX | WS_MAXIMIZEBOX | WS_MINIMIZEBOX), CW_USEDEFAULT, CW_USEDEFAULT, 430, 220, nullptr, nullptr, hInst, this);
+	_hWnd = CreateWindowExW(0, L"sciter-jytrainer-update-window", L"JiYu Trainer Update Window", WS_OVERLAPPEDWINDOW ^ (WS_SIZEBOX | WS_MAXIMIZEBOX | WS_MINIMIZEBOX), CW_USEDEFAULT, CW_USEDEFAULT, 430, 220, nullptr, nullptr, currentApp->GetInstance(), this);
 	if (!_hWnd) return;
 
 	init();
@@ -129,8 +130,8 @@ bool UpdaterWindow::initClass()
 	wcex.lpfnWndProc = wndProc;
 	wcex.cbClsExtra = 0;
 	wcex.cbWndExtra = 0;
-	wcex.hInstance = hInst;
-	wcex.hIcon = LoadIcon(hInst, MAKEINTRESOURCE(IDI_APP));
+	wcex.hInstance = currentApp->GetInstance();
+	wcex.hIcon = LoadIcon(currentApp->GetInstance(), MAKEINTRESOURCE(IDI_APP));
 	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
 	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
 	wcex.lpszMenuName = 0;//MAKEINTRESOURCE(IDC_PLAINWIN);
@@ -166,13 +167,13 @@ bool UpdaterWindow::init()
 	setup_callback(); // to receive SC_LOAD_DATA, SC_DATA_LOADED, etc. notification
 	attach_dom_event_handler(_hWnd, this); // to receive DOM events
 	BOOL result = FALSE;
-	HRSRC hResource = FindResource(hInst, MAKEINTRESOURCE(IDR_HTML_UPDATER), RT_HTML);
+	HRSRC hResource = FindResource(currentApp->GetInstance(), MAKEINTRESOURCE(IDR_HTML_UPDATER), RT_HTML);
 	if (hResource) {
-		HGLOBAL hg = LoadResource(hInst, hResource);
+		HGLOBAL hg = LoadResource(currentApp->GetInstance(), hResource);
 		if (hg) {
 			LPVOID pData = LockResource(hg);
 			if (pData)
-				result = load_html((LPCBYTE)pData, SizeofResource(hInst, hResource));
+				result = load_html((LPCBYTE)pData, SizeofResource(currentApp->GetInstance(), hResource));
 		}
 	}
 	return result;
@@ -223,6 +224,6 @@ void UpdaterWindow::OnUpdateDownloadCallback(LPCWSTR precent, int status)
 		progress_text.set_text(L"更新下载完成！");
 		SendMessage(_hWnd, WM_COMMAND, IDC_UPDATE_CLOSE, NULL);
 		if (JUpdater_RunInstallion())
-			SendMessage(((MainWindow *)JTUI_GetMainWindow())->get_hwnd(), WM_COMMAND, IDC_UPDATE_CLOSE, NULL);
+			SendMessage(currentMainWindow->get_hwnd(), WM_COMMAND, IDC_UPDATE_CLOSE, NULL);
 	}
 }

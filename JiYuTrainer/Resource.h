@@ -2,22 +2,11 @@
 // Microsoft Visual C++ 生成的包含文件。
 // 供 JiYuTrainer.rc 使用
 //
-#define IDC_MYICON                      2
-#define IDS_APP_TITLE                   103
-#define IDD_ABOUTBOX                    103
 #define IDD_DIALOG_ARGEEMENT            104
-#define IDM_ABOUT                       104
-#define IDM_EXIT                        105
-#define IDC_JIYUTRAINER                 109
-#define IDR_MAINFRAME                   128
 #define IDR_DLL_DRIVER                  130
 #define IDR_DLL_HOOKS                   131
-#define IDR_DLL_UI                      132
-#define IDR_DLL_UPDATER                 133
 #define IDR_DLL_SCITER                  134
-#define IDI_APP                         135
-#define IDD_DIALOG_MD5SHOW              136
-#define IDC_EDIT_MD5                    1000
+#define IDI_APP_MAIN                         135
 #define IDC_STATIC_RED                  32770
 #define IDC_STATIC                      -1
 

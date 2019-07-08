@@ -30,7 +30,7 @@ BOOL MRegForceDeleteServiceRegkey(LPWSTR lpszDriverName)
 	wsprintf(regPath, L"SYSTEM\\CurrentControlSet\\services\\%s", lpszDriverName);
 	rs = MRegDeleteKey(HKEY_LOCAL_MACHINE, regPath);
 
-	if (!rs) currentLogger->LogWarn(L"RegDeleteTree failed : %d in delete key HKEY_LOCAL_MACHINE\\%s", GetLastError(), regPath);
+	if (!rs) currentLogger->LogWarn2(L"RegDeleteTree failed : %d in delete key HKEY_LOCAL_MACHINE\\%s", GetLastError(), regPath);
 	else currentLogger->LogInfo(L"Service Key deleted : HKEY_LOCAL_MACHINE\\%s", regPath);
 
 	wchar_t regName[MAX_PATH];
@@ -40,7 +40,7 @@ BOOL MRegForceDeleteServiceRegkey(LPWSTR lpszDriverName)
 	rs = MRegDeleteKey(HKEY_LOCAL_MACHINE, regPath);
 
 	if (!rs) {
-		currentLogger->LogWarn(L"RegDeleteTree failed : %d in delete key HKEY_LOCAL_MACHINE\\%s", GetLastError(), regPath);
+		currentLogger->LogWarn2(L"RegDeleteTree failed : %d in delete key HKEY_LOCAL_MACHINE\\%s", GetLastError(), regPath);
 		rs = TRUE;
 	}
 	else currentLogger->LogInfo(L"Service Key deleted : HKEY_LOCAL_MACHINE\\%s", regPath);
@@ -67,7 +67,7 @@ RECREATE:
 	hServiceMgr = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 	if (hServiceMgr == NULL)
 	{
-		currentLogger->LogError(L"Load driver error in OpenSCManager : %d", GetLastError());
+		currentLogger->LogError2(L"Load driver error in OpenSCManager : %d", GetLastError());
 		bRet = FALSE;
 		goto BeforeLeave;
 	}
@@ -81,7 +81,7 @@ RECREATE:
 		dwRtn = GetLastError();
 		if (dwRtn == ERROR_SERVICE_MARKED_FOR_DELETE)
 		{
-			currentLogger->LogError(L"Load driver error in CreateService : ERROR_SERVICE_MARKED_FOR_DELETE");
+			currentLogger->LogError2(L"Load driver error in CreateService : ERROR_SERVICE_MARKED_FOR_DELETE");
 			if (!recreatee) {
 				recreatee = true;
 				if (hServiceDDK) CloseServiceHandle(hServiceDDK);
@@ -91,7 +91,7 @@ RECREATE:
 		}
 		if (dwRtn != ERROR_IO_PENDING && dwRtn != ERROR_SERVICE_EXISTS)
 		{
-			currentLogger->LogError(L"Load driver error in CreateService : %d", dwRtn);
+			currentLogger->LogError2(L"Load driver error in CreateService : %d", dwRtn);
 			bRet = FALSE;
 			goto BeforeLeave;
 		}
@@ -99,7 +99,7 @@ RECREATE:
 		if (hServiceDDK == NULL)
 		{
 			dwRtn = GetLastError();
-			currentLogger->LogError(L"Load driver error in OpenService : %d", dwRtn);
+			currentLogger->LogError2(L"Load driver error in OpenService : %d", dwRtn);
 			bRet = FALSE;
 			goto BeforeLeave;
 		}
@@ -110,7 +110,7 @@ RECREATE:
 		DWORD dwRtn = GetLastError();
 		if (dwRtn != ERROR_IO_PENDING && dwRtn != ERROR_SERVICE_ALREADY_RUNNING)
 		{
-			currentLogger->LogError(L"Load driver error in StartService : %d", dwRtn);
+			currentLogger->LogError2(L"Load driver error in StartService : %d", dwRtn);
 			bRet = FALSE;
 			goto BeforeLeave;
 		}
@@ -152,7 +152,7 @@ BOOL MUnLoadKernelDriver(const wchar_t* szSvrName)
 	hServiceMgr = OpenSCManager(NULL, NULL, SC_MANAGER_ALL_ACCESS);
 	if (hServiceMgr == NULL)
 	{
-		currentLogger->LogError(L"UnLoad driver error in OpenSCManager : %d", GetLastError());
+		currentLogger->LogError2(L"UnLoad driver error in OpenSCManager : %d", GetLastError());
 		bRet = FALSE;
 		goto BeforeLeave;
 	}
@@ -162,17 +162,17 @@ BOOL MUnLoadKernelDriver(const wchar_t* szSvrName)
 	{
 		if (GetLastError() == ERROR_SERVICE_DOES_NOT_EXIST)
 			currentLogger->LogWarn(L"UnLoad driver error because driver not load.");
-		else currentLogger->LogError(L"UnLoad driver error in OpenService : %d", GetLastError());
+		else currentLogger->LogError2(L"UnLoad driver error in OpenService : %d", GetLastError());
 		bRet = FALSE;
 		goto BeforeLeave;
 	}
 	//停止驱动程序，如果停止失败，只有重新启动才能，再动态加载。 
 	if (!ControlService(hServiceDDK, SERVICE_CONTROL_STOP, &SvrSta)) {
-		currentLogger->LogError(L"UnLoad driver error in ControlService : %d", GetLastError());
+		currentLogger->LogError2(L"UnLoad driver error in ControlService : %d", GetLastError());
 	}
 	//动态卸载驱动程序。 
 	if (!DeleteService(hServiceDDK)) {
-		currentLogger->LogError(L"UnLoad driver error in DeleteService : %d", GetLastError());
+		currentLogger->LogError2(L"UnLoad driver error in DeleteService : %d", GetLastError());
 		bRet = FALSE;
 	}
 	else bDeleted = TRUE;
@@ -213,38 +213,50 @@ BOOL XInitSelfProtect()
 }
 BOOL XLoadDriver() {
 
-	SysHlp * sysHlp = (SysHlp*)currentApp->GetUtils(UTILS_SYSHLP);
+	bool isWin7 = SysHlp::GetSystemVersion() == SystemVersionWindows7OrLater;
+	bool isXp = SysHlp::GetSystemVersion() == SystemVersionWindowsXP;
 
-	bool isWin7 = sysHlp->GetSystemVersion() == SystemVersionWindows7OrLater;
-	bool isXp = sysHlp->GetSystemVersion() == SystemVersionWindowsXP;
-
-	if (sysHlp->Is64BitOS())
+	if (SysHlp::Is64BitOS()) {
+		currentLogger->LogWarn(L"驱动不支持 64位 系统");
 		return FALSE;
-	if (!sysHlp->IsRunasAdmin() && !isXp)
+	}
+	if (!SysHlp::IsRunasAdmin() && !isXp) {
+		currentLogger->LogWarn(L"要加载驱动，请以管理员身份运行本程序");
 		return FALSE;
+	}
 
 	if (MLoadKernelDriver(L"JiYuTrainerDriver", currentApp->GetPartFullPath(PART_DRIVER), NULL))
 	{
 		if (XOpenDriver()) {
+			
+			ULONG sysBulidVersion = SysHlp::GetWindowsBulidVersion();
+
+			currentLogger->Log(L"Windows Bulid version %d", sysBulidVersion);
+			KFSendDriverinitParam(isXp, isWin7, sysBulidVersion);
+			
 			currentLogger->LogInfo(L"驱动加载成功");
-			KFSendDriverinitParam(isXp, isWin7);
 			return TRUE;
 		}
-		else currentLogger->LogWarn(L"驱动加载成功，但打开驱动失败");
+		else currentLogger->LogWarn2(L"驱动加载成功，但打开驱动失败");
 	}
 
 	return FALSE;
 }
 BOOL XCloseDriverHandle() {
 	if (hKDrv) {
+		KFUnInstallSelfProtect();
 		CloseHandle(hKDrv);
 		hKDrv = nullptr;
 		return TRUE;
 	}
 	return FALSE;
 }
-BOOL XUnLoadDriver() {
-	if (XDriverLoaded())
+BOOL XUnLoadDriver()
+{
+	if (XDriverLoaded()) 
+	{
+		KFBeforeUnInitDriver();
 		return MUnLoadKernelDriver(L"JiYuTrainerDriver");
+	}
 	return TRUE;
 }
