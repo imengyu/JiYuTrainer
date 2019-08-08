@@ -14,6 +14,7 @@ extern "C" int JiYuTrainerUICommonEntry(int i);
 
 #define APP_TITLE L"JiYuTrainer"
 #define APP_FAIL_SYSTEM_NOT_SUPPORT -2
+#define APP_FAIL_PIRACY_VERSION -3
 #define APP_FAIL_INSTALL -6
 #define APP_FAIL_ALEDAY_RUN -5
 
@@ -47,6 +48,8 @@ public:
 	void Exit(int code);
 
 	void LoadDriver();
+
+
 
 	HINSTANCE GetInstance() {
 		return hInstance;
@@ -120,6 +123,7 @@ private:
 	Logger *appLogger = nullptr;
 	SettingHlp *appSetting = nullptr;
 	TrainerWorker *appWorker = nullptr;
+	MD5Utils * appMd5Utils = nullptr;
 
 	void MergePathString();
 	void InitPath();
@@ -129,6 +133,7 @@ private:
 	void InitPrivileges();
 	void InitSettings();
 
+	bool CheckAppCorrectness();
 	int RunCheckRunningApp();
 	bool RunArgeementDialog();
 

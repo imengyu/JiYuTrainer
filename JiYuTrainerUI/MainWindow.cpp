@@ -310,18 +310,6 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 			currentApp->RunOperation(AppOperation2);
 		}
 		else if (cmd == L"inspector") sciter::dom::element(get_root()).call_function("runInspector");
-		else if (cmd == L"md5") {
-			if (len >= 2) {
-				LPCWSTR filePath = (cmds)[1].c_str();
-				if (Path::Exists(filePath)) {
-					std::wstring *md5Sting = MD5Utils::GetFileMD5(filePath);
-					currentLogger->Log(L"MD5 : %s", md5Sting->c_str());
-					FreeStringPtr(md5Sting);
-				}
-				else currentLogger->LogError(L"文件不存在");
-			}
-			else currentLogger->LogError(L"缺少参数 (filePath)");
-		}
 		else if (cmd == L"whereisi") {
 			currentLogger->Log(L"本程序路径是：%s", currentApp->GetFullPath());
 		}

@@ -30,8 +30,17 @@ INT_PTR CALLBACK SettingsDlgFunc(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 		SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)LoadIcon(currentApp->GetInstance(), MAKEINTRESOURCE(IDI_APP)));
 		SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)LoadIcon(currentApp->GetInstance(), MAKEINTRESOURCE(IDI_APP)));
 
-		CheckDlgButton(hDlg, IDC_CHECK_INI_0, currentSettings->GetSettingBool(L"DisableDriver", false) ? BST_CHECKED : BST_UNCHECKED);
-		CheckDlgButton(hDlg, IDC_CHECK_INI_1, currentSettings->GetSettingBool(L"SelfProtect", true) ? BST_CHECKED : BST_UNCHECKED);
+		if (SysHlp::Is64BitOS())
+		{
+			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_INI_0), FALSE);
+			EnableWindow(GetDlgItem(hDlg, IDC_CHECK_INI_1), FALSE);
+			CheckDlgButton(hDlg, IDC_CHECK_INI_0, BST_CHECKED);
+		}
+		else
+		{
+			CheckDlgButton(hDlg, IDC_CHECK_INI_0, currentSettings->GetSettingBool(L"DisableDriver", false) ? BST_CHECKED : BST_UNCHECKED);
+			CheckDlgButton(hDlg, IDC_CHECK_INI_1, currentSettings->GetSettingBool(L"SelfProtect", true) ? BST_CHECKED : BST_UNCHECKED);
+		}
 		CheckDlgButton(hDlg, IDC_CHECK_INI_2, currentSettings->GetSettingBool(L"BandAllRunOp", false) ? BST_CHECKED : BST_UNCHECKED);
 		CheckDlgButton(hDlg, IDC_CHECK_INI_3, currentSettings->GetSettingBool(L"AlwaysCheckUpdate", false) ? BST_CHECKED : BST_UNCHECKED);
 		CheckDlgButton(hDlg, IDC_CHECK_INI_4, currentSettings->GetSettingBool(L"DoNotShowVirusWindow", false) ? BST_CHECKED : BST_UNCHECKED);
@@ -69,6 +78,16 @@ INT_PTR CALLBACK SettingsDlgFunc(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 			EndDialog(hDlg, LOWORD(wParam));
 			return TRUE;
 		}
+		if (LOWORD(wParam) == IDC_CHECK_INI_0) {
+			if (IsDlgButtonChecked(hDlg, IDC_CHECK_INI_0)) {
+				EnableWindow(GetDlgItem(hDlg, IDC_CHECK_INI_1), FALSE);
+				CheckDlgButton(hDlg, IDC_CHECK_INI_1, BST_UNCHECKED);
+			}
+			else {
+				EnableWindow(GetDlgItem(hDlg, IDC_CHECK_INI_1), TRUE);
+				CheckDlgButton(hDlg, IDC_CHECK_INI_1, currentSettings->GetSettingBool(L"SelfProtect", true) ? BST_CHECKED : BST_UNCHECKED);
+			}
+		}
 		if (LOWORD(wParam) == IDC_SAVE) {
 			if (IsDlgButtonChecked(hDlg, IDC_KILLPROC_TP))
 				currentSettings->SetSettingStr(L"KillProcess", L"TerminateProcess");
@@ -77,8 +96,11 @@ INT_PTR CALLBACK SettingsDlgFunc(HWND hDlg, UINT message, WPARAM wParam, LPARAM 
 			else if (IsDlgButtonChecked(hDlg, IDC_KILLPROC_PPTP_APC))
 				currentSettings->SetSettingStr(L"KillProcess", L"KernelMode");
 
-			currentSettings->SetSettingBool(L"DisableDriver", IsDlgButtonChecked(hDlg, IDC_CHECK_INI_0));
-			currentSettings->SetSettingBool(L"SelfProtect", IsDlgButtonChecked(hDlg, IDC_CHECK_INI_1));
+			if (!SysHlp::Is64BitOS()) 
+			{
+				currentSettings->SetSettingBool(L"DisableDriver", IsDlgButtonChecked(hDlg, IDC_CHECK_INI_0));
+				currentSettings->SetSettingBool(L"SelfProtect", IsDlgButtonChecked(hDlg, IDC_CHECK_INI_1));
+			}
 			currentSettings->SetSettingBool(L"BandAllRunOp", IsDlgButtonChecked(hDlg, IDC_CHECK_INI_2));
 			currentSettings->SetSettingBool(L"AlwaysCheckUpdate", IsDlgButtonChecked(hDlg, IDC_CHECK_INI_3));
 			currentSettings->SetSettingBool(L"DoNotShowVirusWindow", IsDlgButtonChecked(hDlg, IDC_CHECK_INI_4));

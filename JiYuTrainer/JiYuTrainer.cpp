@@ -32,6 +32,8 @@ EXPORT_CFUNC(VOID) ShowAppStartupFail(int rs) {
 		MessageBox(NULL, L"运行本程序最低要求 Windows XP，请使用更高版本的系统", L"JiYuTrainer - 错误", MB_ICONERROR);
 	else if (rs == APP_FAIL_ALEDAY_RUN)
 		MessageBox(0, L"已经有一个程序正在运行，同时只能运行一个实例，请关闭之前那个", L"JiYuTrainer - 错误", MB_ICONERROR);
+	else if (rs == APP_FAIL_PIRACY_VERSION)
+		MessageBox(0, L"您可能是盗版软件的受害者，您现在运行的是被修改过的 JiYuTrainer ，我们建议您至官网下载使用安全版本。", L"JiYuTrainer - 错误", MB_ICONERROR);
 	else if (rs == APP_FAIL_INSTALL) {
 		FAST_STR_BINDER(err, L"安装失败，具体错误请查看日志文件 : %s", 300, currentApp->GetPartFullPath(PART_LOG));
 		MessageBox(0, err, L"JiYuTrainer - 错误", MB_ICONERROR);

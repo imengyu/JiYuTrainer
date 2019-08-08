@@ -256,6 +256,9 @@ int JTAppInternal::RunInternal()
 	InitArgs();
 	InitSettings();
 
+	if (!CheckAppCorrectness())
+		return APP_FAIL_PIRACY_VERSION;
+
 	if (appArgBreak) {
 #ifdef _DEBUG
 		if (MessageBox(NULL, L"This is a Debug version", L"JiYuTrainer - Debug Break", MB_YESNO | MB_ICONEXCLAMATION) == IDYES)
@@ -397,6 +400,28 @@ void JTAppInternal::LoadDriver()
 	if (!appForceNoDriver && XLoadDriver())
 		if (!appForceNoSelfProtect && !XInitSelfProtect())
 			currentLogger->LogWarn(L"驱动自我保护失败！");
+}
+bool JTAppInternal::CheckAppCorrectness() 
+{
+	if(appSetting->GetSettingStr(L"IgnoreCorrectness") == L"20190711")
+		return true;
+
+	SYSTEMTIME time;
+	HANDLE hFileRead = CreateFileW(fullPath.c_str(), GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+
+	FILETIME file_time;
+	FILETIME locationtime;
+
+	GetFileTime(hFileRead, NULL, NULL, &file_time);//获得文件修改时间  
+	FileTimeToLocalFileTime(&file_time, &locationtime);//将文件时间转换为本地文件时间  
+	FileTimeToSystemTime(&locationtime, &time);
+
+	CloseHandle(hFileRead);
+
+	if (time.wYear > 2019 || time.wMonth > 7 || time.wDay > 11)
+		return false;
+
+	return true;
 }
 
 void JTAppInternal::MergePathString()
