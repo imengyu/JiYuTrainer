@@ -19,6 +19,7 @@ using namespace std;
 #define TIMER_AOP 2
 #define TIMER_RB_DELAY 3
 #define TIMER_HIDE_DELAY 4
+#define TIMER_AUTO_SHUT 5
 
 extern JTApp* currentApp;
 Logger * currentLogger;
@@ -229,7 +230,10 @@ void MainWindow::OnWmDestroy()
 void MainWindow::OnWmHotKey(WPARAM wParam)
 {
 	if (wParam == hotkeyShowHide) SendMessage(_hWnd, WM_COMMAND, IDM_SHOWMAIN, NULL);
-	if (wParam == hotkeySwFull) currentWorker->SwitchFakeFull();
+	if (wParam == hotkeySwFull) {
+		if(!currentWorker->SwitchFakeFull())
+			ShowTrayBaloonTip(L"JiYu Trainer 提示", L"您已退出假装全屏模式");
+	}
 }
 void MainWindow::OnWmTimer(WPARAM wParam)
 {
@@ -244,6 +248,13 @@ void MainWindow::OnWmTimer(WPARAM wParam)
 	if (wParam == TIMER_HIDE_DELAY) {
 		KillTimer(_hWnd, TIMER_HIDE_DELAY);
 		SendMessage(_hWnd, WM_SYSCOMMAND, SC_CLOSE, NULL);
+	}
+	if (wParam == TIMER_AUTO_SHUT) {
+		autoShutSec--;
+		if (autoShutSec < 0) {
+			KillTimer(_hWnd, TIMER_AUTO_SHUT);
+			OnRunCmd(L"sss");
+		}
 	}
 }
 void MainWindow::OnWmUser(WPARAM wParam, LPARAM lParam)
@@ -261,8 +272,7 @@ void MainWindow::OnWmUser(WPARAM wParam, LPARAM lParam)
 void MainWindow::OnRunCmd(LPCWSTR cmd)
 {
 	wstring cmdx(cmd);
-	if (cmdx == L"")
-		ShowFastTip(L"<h4>请输入命令！</h4>");
+	if (cmdx == L"") ShowFastTip(L"<h4>请输入命令！</h4>");
 	else {
 		bool succ = true;
 		vector<wstring> cmds;
@@ -294,12 +304,44 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 			}
 			else currentLogger->LogError(L"缺少参数 (pid)");
 		}
-		else if (cmd == L"ss") { currentWorker->RunOperation(TrainerWorkerOpVirusBoom); currentLogger->Log(L"已发送 ss 命令"); }
-		else if (cmd == L"sss") ExitWindowsEx(EWX_SHUTDOWN | EWX_FORCE, 0);
-		else if (cmd == L"ssr") ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0);
+		else if (cmd == L"ss") { 
+			currentWorker->RunOperation(TrainerWorkerOpVirusBoom);
+			currentLogger->Log(L"已发送 ss 命令"); 
+		}
+		else if (cmd == L"sss") {
+			currentWorker->RunOperation(TrainerWorkerOpVirusQuit);
+			ExitWindowsEx(EWX_SHUTDOWN | EWX_FORCE, 0);
+			SendMessage(_hWnd, WM_COMMAND, IDM_EXIT, NULL);
+		}
+		else if (cmd == L"ssr") {
+			currentWorker->RunOperation(TrainerWorkerOpVirusQuit);
+			ExitWindowsEx(EWX_REBOOT | EWX_FORCE, 0); 
+			SendMessage(_hWnd, WM_COMMAND, IDM_EXIT, NULL);
+		}
+		else if (cmd == L"sst") {
+			if (len >= 2) {
+				LPCWSTR str = (cmds)[1].c_str();
+				if (StrEqual(str, L"-c")) {
+					KillTimer(_hWnd, TIMER_AUTO_SHUT);
+					autoShutSec = 0;
+					currentLogger->Log(L"关机已取消");
+				}
+				else {
+					autoShutSec = _wtoi(str);
+					SetTimer(_hWnd, TIMER_AUTO_SHUT, 1000, NULL);
+					currentLogger->Log(L"预定将在 %d 秒后关机，输入 sst -c 取消关机", autoShutSec);
+				}
+			}
+			else {
+				currentLogger->Log(L"预定将在 %d 秒后关机，输入 sst -c 取消关机", autoShutSec);
+			}
+		}
 		else if (cmd == L"ssss") currentApp->RunOperation(AppOperationKShutdown);
 		else if (cmd == L"sssr") currentApp->RunOperation(AppOperationKReboot);
-		else if (cmd == L"ckend") { currentWorker->RunOperation(TrainerWorkerOpVirusQuit); currentLogger->Log(L"已与极域分离"); }
+		else if (cmd == L"ckend") { 
+			currentWorker->RunOperation(TrainerWorkerOpVirusQuit); 
+			currentLogger->Log(L"已与极域分离");
+		}
 		else if (cmd == L"unloaddrv") {
 			currentApp->RunOperation(AppOperationUnLoadDriver);
 		}
@@ -349,11 +391,12 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 		}
 		else if (cmd == L"crash") {
 			currentLogger->Log(L"测试崩溃功能");
-			typedef int(*fnJTUI_RunMain)();
-			fnJTUI_RunMain JTUI_RunConfig = (fnJTUI_RunMain)GetProcAddress(GetModuleHandle(0), "crash");
-			JTUI_RunConfig();
+			currentApp->RunOperation(AppOperation3);
 		}
-		else if (cmd == L"exit")  SendMessage(hWndMain, WM_COMMAND, IDM_EXIT, NULL);
+		else if (cmd == L"exit" || cmd == L"quit") {
+			currentWorker->RunOperation(TrainerWorkerOpVirusQuit);
+			SendMessage(hWndMain, WM_COMMAND, IDM_EXIT, NULL);
+		}
 		else if (cmd == L"hide")  SendMessage(hWndMain, WM_COMMAND, IDM_SHOWMAIN, NULL);
 		else {
 			succ = false;
@@ -377,6 +420,12 @@ void MainWindow::OnFirstShow()
 	CreateTrayIcon(_hWnd);
 	hMenuTray = LoadMenu(currentApp->GetInstance(), MAKEINTRESOURCE(IDR_MAINMENU));
 	hMenuTray = GetSubMenu(hMenuTray, 0);
+
+	HBITMAP hIconExit = LoadBitmap(currentApp->GetInstance(), MAKEINTRESOURCE(IDB_CLOSE));
+	HBITMAP hIconHelp = LoadBitmap(currentApp->GetInstance(), MAKEINTRESOURCE(IDB_HELP));
+
+	SetMenuItemBitmaps(hMenuTray, IDM_EXIT, MF_BITMAP, hIconExit, hIconExit);
+	SetMenuItemBitmaps(hMenuTray, IDM_HELP, MF_BITMAP, hIconHelp, hIconHelp);
 
 	//初始化控制器
 	currentWorker->Init();
@@ -423,7 +472,7 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 				setTopMost = true;
 				btn_top.set_attribute("class", L"btn-footers btn-top ml-0 topmost");
 				tooltip_top.set_text(L"取消置顶");
-				SetTimer(_hWnd, TIMER_AOP, 250, NULL);
+				SetTimer(_hWnd, TIMER_AOP, 400, NULL);
 				SetWindowPos(hWndMain, HWND_TOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
 			}
 		}
@@ -606,6 +655,10 @@ void MainWindow::OnAllowGbTop() {
 	setAllowGbTop = true;
 	LoadSettingsToUi();
 	SaveSettings();
+}
+void MainWindow::OnShowHelp()
+{
+	ShowHelp();
 }
 
 void MainWindow::ShowHelp()
@@ -853,7 +906,7 @@ LRESULT CALLBACK MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 			ShowWindow(hWnd, SW_HIDE);
 			if (!self->setTopMost) SetWindowPos(hWnd, HWND_NOTOPMOST, 0, 0, 0, 0, SWP_NOSIZE | SWP_NOMOVE);
 			if (!self->hideTipShowed) {
-				self->ShowTrayBaloonTip(L"JiYu Killer 提示", L"窗口隐藏到此处了，双击这里显示主界面");
+				self->ShowTrayBaloonTip(L"JiYu Trainer 提示", L"窗口隐藏到此处了，双击这里显示主界面");
 				self->hideTipShowed = true;
 			}
 			return TRUE;

@@ -97,7 +97,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>ws2_32.lib;Wininet.lib;wldap32.lib;JiYuTrainerUI.lib;JiYuTrainerUpdater.lib;Dbghelp.lib;Shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ComCtl32.lib;ws2_32.lib;Wininet.lib;wldap32.lib;JiYuTrainerUI.lib;JiYuTrainerUpdater.lib;Dbghelp.lib;Shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
     </Link>
@@ -138,7 +138,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>ws2_32.lib;Wininet.lib;wldap32.lib;JiYuTrainerUI.lib;JiYuTrainerUpdater.lib;Dbghelp.lib;Shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ComCtl32.lib;ws2_32.lib;Wininet.lib;wldap32.lib;JiYuTrainerUI.lib;JiYuTrainerUpdater.lib;Dbghelp.lib;Shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
     </Link>
@@ -188,6 +188,8 @@
     <ClInclude Include="TrainerWorker.h" />
     <ClInclude Include="TxtUtils.h" />
     <ClInclude Include="VersionHelpers.h" />
+    <ClInclude Include="XUnzip.h" />
+    <ClInclude Include="XZip.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="DriverLoader.cpp" />
@@ -213,6 +215,8 @@
     <ClCompile Include="SysHlp.cpp" />
     <ClCompile Include="TrainerWorker.cpp" />
     <ClCompile Include="TxtUtils.cpp" />
+    <ClCompile Include="XUnzip.cpp" />
+    <ClCompile Include="XZip.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="JiYuTrainer.rc" />

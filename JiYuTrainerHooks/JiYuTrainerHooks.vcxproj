@@ -95,7 +95,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Version.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -129,7 +129,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Version.lib;shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -189,6 +189,17 @@
     <Image Include="..\..\..\..\图片\编程素材\icoGrey.bmp" />
     <Image Include="..\..\..\..\图片\编程素材\icoRed.bmp" />
     <Image Include="..\..\..\..\图片\编程素材\图标\ico161.ico" />
+    <Image Include="..\..\..\..\图片\编程素材\图标\icon1.ico" />
+    <Image Include="..\JiYuTrainerLogo.ico" />
+    <Image Include="..\JiYuTrainerUI\res\close-small.bmp" />
+    <Image Include="..\JiYuTrainerUI\res\close.ico" />
+    <Image Include="..\JiYuTrainerUI\res\help-small.bmp" />
+    <Image Include="..\JiYuTrainerUI\res\help.ico" />
+    <Image Include="..\JiYuTrainerUI\res\icoGreen.bmp" />
+    <Image Include="..\JiYuTrainerUI\res\icoGrey.bmp" />
+    <Image Include="..\JiYuTrainerUI\res\icon-main-small.bmp" />
+    <Image Include="..\JiYuTrainerUI\res\icoRed.bmp" />
+    <Image Include="..\JiYuTrainerUI\res\warn.ico" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

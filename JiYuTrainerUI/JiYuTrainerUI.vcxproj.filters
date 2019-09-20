@@ -159,6 +159,18 @@
     <Image Include="res\link-icons.png">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="res\close.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\help.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\close-small.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="res\help-small.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
   <ItemGroup>
     <None Include="MainWindow.html" />

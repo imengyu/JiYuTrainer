@@ -165,13 +165,14 @@ void TrainerWorkerInternal::HandleMessageFromVirus(LPCWSTR buf)
 			}
 			else if (arr[1] == L"gbuntop") ManualTop(false);
 			else if (arr[1] == L"gbtop") ManualTop(true);
+			else if (arr[1] == L"showhelp" && _Callback) _Callback->OnShowHelp();
 		}
 		else if (arr[0] == L"wcd")
 		{
 			//wwcd
 			int wcdc = _wtoi(arr[1].c_str());
 			if (wcdc % 20 == 0)
-				currentLogger->LogInfo(L"Receive  watch dog message %d ", wcdc);
+				currentLogger->LogInfo(L"Receive watch dog message %d ", wcdc);
 		}
 		else if (arr[0] == L"vback") {
 			wstring strBuff = arr[1];
@@ -824,7 +825,7 @@ bool TrainerWorkerInternal::UnLoadAllVirus()
 	return false;
 }
 
-void TrainerWorkerInternal::SwitchFakeFull()
+bool TrainerWorkerInternal::SwitchFakeFull()
 {
 	if (_FakeFull) { 
 		_FakeFull = false; 
@@ -836,6 +837,8 @@ void TrainerWorkerInternal::SwitchFakeFull()
 		SendMessageToVirus(L"hk:fkfull:true");
 		FakeFull(_FakeFull);
 	}
+
+	return _FakeFull;
 }
 void TrainerWorkerInternal::FakeFull(bool fk) {
 	if (_CurrentBroadcastWnd)

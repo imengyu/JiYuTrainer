@@ -1,3 +1,4 @@
+#include "DriverLoader.h"
 #include "stdafx.h"
 #include "DriverLoader.h"
 #include "JiYuTrainer.h"
@@ -207,11 +208,7 @@ BOOL XDriverLoaded() {
 	return hKDrv != NULL;
 }
 
-BOOL XInitSelfProtect()
-{
-	return KFInstallSelfProtect();
-}
-BOOL XLoadDriver() {
+BOOL XTestDriverCanUse() {
 
 	bool isWin7 = SysHlp::GetSystemVersion() == SystemVersionWindows7OrLater;
 	bool isXp = SysHlp::GetSystemVersion() == SystemVersionWindowsXP;
@@ -225,10 +222,21 @@ BOOL XLoadDriver() {
 		return FALSE;
 	}
 
+	return TRUE;
+}
+BOOL XInitSelfProtect()
+{
+	return KFInstallSelfProtect();
+}
+BOOL XLoadDriver() {
+
+	if(!XTestDriverCanUse()) return FALSE;
 	if (MLoadKernelDriver(L"JiYuTrainerDriver", currentApp->GetPartFullPath(PART_DRIVER), NULL))
 	{
 		if (XOpenDriver()) {
-			
+
+			bool isWin7 = SysHlp::GetSystemVersion() == SystemVersionWindows7OrLater;
+			bool isXp = SysHlp::GetSystemVersion() == SystemVersionWindowsXP;
 			ULONG sysBulidVersion = SysHlp::GetWindowsBulidVersion();
 
 			currentLogger->Log(L"Windows Bulid version %d", sysBulidVersion);

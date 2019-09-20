@@ -99,8 +99,6 @@ void LoggerInternal::SetLogLevel(LogLevel level)
 }
 void LoggerInternal::SetLogOutPut(LogOutPut output)
 {
-	if (this->outPut == LogOutPutFile && output != LogOutPutFile)
-		CloseLogFile();
 	this->outPut = output;
 }
 void LoggerInternal::SetLogOutPutFile(const wchar_t * filePath)
@@ -155,9 +153,9 @@ void LoggerInternal::LogInternal(LogLevel level, const wchar_t * str, va_list ar
 	wstring format1 = FormatString(L"[%02d:%02d:%02d] [%s] %s\n", tm_log.tm_hour, tm_log.tm_min, tm_log.tm_sec, levelStr, str);
 	wstring out = FormatString(format1.c_str(), arg);
 
-	LogOutput(level, out.c_str());
+	LogOutput(level, out.c_str(), out.size());
 }
-void LoggerInternal::LogOutput(LogLevel level, const wchar_t * str)
+void LoggerInternal::LogOutput(LogLevel level, const wchar_t * str, size_t len)
 {
 #if _DEBUG
 	OutputDebugString(str);
@@ -166,7 +164,7 @@ void LoggerInternal::LogOutput(LogLevel level, const wchar_t * str)
 		OutputDebugString(str);
 #endif
 	if (outPut == LogOutPutFile && logFile)
-		fwprintf_s(logFile, str);
+		fwprintf_s(logFile, L"%s", str);
 	else if (outPut == LogOutPutCallback && callBack)
 		callBack(str, level, callBackData);
 	else

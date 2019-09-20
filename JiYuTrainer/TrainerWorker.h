@@ -33,6 +33,7 @@ public:
 	virtual void OnSimpleMessageCallback(LPCWSTR text) {}
 	virtual void OnBeforeSendStartConf() {}
 	virtual void OnAllowGbTop() {}
+	virtual void OnShowHelp() {}
 	virtual void OnSwitchLockStatus(bool locked) {}
 	virtual HWND GetMainHWND() { return NULL; }
 };
@@ -50,7 +51,7 @@ public:
 	virtual void Stop() {}
 	virtual bool Running() { return false; }
 	virtual void* RunOperation(TrainerWorkerOp op) { return nullptr; }
-	virtual void SwitchFakeFull() {}
+	virtual bool SwitchFakeFull() { return false; }
 	virtual bool FindProcess(LPCWSTR processName, DWORD*outPid) { return false; }
 	virtual bool KillProcess(DWORD pid, bool force){ return false; }
 
@@ -154,7 +155,7 @@ private:
 
 	/*Window resolver*/
 
-	void SwitchFakeFull();
+	bool SwitchFakeFull();
 	void FakeFull(bool fk);
 	void ManualFull(bool fk);
 	void ManualTop(bool fk);

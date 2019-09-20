@@ -33,6 +33,8 @@ public:
 	int CheckAndInstall();
 	void UnInstall();
 
+	BOOL InstallSciter();
+
 	EXTRACT_RES InstallResFile(HINSTANCE resModule, LPWSTR resId, LPCWSTR resType, LPCWSTR extractTo);
 
 	LPWSTR *GetCommandLineArray() { return appArgList; };
@@ -71,6 +73,7 @@ public:
 	void*GetSciterAPI() {	return pSciterAPI;}
 
 	LPVOID RunOperation(AppOperation op);
+
 private:
 
 	std::wstring fullPath;
@@ -82,6 +85,7 @@ private:
 
 	std::wstring fullDriverPath;
 	std::wstring fullHookerPath;
+	std::wstring fullSciterPath;
 
 	enum AppStartType {
 		AppStartTypeNormal,
@@ -113,6 +117,7 @@ private:
 	bool appIsConfigMode = false;
 	bool appIsHiddenMode = false;
 	bool appIsBugReportMode = false;
+	bool appCrashTestMode = false;
 
 	int appShowCmd = 0;
 	std::wstring updaterPath;
@@ -133,6 +138,13 @@ private:
 	void InitPrivileges();
 	void InitSettings();
 
+	HANDLE hActCtx = nullptr;
+	ACTCTX actCtx;
+	ULONG_PTR cookie;
+
+	void EnableVisualStyles();
+	void DisableVisualStyles();
+
 	bool CheckAppCorrectness();
 	int RunCheckRunningApp();
 	bool RunArgeementDialog();
@@ -144,12 +156,6 @@ private:
 	static HFONT hFontRed;
 
 	static INT_PTR CALLBACK ArgeementWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
-
-	static LPTOP_LEVEL_EXCEPTION_FILTER __stdcall MyDummySetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter);
-	static BOOL PreventSetUnhandledExceptionFilter();
-	static LONG WINAPI UnhandledExceptionFilter(PEXCEPTION_POINTERS pExInfo);
-	static LONG GenerateMiniDump(PEXCEPTION_POINTERS pExInfo);
-	static BOOL GenerateCrashInfo(PEXCEPTION_POINTERS pExInfo, LPCWSTR info_file_name, LPCWSTR file_name, SYSTEMTIME tm, LPCWSTR);
 };
 
 

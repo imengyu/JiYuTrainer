@@ -67,6 +67,8 @@ LPCWSTR SysHlp::ConvertErrorCodeToString(DWORD ErrorCode)
 	FormatMessage(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_IGNORE_INSERTS | FORMAT_MESSAGE_FROM_SYSTEM,
 		NULL, ErrorCode, 0, (LPWSTR)&LocalAddress, 0, NULL);
 	szErrorCodeBuffer = (LPCWSTR)LocalAddress;
+	if (szErrorCodeBuffer.size() >= 2 && szErrorCodeBuffer.substr(szErrorCodeBuffer.size() - 2, 2) == L"\r\n")
+		szErrorCodeBuffer = szErrorCodeBuffer.substr(0, szErrorCodeBuffer.size() - 2);
 	LocalFree(LocalAddress);
 	return szErrorCodeBuffer.c_str();
 }

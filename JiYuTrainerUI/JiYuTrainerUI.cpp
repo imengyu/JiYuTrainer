@@ -11,6 +11,7 @@
 #include "JiYuTrainerUI.h"
 
 MainWindow *currentMainWindow = nullptr;
+extern JTApp * currentApp;
 
 int JiYuTrainerUIRunMain()
 {
@@ -43,12 +44,14 @@ int JiYuTrainerUIRunBugReport()
 
 UIEXPORT_CFUNC(int) JiYuTrainerUICommonEntry(int i)
 {
+	SetUnhandledExceptionFilter(AppUnhandledExceptionFilter);
 	switch (i)
 	{
 	case 0: return JiYuTrainerUIRunMain();
 	case 1: return JiYuTrainerUIRunUpdate();
 	case 2: return JiYuTrainerUIRunConfig();
 	case 3: return JiYuTrainerUIRunBugReport();
+	case 4: currentApp->RunOperation(AppOperation3);  return 0;
 	default: return 0;
 	}
 }

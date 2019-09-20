@@ -3,7 +3,7 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <RemoteDebuggerCommand>C:\Users\a\Desktop\新建文件夹\JiYuTrainer.exe</RemoteDebuggerCommand>
     <RemoteDebuggerWorkingDirectory>C:\Users\a\Desktop\新建文件夹</RemoteDebuggerWorkingDirectory>
-    <RemoteDebuggerServerName>192.168.11.43</RemoteDebuggerServerName>
+    <RemoteDebuggerServerName>192.168.11.130</RemoteDebuggerServerName>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
     <RemoteDebuggerConnection>RemoteWithoutAuthentication</RemoteDebuggerConnection>
   </PropertyGroup>

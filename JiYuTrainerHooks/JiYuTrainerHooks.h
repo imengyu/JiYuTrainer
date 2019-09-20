@@ -10,8 +10,8 @@ enum VirusMode {
 	VirusModeReplaceStub
 };
 
-void VUnloadAll();
-void VLoad();
+EXTERN_C void __declspec(dllexport) VUnloadAll();
+EXTERN_C void __declspec(dllexport) VLoad();
 void VRunMain();
 
 void VLoadRealVirus();
@@ -47,11 +47,20 @@ void VUnInstallHooks();
 void VOpenFuckDrivers();
 void VCloseFuckDrivers();
 
+void VUnHookKeyBoard();
+
+void VGetStudentainVersion();
+
+EXTERN_C BOOL VGetExeInfo(LPWSTR strFilePath, LPCWSTR InfoItem, LPWSTR str, int maxCount);
+
 INT_PTR CALLBACK FakeDesktopWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK MainWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK JiYuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 INT_PTR CALLBACK JiYuTDDeskWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 
+typedef HHOOK(*fnDoneHook)();
+typedef int(*fnUnHookLocalInput)(DWORD *bytesReturn);
+typedef HMODULE(*fnUnLockLocalInput)();
 typedef BOOL (WINAPI *fnSetForegroundWindow)(HWND hWnd);
 typedef BOOL (WINAPI *fnSetWindowPos)(HWND hWnd, HWND hWndInsertAfter, int X, int Y, int cx, int cy, UINT uFlags);
 typedef BOOL (WINAPI *fnMoveWindow)(HWND hWnd, int X, int Y, int nWidth, int nHeight, BOOL bRepaint);
@@ -176,6 +185,7 @@ typedef LRESULT (WINAPI *fnSendMessageW)(__in HWND hWnd, __in UINT Msg, __in WPA
 typedef BOOL (WINAPI *fnTerminateProcess)(__in HANDLE hProcess,	__in UINT uExitCode);
 typedef HRESULT (WINAPI *fnFilterConnectCommunicationPort)(LPCWSTR lpPortName, DWORD dwOptions, LPCVOID lpContext, WORD wSizeOfContext, LPSECURITY_ATTRIBUTES lpSecurityAttributes, HANDLE *hPort);
 
+
 //Hooks
 
 BOOL WINAPI hkExitWindowsEx(__in UINT uFlags, __in DWORD dwReason);
@@ -296,6 +306,8 @@ BOOL WINAPI hkPostMessageW(	__in_opt HWND hWnd,	__in UINT Msg,	__in WPARAM wPara
 LRESULT WINAPI hkSendMessageW(	__in HWND hWnd,	__in UINT Msg,	__in WPARAM wParam,	__in LPARAM lParam);
 BOOL WINAPI hkTerminateProcess(__in HANDLE hProcess,	__in UINT uExitCode);
 HRESULT WINAPI hkFilterConnectCommunicationPort(LPCWSTR lpPortName,	DWORD dwOptions,	LPCVOID lpContext,	WORD wSizeOfContext,	LPSECURITY_ATTRIBUTES lpSecurityAttributes,	HANDLE *hPort);
+
+
 
 INT_PTR CALLBACK VShowOpConfirmWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 

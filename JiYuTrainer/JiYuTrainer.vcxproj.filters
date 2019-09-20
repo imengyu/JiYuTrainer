@@ -87,6 +87,12 @@
     <ClInclude Include="MemoryModule.h">
       <Filter>头文件\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="XZip.h">
+      <Filter>头文件\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="XUnzip.h">
+      <Filter>头文件\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -141,6 +147,12 @@
       <Filter>源文件\Utils</Filter>
     </ClCompile>
     <ClCompile Include="MemoryModule.cpp">
+      <Filter>源文件\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="XUnzip.cpp">
+      <Filter>源文件\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="XZip.cpp">
       <Filter>源文件\Utils</Filter>
     </ClCompile>
   </ItemGroup>

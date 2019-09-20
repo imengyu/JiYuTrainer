@@ -14,6 +14,8 @@ BOOL XOpenDriver();
 //返回驱动是否加载
 BOOL XDriverLoaded();
 
+BOOL XTestDriverCanUse();
+
 BOOL XInitSelfProtect();
 
 BOOL XLoadDriver();

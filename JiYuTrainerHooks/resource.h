@@ -10,6 +10,12 @@
 #define IDB_BITMAP_GRRY                 113
 #define IDB_BITMAP_RED                  114
 #define IDD_FAKEDESKTOP                 115
+#define IDI_ICONAPP                     118
+#define IDI_ICONCLOSE                   119
+#define IDI_ICONHELP                    120
+#define IDB_HELP                        121
+#define IDB_APP                         122
+#define IDB_EXIT                        123
 #define IDC_STATUS_TEXT                 1001
 #define IDC_STATUS_LIST                 1002
 #define IDC_KILL                        1003
@@ -28,7 +34,7 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        117
+#define _APS_NEXT_RESOURCE_VALUE        124
 #define _APS_NEXT_COMMAND_VALUE         40001
 #define _APS_NEXT_CONTROL_VALUE         1013
 #define _APS_NEXT_SYMED_VALUE           101

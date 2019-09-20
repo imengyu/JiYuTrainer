@@ -130,6 +130,8 @@ private:
 	sciter::dom::element update_message_newver;
 	sciter::dom::element update_message_text;
 
+	int autoShutSec = 0;
+
 	void OnWmCommand(WPARAM wParam); 
 	BOOL OnWmCreate();
 	void OnWmDestroy();
@@ -146,6 +148,7 @@ private:
 	HWND GetMainHWND() override { return _hWnd; }
 	void OnSimpleMessageCallback(LPCWSTR text)override;
 	void OnAllowGbTop();
+	void OnShowHelp();
 
 	void ShowHelp();
 	void CloseHelp();

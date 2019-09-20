@@ -10,12 +10,14 @@
 #include "KernelUtils.h"
 #include "DriverLoader.h"
 #include "TxtUtils.h"
+#include "XUnzip.h"
 #include <Shlwapi.h>
 #include <winioctl.h>
 #include <CommCtrl.h>
 #include <ShellAPI.h>
 #include <dbghelp.h>
 #include "../JiYuTrainerUI/MainWindow.h"
+#pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 
 extern LoggerInternal * currentLogger;
 extern JTApp * currentApp;
@@ -45,16 +47,33 @@ int JTAppInternal::CheckAndInstall()
 			return -1;
 		}
 		WCHAR szTempMainPath[MAX_PATH];
+		WCHAR szTempMainStartBatPath[MAX_PATH];
 		wcscpy_s(szTempMainPath, szTempPath);
 		wcscat_s(szTempMainPath, L"\\JiYuTrainer.exe");
+		wcscpy_s(szTempMainStartBatPath, szTempPath);
+		wcscat_s(szTempMainStartBatPath, L"\\JiYuTrainerStart.bat");
 		//复制本体
 		if (!CopyFile(fullPath.c_str(), szTempMainPath, FALSE)) {
 			appLogger->LogError2(L"创建主程序失败：%s (%d)", PRINT_LAST_ERROR_STR);
 			return -1;
 		}
 
-		std::wstring runBatContent = FormatString(L"/c start \"\" \"%s\" -f \"%s\"", szTempMainPath, fullPath.c_str());
+		bool useBatStart = false;
+
+		//写入启动bat
+		std::wstring szTempMainStartBatPathwz;
+		std::wstring szTempMainStartBatPathct = FormatString(L"start \"%s\" -f \"%s\"", szTempMainPath, fullPath.c_str());
+		szTempMainStartBatPathwz = szTempMainStartBatPath;
+		if (TxtUtils::WriteStringToTxt(szTempMainStartBatPathwz, szTempMainStartBatPathct)) useBatStart = true;
+
+		appLogger->Log(L"Installer finish, start app : %s", szTempMainPath);
+
 		//启动 exe 并转交控制权
+		std::wstring runBatContent;
+		if(useBatStart)
+			runBatContent = FormatString(L"/c start \"\" \"%s\"", szTempMainStartBatPath);
+		else 
+			runBatContent = FormatString(L"/c start \"\" \"%s\" -f \"%s\"", szTempMainPath, fullPath.c_str());
 		appIsInstaller = true;
 		if (!SysHlp::RunApplicationPriviledge(L"cmd", runBatContent.c_str())) {
 			appLogger->LogError2(L"启动主程序失败：%s (%d)", PRINT_LAST_ERROR_STR);
@@ -64,11 +83,22 @@ int JTAppInternal::CheckAndInstall()
 	}
 
 	//安装HOOK dll
-	//安装驱动文件
 	if (!Path::Exists(fullHookerPath) && InstallResFile(hInstance, MAKEINTRESOURCE(IDR_DLL_HOOKS), L"BIN", fullHookerPath.c_str()) != EXTRACT_RES::ExtractSuccess)
 		return -1;
-	if (!Path::Exists(fullDriverPath) && InstallResFile(hInstance, MAKEINTRESOURCE(IDR_DLL_DRIVER), L"BIN", fullDriverPath.c_str()) != EXTRACT_RES::ExtractSuccess)
+	//安装Sciter dll
+	if (!Path::Exists(fullSciterPath) && !InstallSciter())
 		return -1;
+
+	//加载两个模块
+	LoadLibrary(fullHookerPath.c_str());
+	if (!LoadLibrary(fullSciterPath.c_str())) {
+		appLogger->LogError2(L"模块 Sciter.dll 加载失败：%s (%d)", PRINT_LAST_ERROR_STR);
+		return -1;
+	}
+
+	//安装驱动文件
+	if (XTestDriverCanUse() && !Path::Exists(fullDriverPath))
+		InstallResFile(hInstance, MAKEINTRESOURCE(IDR_DLL_DRIVER), L"BIN", fullDriverPath.c_str());
 
 	//更新器
 	if (appIsInstaller) {
@@ -92,7 +122,14 @@ int JTAppInternal::CheckAndInstall()
 		}
 	}
 	else {
-		//加载sciter到内存
+		//加载sciter
+		HMODULE pSciterdll = LoadLibrary(L"sciter.dll");
+		if (pSciterdll != NULL)
+		{
+			pSciterAPI = GetProcAddress(pSciterdll, "SciterAPI");
+			if(pSciterAPI) return 0;
+		}
+		/*
 		HRSRC hResource = FindResourceW(hInstance, MAKEINTRESOURCE(IDR_DLL_SCITER), L"BIN");
 		if (hResource) {
 			HGLOBAL hg = LoadResource(hInstance, hResource);
@@ -109,7 +146,7 @@ int JTAppInternal::CheckAndInstall()
 					}
 				}
 			}
-		}
+		}*/
 		appLogger->LogError2(L"读取文件失败，资源提取错误：%s (%d)", PRINT_LAST_ERROR_STR);
 	}
 
@@ -125,17 +162,14 @@ void JTAppInternal::UnInstall()
 	//稍后删除本体
 	Sleep(1000);
 
-	//删除模块
 	if (Path::Exists(fullDriverPath)) DeleteFile(fullDriverPath.c_str());
-	if (Path::Exists(fullHookerPath)) DeleteFile(fullHookerPath.c_str());
+	if (Path::Exists(fullLogPath)) DeleteFile(fullLogPath.c_str());
+	if (Path::Exists(fullIniPath)) DeleteFile(fullIniPath.c_str());
 
 	//写入删除本体exe的bat
 	std::wstring uninstallBatPath = fullDir + L"\\uninstall-final.bat";
-	std::wstring uninstallBatContent = L"@echo off\n\
-@ping 127.0.0.1 -n 6 > nul\n\
-del /F /Q " + fullPath + L"\n\
-del /F /Q " + fullIniPath + L"\n\
-del %0";
+	std::wstring uninstallBatContent = FormatString(L"@echo off\n@ping 127.0.0.1 -n 6 > nul\ndel /F /Q %s\
+\ndel /F /Q %s\ndel /F /Q %s\ndel %%%%0", fullPath.c_str(), fullHookerPath.c_str(), fullSciterPath.c_str());
 
 	if(TxtUtils::WriteStringToTxt(uninstallBatPath, uninstallBatContent))
 		SysHlp::RunApplicationPriviledge(uninstallBatPath.c_str(), NULL);
@@ -143,41 +177,112 @@ del %0";
 	TerminateProcess(GetCurrentProcess(), 0);
 }
 
+BOOL JTAppInternal::InstallSciter() {
+
+	HRSRC hResource = NULL;
+	HGLOBAL hGlobal = NULL;
+	LPVOID pData = NULL;
+	DWORD dwSize = NULL;
+	HZIP hZip = NULL;
+	int sciterZipIndex = 0;
+	ZIPENTRYW sciterZipEntry = { 0 };
+	ZRESULT zipResult = 0;
+	void*buff = nullptr;
+
+	HANDLE hFile = CreateFile(fullSciterPath.c_str(), GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
+	if (hFile == INVALID_HANDLE_VALUE)
+	{
+		appLogger->LogError2(L"创建模块文件 失败：%s (%d)  %s", PRINT_LAST_ERROR_STR, fullSciterPath.c_str());
+		return FALSE;
+	}
+
+	hResource = FindResourceW(hInstance, MAKEINTRESOURCE(IDR_DLL_SCITER), L"BIN");
+	if (!hResource) goto RETURN;
+	hGlobal = LoadResource(hInstance, hResource);
+	if (!hGlobal) goto RETURN;
+	pData = LockResource(hGlobal);
+	if (!pData) goto RETURN;
+	dwSize = SizeofResource(hInstance, hResource);
+	if (!dwSize) goto RETURN;
+
+	hZip = OpenZip(pData, dwSize, ZIP_MEMORY);
+	if(!hZip) goto RETURN;
+
+	zipResult = FindZipItem(hZip, L"sciter.dll", false, &sciterZipIndex, &sciterZipEntry);
+	if (zipResult != ZR_OK) {
+		appLogger->LogError2(L"FindZipItem failed : %d (0x%08X)", zipResult, zipResult);
+		goto CLOSE_ZIP_RETURN;
+	}
+	if (sciterZipEntry.unc_size <= 0) {
+		appLogger->LogError2(L"sciterZipEntry.unc_size unknow ");
+		goto CLOSE_ZIP_RETURN;
+	}
+
+	zipResult = UnzipItem(hZip, sciterZipIndex, hFile, 0, ZIP_HANDLE);
+	if (zipResult != ZR_OK) {
+		appLogger->LogError2(L"UnzipItem failed : %d (0x%08X)", zipResult, zipResult);
+		goto CLOSE_ZIP_RETURN;
+	}
+
+	CloseHandle(hFile);
+	CloseZip(hZip);
+	return TRUE;
+
+CLOSE_ZIP_RETURN:
+	CloseZip(hZip);
+RETURN:
+	CloseHandle(hFile);
+	DeleteFile(fullSciterPath.c_str());
+	return FALSE;
+}
 EXTRACT_RES JTAppInternal::InstallResFile(HINSTANCE resModule, LPWSTR resId, LPCWSTR resType, LPCWSTR extractTo)
 {
 	appLogger->Log(L"安装模块文件：(%d) %s", resId, extractTo);
 
 	EXTRACT_RES result = ExtractUnknow;
+	HRSRC hResource = NULL;
+	HGLOBAL hGlobal = NULL;
+	LPVOID pData = NULL;
+	DWORD dwSize = NULL;
+	DWORD writed;
 	HANDLE hFile = CreateFile(extractTo, GENERIC_WRITE, 0, NULL, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, NULL);
-	if (hFile == INVALID_HANDLE_VALUE) 
+	if (hFile == INVALID_HANDLE_VALUE)
 	{
 		result = ExtractCreateFileError;
 		appLogger->LogError2(L"创建模块文件 失败：%s (%d)  %s", PRINT_LAST_ERROR_STR, extractTo);
 		return result;
 	}
 
-	HRSRC hResource = FindResourceW(resModule, resId, resType);
-	if (hResource) {
-		HGLOBAL hg = LoadResource(resModule, hResource);
-		if (hg) {
-			LPVOID pData = LockResource(hg);
-			if (pData)
-			{
-				DWORD dwSize = SizeofResource(resModule, hResource);
-				DWORD writed;
-				if (WriteFile(hFile, pData, dwSize, &writed, NULL)) {
-					SetFileAttributes(extractTo, FILE_ATTRIBUTE_HIDDEN);
-					CloseHandle(hFile);
-					result = ExtractSuccess;
-					return result;
-				}
-				else result = ExtractWriteFileError;;
-			}
-			else result = ExtractReadResError;
-		}
-		else result = ExtractReadResError;
+	hResource = FindResourceW(resModule, resId, resType);
+	if (!hResource) {
+		result = ExtractReadResError;
+		goto RETURN;
 	}
-	else result = ExtractReadResError;
+	hGlobal = LoadResource(resModule, hResource);
+	if (!hGlobal) {
+		result = ExtractReadResError;
+		goto RETURN;
+	}
+	pData = LockResource(hGlobal);
+	if (!pData)
+	{
+		result = ExtractReadResError;
+		goto RETURN;
+	}
+	dwSize = SizeofResource(resModule, hResource);
+	if (!WriteFile(hFile, pData, dwSize, &writed, NULL)) {
+		result = ExtractWriteFileError;
+		appLogger->LogError2(L"创建模块文件失败，写入文件错误：%s (%d) %s ", PRINT_LAST_ERROR_STR, extractTo);
+		CloseHandle(hFile);
+		return result;
+	}
+
+	SetFileAttributes(extractTo, FILE_ATTRIBUTE_HIDDEN);
+	CloseHandle(hFile);
+	result = ExtractSuccess;
+	return result;
+
+RETURN:
 	appLogger->LogError2(L"创建模块文件失败，资源提取错误：%s (%d) %s ", PRINT_LAST_ERROR_STR, extractTo);
 	CloseHandle(hFile);
 	return result;
@@ -241,20 +346,27 @@ bool JTAppInternal::RunArgeementDialog()
 int JTAppInternal::RunInternal()
 {
 	setlocale(LC_ALL, "chs");
-	SetUnhandledExceptionFilter(NULL);
-	SetUnhandledExceptionFilter(UnhandledExceptionFilter);
 
 	MLoadNt();
 
-	if (SysHlp::GetSystemVersion() == SystemVersionNotSupport)
+	if (SysHlp::GetSystemVersion() == SystemVersionNotSupport) {
+		appLogger->LogError2(L"系统版本不支持本软件的运行");
 		return APP_FAIL_SYSTEM_NOT_SUPPORT;
+	}
 
 	InitPrivileges();
 	InitLogger();
 	InitPath();
+
+	//指定日志为文件模式
+	appLogger->SetLogOutPut(LogOutPutFile);
+	appLogger->SetLogOutPutFile(fullLogPath.c_str());
+
 	InitCommandLine();
 	InitArgs();
 	InitSettings();
+
+	EnableVisualStyles();
 
 	if (!CheckAppCorrectness())
 		return APP_FAIL_PIRACY_VERSION;
@@ -280,11 +392,6 @@ int JTAppInternal::RunInternal()
 		appStartType = AppStartTypeConfig;
 		goto RUN_MAIN;
 	}
-
-	//指定日志为文件模式
-	appLogger->SetLogOutPut(LogOutPutFile);
-	appLogger->SetLogOutPutFile(fullLogPath.c_str());
-
 	if (appArgRemoveUpdater) 
 	{
 		Sleep(1000);//Sleep for a while
@@ -294,9 +401,9 @@ int JTAppInternal::RunInternal()
 		wcscpy_s(updaterLogPath, updaterPath.c_str());
 		PathRenameExtension(updaterLogPath, L".log");
 		if (Path::Exists(updaterLogPath) && !DeleteFileW(updaterLogPath))
-			currentLogger->LogError(L"Remove updater file %s failed : %d", updaterPath.c_str(), GetLastError());
+			currentLogger->LogError2(L"Remove updater file %s failed : %d", updaterPath.c_str(), GetLastError());
 		if (!DeleteFileW(updaterPath.c_str()))
-			currentLogger->LogError(L"Remove updater file %s failed : %d", updaterPath.c_str(), GetLastError());
+			currentLogger->LogError2(L"Remove updater file %s failed : %d", updaterPath.c_str(), GetLastError());
 	}
 	if (!appIsRecover) {
 
@@ -317,6 +424,7 @@ int JTAppInternal::RunInternal()
 
 RUN_MAIN:
 
+	if (appCrashTestMode)return JiYuTrainerUICommonEntry(4);
 	if (appStartType == AppStartTypeNormal) return JiYuTrainerUICommonEntry(0);
 	else if (appStartType == AppStartTypeUpdater)  return JiYuTrainerUICommonEntry(1);
 	else if (appStartType == AppStartTypeConfig) return JiYuTrainerUICommonEntry(2);
@@ -358,6 +466,8 @@ void JTAppInternal::ExitClear()
 		delete appSetting;
 		appSetting = nullptr;
 	}
+
+	DisableVisualStyles();
 }
 
 LPCWSTR JTAppInternal::GetPartFullPath(int partId)
@@ -389,6 +499,11 @@ LPVOID JTAppInternal::RunOperation(AppOperation op)
 	case AppOperationKReboot:  KFReboot(); break;
 	case AppOperationKShutdown: KFShutdown();  break;
 	case AppOperationForceLoadDriver: XLoadDriver(); break;
+	case AppOperation3: {
+		char*voidp = (char*)0x65e413f;
+		*voidp = '\0';
+		break;
+	}
 	default:
 		break;
 	}
@@ -403,7 +518,8 @@ void JTAppInternal::LoadDriver()
 }
 bool JTAppInternal::CheckAppCorrectness() 
 {
-	if(appSetting->GetSettingStr(L"IgnoreCorrectness") == L"20190711")
+	/*
+	if(appSetting->GetSettingStr(L"IgnoreCorrectness") == L"20190916")
 		return true;
 
 	SYSTEMTIME time;
@@ -418,9 +534,9 @@ bool JTAppInternal::CheckAppCorrectness()
 
 	CloseHandle(hFileRead);
 
-	if (time.wYear > 2019 || time.wMonth > 7 || time.wDay > 11)
+	if (time.wYear > 2019 && time.wMonth > 9 && time.wDay > 16)
 		return false;
-
+	*/
 	return true;
 }
 
@@ -428,6 +544,7 @@ void JTAppInternal::MergePathString()
 {
 	fullDriverPath = fullDir + L"\\JiYuTrainerDriver.sys";
 	fullHookerPath = fullDir + L"\\JiYuTrainerHooks.dll";
+	fullSciterPath = fullDir + L"\\sciter.dll";
 }
 void JTAppInternal::InitPath()
 {
@@ -469,6 +586,7 @@ void JTAppInternal::InitArgs()
 	if (FindArgInCommandLine(appArgList, appArgCount, L"-hidden") != -1) appIsHiddenMode = true;
 	if (FindArgInCommandLine(appArgList, appArgCount, L"-config") != -1) appIsConfigMode = true;
 	if (FindArgInCommandLine(appArgList, appArgCount, L"-bugreport") != -1) appIsBugReportMode = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"-crash-test") != -1) appCrashTestMode = true;
 
 	int argFIndex = FindArgInCommandLine(appArgList, appArgCount, L"-f");
 	if (argFIndex >= 0 && (argFIndex + 1) < appArgCount) {
@@ -511,6 +629,41 @@ void JTAppInternal::InitSettings()
 	appForceIntallInCurrentDir = appSetting->GetSettingBool(L"ForceInstallInCurrentDri", false);
 }
 
+void JTAppInternal::EnableVisualStyles() {
+
+	/*
+	TCHAR systenDir[MAX_PATH];
+	GetSystemDirectory(systenDir, sizeof(systenDir));
+
+	ZeroMemory(&actCtx, sizeof(actCtx));
+	actCtx.cbSize = sizeof(actCtx);
+	actCtx.hModule = hInstance;
+	actCtx.lpSource = TEXT("shell32.dll");
+	actCtx.lpAssemblyDirectory = systenDir;
+	actCtx.dwFlags = ACTCTX_FLAG_RESOURCE_NAME_VALID
+		| ACTCTX_FLAG_SET_PROCESS_DEFAULT
+		| ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID;
+	actCtx.lpResourceName = (LPCWSTR)124;
+
+	hActCtx = CreateActCtx(&actCtx);
+	if (hActCtx != INVALID_HANDLE_VALUE) ActivateActCtx(hActCtx, &cookie);
+	else appLogger->LogError2(L"CreateActCtx failed ：%s (%d)", PRINT_LAST_ERROR_STR);
+	*/
+
+	INITCOMMONCONTROLSEX InitCtrls;
+	InitCtrls.dwSize = sizeof(InitCtrls);
+	InitCtrls.dwICC = ICC_WIN95_CLASSES;
+	InitCommonControlsEx(&InitCtrls);
+}
+void JTAppInternal::DisableVisualStyles()
+{
+	if (hActCtx &&hActCtx != INVALID_HANDLE_VALUE) {
+		DeactivateActCtx(0, cookie);
+		ReleaseActCtx(hActCtx);
+		hActCtx = NULL;
+	}
+}
+
 HFONT JTAppInternal::hFontRed = NULL;
 HINSTANCE JTAppInternal::hInstance = NULL;
 
@@ -547,115 +700,3 @@ INT_PTR CALLBACK JTAppInternal::ArgeementWndProc(HWND hDlg, UINT message, WPARAM
 	}
 	return lResult;
 }
-
-BOOL appGenerateMiniDumpLock = FALSE;
-
-LPTOP_LEVEL_EXCEPTION_FILTER WINAPI JTAppInternal::MyDummySetUnhandledExceptionFilter(LPTOP_LEVEL_EXCEPTION_FILTER lpTopLevelExceptionFilter)
-{
-	return NULL;
-}
-BOOL JTAppInternal::PreventSetUnhandledExceptionFilter()
-{
-	HMODULE hKernel32 = LoadLibrary(L"kernel32.dll");
-	if (hKernel32 == NULL) return FALSE;
-	void *pOrgEntry = GetProcAddress(hKernel32, "SetUnhandledExceptionFilter");
-	if (pOrgEntry == NULL) return FALSE;
-	unsigned char newJump[100];
-	DWORD dwOrgEntryAddr = (DWORD)pOrgEntry;
-	dwOrgEntryAddr += 5; // add 5 for 5 op-codes for jmp far
-	void *pNewFunc = &MyDummySetUnhandledExceptionFilter;
-	DWORD dwNewEntryAddr = (DWORD)pNewFunc;
-	DWORD dwRelativeAddr = dwNewEntryAddr - dwOrgEntryAddr;
-	newJump[0] = 0xE9;  // JMP absolute
-	memcpy(&newJump[1], &dwRelativeAddr, sizeof(pNewFunc));
-	SIZE_T bytesWritten;
-	BOOL bRet = WriteProcessMemory(GetCurrentProcess(), pOrgEntry, newJump, sizeof(pNewFunc) + 1, &bytesWritten);
-	return bRet;
-}
-LONG WINAPI JTAppInternal::UnhandledExceptionFilter(PEXCEPTION_POINTERS pExInfo)
-{
-	// 这里做一些异常的过滤或提示
-	if (IsDebuggerPresent())
-		return EXCEPTION_CONTINUE_SEARCH;
-	if (!appGenerateMiniDumpLock) {
-		appGenerateMiniDumpLock = TRUE;
-		return GenerateMiniDump(pExInfo);
-	}
-	return EXCEPTION_CONTINUE_SEARCH;
-}
-LONG JTAppInternal::GenerateMiniDump(PEXCEPTION_POINTERS pExInfo)
-{
-	TCHAR dmp_path[MAX_PATH];
-	wcscpy_s(dmp_path, currentApp->GetCurrentDir());
-
-	SYSTEMTIME tm;
-	GetLocalTime(&tm);//获取时间
-	TCHAR file_name[128];
-	swprintf_s(file_name, L"%s\\JiYuTrainerCrashDump%d%02d%02d-%02d%02d%02d.dmp", dmp_path,
-		tm.wYear, tm.wMonth, tm.wDay, tm.wHour, tm.wMinute, tm.wSecond);//设置dmp文件名称
-	TCHAR info_file_name[128];
-	swprintf_s(info_file_name, L"%s\\JiYuTrainerCrashInfo%d%02d%02d-%02d%02d%02d.txt", dmp_path,
-		tm.wYear, tm.wMonth, tm.wDay, tm.wHour, tm.wMinute, tm.wSecond);
-
-	//Create file
-	HANDLE hFile = CreateFile(file_name, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS,
-		FILE_ATTRIBUTE_NORMAL, NULL);
-
-	//Generate Crash info
-	BOOL hasCrashInfo = GenerateCrashInfo(pExInfo, info_file_name, file_name, tm, dmp_path);
-
-	//Gen Dump File and show dialog
-
-	TCHAR expInfo[128];
-	swprintf_s(expInfo, L"Exception !!! Address : 0x%08x  Code : 0x%08X  (0x%08X)",
-		(ULONG_PTR)pExInfo->ExceptionRecord->ExceptionAddress, pExInfo->ExceptionRecord->ExceptionCode,
-		pExInfo->ExceptionRecord->ExceptionFlags);
-
-	if (hFile != INVALID_HANDLE_VALUE)
-	{
-		MINIDUMP_EXCEPTION_INFORMATION expParam;
-		expParam.ThreadId = GetCurrentThreadId();
-		expParam.ExceptionPointers = pExInfo;
-		expParam.ClientPointers = FALSE;
-		MiniDumpWriteDump(GetCurrentProcess(), GetCurrentProcessId(), hFile, MiniDumpWithDataSegs, (pExInfo ? &expParam : NULL), NULL, NULL);
-		CloseHandle(hFile);
-		
-		TCHAR info[300];
-		swprintf_s(info, L"应用程序出现了一个错误，%s。\n%s", (hasCrashInfo ? L"需要关闭，已生成关于此错误的报告" : L"并且无法生成错误转储文件"), expInfo);
-		MessageBoxTimeoutW(NULL, info, L"JiYuTrainer 应用程序错误", MB_ICONERROR | MB_SYSTEMMODAL, 0, 3600);
-
-		if (hasCrashInfo) 
-		{
-			WCHAR arg[320];
-			swprintf_s(arg, L"-bugreport -bugfile \"%s\"", info_file_name);
-			ShellExecute(NULL, L"open", currentApp->GetFullPath(), arg, NULL, SW_NORMAL);
-		}
-	}
-	else
-	{
-		TCHAR info[300];
-		swprintf_s(info, L"应用程序出现了一个错误，并且无法生成错误转储文件。\n%s\nFail to create dump file: %s \nLast Error : %d\n现在应用程序即将关闭。", expInfo, file_name, GetLastError());
-		MessageBox(NULL, info, L"JiYuTrainer 应用程序错误", MB_ICONERROR | MB_SYSTEMMODAL);
-	}
-	return EXCEPTION_EXECUTE_HANDLER;
-}
-BOOL JTAppInternal::GenerateCrashInfo(PEXCEPTION_POINTERS pExInfo, LPCWSTR info_file_name, LPCWSTR file_name, SYSTEMTIME tm, LPCWSTR dir) {
-	FILE*fp = NULL;
-	_wfopen_s(&fp, info_file_name, L"w");
-	if (fp) {
-		fwprintf_s(fp, L"=== JiYuTrainer ===== %04d/%02d/%02d %02d:%02d:%02d ===========", tm.wYear, tm.wMonth, tm.wDay, tm.wHour, tm.wMinute, tm.wSecond);
-		fwprintf_s(fp, L"\r\n应用程序错误 ：Address : 0x%08x  Code : 0x%08X  (0x%08X)",
-			(ULONG_PTR)pExInfo->ExceptionRecord->ExceptionAddress, pExInfo->ExceptionRecord->ExceptionCode,
-			pExInfo->ExceptionRecord->ExceptionFlags);
-		fwprintf_s(fp, L"\r\n=== JiYuTrainer =====================================");
-		fwprintf_s(fp, L"\r\n我们生成了关于描述这个错误的错误报告(不包含您的个人信息)：");
-		fwprintf_s(fp, L"\r\n=== 文件内容 =====================================");
-		fwprintf_s(fp, L"\r\n[错误转储文件] %s", file_name);
-		fwprintf_s(fp, L"\r\n[程序运行日志] %s\\%s", dir, L"JiYuTrainer.log");
-		fwprintf_s(fp, L"\r\n=== %hs =================================", CURRENT_VERSION);
-		fclose(fp);
-		return TRUE;
-	}
-	return FALSE;
-}
-

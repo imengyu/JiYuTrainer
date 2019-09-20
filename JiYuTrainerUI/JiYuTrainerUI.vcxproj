@@ -211,12 +211,16 @@
     <Image Include="res\checkbox-checked.png" />
     <Image Include="res\checkbox-uncheck.png" />
     <Image Include="res\checkboxs.png" />
+    <Image Include="res\close-small.bmp" />
+    <Image Include="res\close.ico" />
     <Image Include="res\footer-mask.png" />
     <Image Include="res\footer-x2.png" />
     <Image Include="res\footer-xnotwork.png" />
     <Image Include="res\footer-xok.png" />
     <Image Include="res\footer-xwarn.png" />
     <Image Include="res\footer-xwork.png" />
+    <Image Include="res\help-small.bmp" />
+    <Image Include="res\help.ico" />
     <Image Include="res\icon-main-small.png" />
     <Image Include="res\JiYuTrainerHelp1.png" />
     <Image Include="res\JiYuTrainerHelp2.png" />

@@ -15,7 +15,7 @@ VOID ShowMoreSettings(HWND hWndMain)
 {
 	currentLogger = currentApp->GetLogger();
 	currentSettings = currentApp->GetSettings();
-	DialogBox(currentApp->GetInstance() , MAKEINTRESOURCE(IDD_SETTINGS), hWndMain, SettingsDlgFunc);
+	DialogBox(currentApp->GetInstance() , MAKEINTRESOURCE(IDD_SETTINGS), GetDesktopWindow(), SettingsDlgFunc);
 }
 
 INT_PTR CALLBACK SettingsDlgFunc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)

@@ -42,6 +42,9 @@
 
 #define IDM_TOPMOST 25600
 #define IDM_FULL 25601
+#define IDM_HELP_GB 25602
+#define IDM_CLOSE_GB 25603
+#define IDM_HELP_GB2 25604
 
 #define INVALID_HHOOK_MOUSE 0x0001
 #define INVALID_HHOOK_KEYBOARD 0x0002
@@ -56,6 +59,15 @@ list<HWND>  jiYuWnds;
 list<HWND>  jiYuWndCanSize;
 HWND jiYuGBWnd = NULL;
 HWND jiYuGBDeskRdWnd = NULL;
+HWND jiYuGBToolWnd = NULL;
+int jiYuGBToolHeight = 0;
+
+enum jiYuVersions {
+	jiYuVersionsAuto,
+	jiYuVersions40,
+	jiYuVersions402016HH,
+};
+jiYuVersions jiYuVersion = jiYuVersionsAuto;
 
 HWND hWndMsgCenter = NULL;
 HWND hListBoxStatus = NULL;
@@ -63,6 +75,8 @@ HWND hListBoxStatus = NULL;
 HWND desktopWindow, fakeDesktopWindow;
 HWND mainWindow;
 
+HMENU hMenuGb = NULL;
+HMENU hMenuGbP;
 HANDLE hThreadMain = NULL;
 LRESULT hWndOpConformRs = 0;
 LRESULT hWndOutOfControlConformRs = 0;
@@ -86,10 +100,7 @@ DWORD currentPid = 0;
 
 fnTDAjustCreateInstance faTDAjustCreateInstance = NULL;
 
-//Real api address
-typedef void(__fastcall *fnUnHookLocalInput)(void);
-
-fnUnHookLocalInput UnHookLocalInput = NULL;
+fnUnLockLocalInput UnLockLocalInput = NULL;
 fnSetWindowPos raSetWindowPos = NULL;
 fnMoveWindow raMoveWindow = NULL;
 fnSetForegroundWindow raSetForegroundWindow = NULL;
@@ -155,6 +166,7 @@ void VUnloadAll() {
 		jiYuWnds.clear();
 		jiYuWndCanSize.clear();
 		runOPWhiteList.clear();
+		if (hMenuGb) DestroyMenu(hMenuGb);
 		VUnInstallHooks();
 		loaded = false;
 		FreeLibrary(hInst);
@@ -194,6 +206,10 @@ void VLoad()
 	}
 	else if (name == L"MasterHelper.exe") {
 		//MasterHelper.exe 搞一些事情
+		VInstallHooks(VirusModeMaster);
+	}
+	else if (name == L"ProcHelper64.exe") {
+		//ProcHelper64.exe 搞一些事情
 		VInstallHooks(VirusModeMaster);
 	}
 
@@ -257,6 +273,23 @@ void VParamInit() {
 	screenWidth = GetSystemMetrics(SM_CXSCREEN);
 	screenHeight = GetSystemMetrics(SM_CYSCREEN);
 	currentPid = GetCurrentProcessId();
+
+	//创建广播的右键菜单
+
+	HBITMAP hIconExit = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_EXIT));
+	HBITMAP hIconHelp = LoadBitmap(hInst, MAKEINTRESOURCE(IDB_HELP));
+
+	hMenuGb = CreatePopupMenu();
+	AppendMenu(hMenuGb, MF_STRING , IDM_HELP_GB, L"JiYuTrainer 添加的菜单");
+	AppendMenu(hMenuGb, MF_STRING, IDM_HELP_GB2, L"JiYuTrainer 帮助");
+	AppendMenu(hMenuGb, MF_SEPARATOR, 0, NULL);
+	AppendMenu(hMenuGb, MF_STRING, IDM_FULL, L"广播窗口全屏");
+	AppendMenu(hMenuGb, MF_STRING, IDM_TOPMOST, L"广播窗口置顶");
+	AppendMenu(hMenuGb, MF_SEPARATOR, 0, NULL);
+	AppendMenu(hMenuGb, MF_STRING, IDM_CLOSE_GB, L"关闭广播窗口");
+
+	SetMenuItemBitmaps(hMenuGb, IDM_CLOSE_GB, MF_BITMAP, hIconExit, hIconExit);
+	SetMenuItemBitmaps(hMenuGb, IDM_HELP_GB2, MF_BITMAP, hIconHelp, hIconHelp);
 }
 void VInitSettings()
 {
@@ -334,7 +367,8 @@ void VHandleMsg(LPWSTR buff) {
 		else if (arr[0] == L"hk") {
 			VOutPutStatus(L"[V] %s", buff);
 			if (arr[1] == L"ckstat") {
-			
+				if(jiYuVersion == jiYuVersionsAuto) VGetStudentainVersion();
+				VUnHookKeyBoard();
 				VSendMessageBack(L"hkb:succ", hWndMsgCenter);
 				SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_MAIN, NULL);
 				SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_RB_FLASH, 0);
@@ -365,7 +399,7 @@ void VHandleMsg(LPWSTR buff) {
 		}
 		else if (arr[0] == L"ukt") {
 			VOutPutStatus(L"[T] %s", buff);
-			if (UnHookLocalInput) { UnHookLocalInput(); VSendMessageBack(L"ukt:succ", hWndMsgCenter); }
+			if (UnLockLocalInput) { UnLockLocalInput(); VSendMessageBack(L"ukt:succ", hWndMsgCenter); }
 			else VSendMessageBack(L"ukt:fail", hWndMsgCenter);
 		}
 		else if (arr[0] == L"test") {
@@ -431,7 +465,7 @@ void VHookWindow(const wchar_t* hWndStr) {
 		}
 	}
 }
-void VFixGuangBoWindow(HWND hWnd) 
+void VFixGuangBoWindow(HWND hWnd)
 {
 	if (gbWindow != hWnd) {
 		gbWindow = hWnd;
@@ -442,7 +476,7 @@ void VFixGuangBoWindow(HWND hWnd)
 	if (oldWndProc != (WNDPROC)JiYuWndProc) {
 		jiYuWndProc = (WNDPROC)oldWndProc;
 		SetWindowLong(hWnd, GWL_WNDPROC, (LONG)JiYuWndProc);
-		VOutPutStatus(L"Hooked hWnd %d (0x%08x) WNDPROC", hWnd, hWnd);
+		VOutPutStatus(L"[J] Hooked hWnd %d (0x%08x) WNDPROC", hWnd, hWnd);
 		SendMessage(hWnd, WM_SHOWWINDOW, TRUE, FALSE);
 	}
 	LONG style = GetWindowLong(hWnd, GWL_STYLE);
@@ -461,16 +495,22 @@ void VFixGuangBoWindow(HWND hWnd)
 	LONG oldLong = GetWindowLong(gbWindow, GWL_EXSTYLE);
 	if ((oldLong & WS_EX_TOPMOST) == WS_EX_TOPMOST) {
 		CheckMenuItem(hMenu, IDM_TOPMOST, MF_CHECKED);
+		CheckMenuItem(hMenuGb, IDM_TOPMOST, MF_CHECKED);
 		gbCurrentIsTop = true;
 	}
 	else {
 		CheckMenuItem(hMenu, IDM_TOPMOST, MF_UNCHECKED);
+		CheckMenuItem(hMenuGb, IDM_TOPMOST, MF_UNCHECKED);
 		gbCurrentIsTop = false;
 	}
-	if (gbFullManual)
-		CheckMenuItem(hMenu, IDM_FULL,  MF_CHECKED);
-	else 
+	if (gbFullManual) {
+		CheckMenuItem(hMenu, IDM_FULL, MF_CHECKED);
+		CheckMenuItem(hMenuGb, IDM_FULL, MF_CHECKED);
+	}
+	else {
 		CheckMenuItem(hMenu, IDM_FULL, MF_UNCHECKED);
+		CheckMenuItem(hMenuGb, IDM_FULL, MF_UNCHECKED);
+	}
 
 	//类属性
 	LONG oldWndClsLong = GetClassLong(gbWindow, GCL_STYLE);
@@ -571,6 +611,15 @@ void VSwitchLockState(bool l) {
 		SendMessage(hWndMsgCenter, WM_COMMAND, IDC_SW_STATUS_LOCKED, NULL);
 		WCHAR str[32]; swprintf_s(str, L"hkb:jyk:%s", l ? L"1" : L"0");
 		VSendMessageBack(str, hWndMsgCenter);
+		if (jiYuGBDeskRdWnd) {
+			RECT rc, rcTool; GetWindowRect(jiYuGBDeskRdWnd, &rc);
+			if (jiYuGBToolWnd) {
+				GetClientRect(jiYuGBToolWnd, &rcTool);
+				jiYuGBToolHeight = rcTool.bottom - rcTool.top;
+			}
+			raMoveWindow(jiYuGBDeskRdWnd, 0, isLocked ? 0 : jiYuGBToolHeight,
+				rc.right - rc.left, rc.bottom - rc.top - (isLocked ? 0 : jiYuGBToolHeight), TRUE);
+		}
 	}
 }
 void VSwitchLockState(HWND hWnd, bool l) {
@@ -588,6 +637,106 @@ void VSwitchLockState(HWND hWnd, bool l) {
 			VSwitchLockState(l);
 		}
 	}
+}
+void VUnHookKeyBoard() {
+	HMODULE hTDMaster = GetModuleHandle(L"LibTDMaster.dll");
+	if (hTDMaster) {
+		fnDoneHook DoneHook = (fnDoneHook)GetProcAddress(hTDMaster, "DoneHook");
+		UnLockLocalInput = (fnUnLockLocalInput)GetProcAddress(hTDMaster, "UnLockLocalInput");
+		if (UnLockLocalInput) {
+			UnLockLocalInput();
+			VOutPutStatus(L"[V] Unlocked Local Input. ");
+		}
+		else if (DoneHook) {
+			DoneHook();
+			VOutPutStatus(L"[V] Forece call DoneHook .");
+		}
+	}
+}
+void VGetStudentainVersion() 
+{
+	//Get main mod name
+	WCHAR mainModName[MAX_PATH];
+	GetModuleFileName(NULL, mainModName, MAX_PATH);
+	WCHAR mainModVersion[64];
+
+	VOutPutStatus(L"[V] VGetExeInfo %s ", mainModName);
+	//获取极域版本
+	if (VGetExeInfo(mainModName, L"ProductVersion", mainModVersion, 64)) {
+
+		VOutPutStatus(L"[V] JiYu Version : %s", mainModVersion);
+
+		if (wcscmp(mainModVersion, L"5.01 Baseline") == 0) {
+			jiYuVersion = jiYuVersions::jiYuVersions40;
+			VOutPutStatus(L"[V] 当前是：极域 V4 2010 专业版");
+		}
+		else if (wcscmp(mainModVersion, L"2.07 CMPC") == 0) {
+			jiYuVersion = jiYuVersions::jiYuVersions402016HH;
+			VOutPutStatus(L"[V] 当前是：极域 V6.0 2016 豪华版");
+		}
+
+	}else VOutPutStatus(L"[V] VGetExeInfo err !");
+
+}
+BOOL VGetExeInfo(LPWSTR strFilePath, LPCWSTR InfoItem, LPWSTR str, int maxCount)
+{
+	/*
+	CompanyName
+	FileDescription
+	FileVersion
+	InternalName
+	LegalCopyright
+	OriginalFilename
+	ProductName
+	ProductVersion
+	Comments
+	LegalTrademarks
+	PrivateBuild
+	SpecialBuild
+	*/
+
+	TCHAR   szResult[256];
+	TCHAR   szGetName[256];
+	LPWSTR  lpVersion = { 0 };        // String pointer to Item text
+	DWORD   dwVerInfoSize;    // Size of version information block
+	DWORD   dwVerHnd = 0;        // An 'ignored' parameter, always '0'
+	UINT    uVersionLen;
+	BOOL    bRetCode;
+
+	dwVerInfoSize = GetFileVersionInfoSize(strFilePath, &dwVerHnd);
+	if (dwVerInfoSize) {
+		LPSTR   lpstrVffInfo;
+		HANDLE  hMem;
+		hMem = GlobalAlloc(GMEM_MOVEABLE, dwVerInfoSize);
+		lpstrVffInfo = (LPSTR)GlobalLock(hMem);
+		GetFileVersionInfo(strFilePath, dwVerHnd, dwVerInfoSize, lpstrVffInfo);
+		lstrcpy(szGetName, L"\\VarFileInfo\\Translation");
+		uVersionLen = 0;
+		lpVersion = NULL;
+		bRetCode = VerQueryValue((LPVOID)lpstrVffInfo,
+			szGetName,
+			(void **)&lpVersion,
+			(UINT *)&uVersionLen);
+		if (bRetCode && uVersionLen && lpVersion)
+			wsprintf(szResult, L"%04x%04x", (WORD)(*((DWORD *)lpVersion)),
+			(WORD)(*((DWORD *)lpVersion) >> 16));
+		else lstrcpy(szResult, L"041904b0");
+		wsprintf(szGetName, L"\\StringFileInfo\\%s\\", szResult);
+		lstrcat(szGetName, InfoItem);
+		uVersionLen = 0;
+		lpVersion = NULL;
+		bRetCode = VerQueryValue((LPVOID)lpstrVffInfo,
+			szGetName,
+			(void **)&lpVersion,
+			(UINT *)&uVersionLen);
+		if (bRetCode && uVersionLen && lpVersion) {
+			if (str) {
+				wcscpy_s(str, maxCount, lpVersion);
+				return TRUE;
+			}
+		}
+	}
+	return FALSE;
 }
 
 INT_PTR CALLBACK VShowOpConfirmWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
@@ -889,9 +1038,12 @@ void VInstallHooks(VirusMode mode) {
 		//if (UnHookLocalInput) UnHookLocalInput();
 
 		if (hLibTDMaster == NULL) {
+			VOutPutStatus(L"[E] Not found LibTDMaster.dll ! Virus will not work.");
 			VUnloadAll();
 			return;
 		}
+
+		VOutPutStatus(L"[D] Install hook in mode VirusModeHook");
 
 		hk1 = Mhook_SetHook((PVOID*)&raSetWindowPos, hkSetWindowPos);
 		hk2 = Mhook_SetHook((PVOID*)&raMoveWindow, hkMoveWindow);
@@ -946,6 +1098,8 @@ void VInstallHooks(VirusMode mode) {
 	if (mode == VirusModeMaster) {
 
 		g_hhook = SetWindowsHookExA(WH_CBT, VCBTProc, hInst, GetCurrentThreadId());
+		
+		VOutPutStatus(L"[D] Install hook in mode VirusModeMaster");
 
 		hk8 = Mhook_SetHook((PVOID*)&faSetWindowsHookExA, hkSetWindowsHookExA);
 		hk19 = Mhook_SetHook((PVOID*)&faExitWindowsEx, hkExitWindowsEx);
@@ -996,6 +1150,7 @@ void VUnInstallHooks() {
 	if (hk39) Mhook_Unhook((PVOID*)&faTerminateProcess);
 	if (hk40) Mhook_Unhook((PVOID*)&faFilterConnectCommunicationPort);
 
+	VOutPutStatus(L"[D] UnInstall all hook");
 
 	if (g_hhook) {
 		UnhookWindowsHookEx(g_hhook);
@@ -1415,20 +1570,20 @@ HHOOK WINAPI hkSetWindowsHookExA(int idHook, HOOKPROC lpfn, HINSTANCE hmod, DWOR
 				case WH_MOUSE_LL:
 					lpMouseHookfn = lpfn;
 					hMouseHook = faSetWindowsHookExA(idHook, LowLevelMouseProc, hmod, dwThreadId);
-					VOutPutStatus(L"hMouseHook WH_MOUSE_LL hooked 0x%08x", hMouseHook);
-					VOutPutStatus(L"lpfn : 0x%08x hmod :  0x%08x dwThreadId : %d", hMouseHook, hmod, dwThreadId);
+					VOutPutStatus(L"[K] hMouseHook WH_MOUSE_LL hooked 0x%08x", hMouseHook);
+					VOutPutStatus(L"[K] lpfn : 0x%08x hmod :  0x%08x dwThreadId : %d", hMouseHook, hmod, dwThreadId);
 					return (HHOOK)INVALID_HHOOK_MOUSE;
 				case WH_MOUSE:
 					lpMouseHookfn = lpfn;
 					hMouseHook = faSetWindowsHookExA(idHook, LowLevelMouseProc, hmod, dwThreadId);
-					VOutPutStatus(L"hMouseHook WH_MOUSE hooked 0x%08x", hMouseHook);
-					VOutPutStatus(L"lpfn : 0x%08x hmod :  0x%08x dwThreadId : %d", hMouseHook, hmod, dwThreadId);
+					VOutPutStatus(L"[K] hMouseHook WH_MOUSE hooked 0x%08x", hMouseHook);
+					VOutPutStatus(L"[K] lpfn : 0x%08x hmod :  0x%08x dwThreadId : %d", hMouseHook, hmod, dwThreadId);
 					return (HHOOK)INVALID_HHOOK_MOUSE;
 				case WH_KEYBOARD_LL:
 					lpKeyboardHookfn = lpfn;
 					hKeyboardHook = faSetWindowsHookExA(idHook, LowLevelKeyboardProc, hmod, dwThreadId);
-					VOutPutStatus(L"hMouseHook WH_KEYBOARD_LL hooked 0x%08x", hKeyboardHook);
-					VOutPutStatus(L"lpfn : 0x%08x hmod :  0x%08x dwThreadId : %d", hMouseHook, hmod, dwThreadId);
+					VOutPutStatus(L"[K] hMouseHook WH_KEYBOARD_LL hooked 0x%08x", hKeyboardHook);
+					VOutPutStatus(L"[K] lpfn : 0x%08x hmod :  0x%08x dwThreadId : %d", hMouseHook, hmod, dwThreadId);
 					return (HHOOK)INVALID_HHOOK_KEYBOARD;
 				}
 			}
@@ -1448,13 +1603,13 @@ BOOL WINAPI hkUnhookWindowsHookEx(HHOOK hhk)
 	if (hhk == (HHOOK)INVALID_HHOOK_MOUSE) {
 		BOOL rs = faUnhookWindowsHookEx(hMouseHook);
 		hMouseHook = NULL;
-		VOutPutStatus(L"hMouseHook Unkooked !");
+		VOutPutStatus(L"[K] hMouseHook Unkooked !");
 		return rs;
 	}
 	if (hhk == (HHOOK)INVALID_HHOOK_KEYBOARD) {
 		BOOL rs = faUnhookWindowsHookEx(hKeyboardHook);
 		hMouseHook = hKeyboardHook;
-		VOutPutStatus(L"hKeyboardHook Unkooked !");
+		VOutPutStatus(L"[K] hKeyboardHook Unkooked !");
 		return rs;
 	}
 	return faUnhookWindowsHookEx(hhk);
@@ -1557,6 +1712,7 @@ EXTERN_C HRESULT __declspec(dllexport) __cdecl TDAjustCreateInstance(CLSID *rcls
 
 HBITMAP hIconRed, hIconGreen, hIconGrey;
 HWND hStatusFakeFull, hStatusMain, hStatusLock;
+
 
 INT_PTR CALLBACK FakeDesktopWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam) {
 	switch (message)
@@ -1761,20 +1917,32 @@ INT_PTR CALLBACK JiYuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		RECT rcClient;
 		GetWindowRect(hWnd, &rcWindow);
 		GetClientRect(hWnd, &rcClient);
-		if (UnHookLocalInput) UnHookLocalInput();
-		bool setToFull = false;
-		if (rcWindow.right - rcWindow.left == screenWidth && rcWindow.bottom - rcWindow.top == screenHeight)
-			setToFull = true;
-		REGIET:
+	REGIET:
 		if (jiYuGBDeskRdWnd == NULL) {
 			jiYuGBDeskRdWnd = FindWindowExW(hWnd, NULL, NULL, L"TDDesk Render Window");
 			if (jiYuGBDeskRdWnd == NULL) goto JOUT;
+
+			//处理新版极域的广播工具栏
+			if (jiYuVersion == jiYuVersions::jiYuVersions402016HH) {
+				jiYuGBToolWnd = FindWindowExW(hWnd, jiYuGBDeskRdWnd, NULL, L"");
+				if (jiYuGBToolWnd != NULL) {
+					RECT rcTool; GetClientRect(jiYuGBToolWnd, &rcTool);
+					jiYuGBToolHeight = rcTool.bottom - rcTool.top;
+					VOutPutStatus(L"[D] jiYuGBToolWnd : 0x%08x", jiYuGBToolWnd);
+					VOutPutStatus(L"[D] jiYuGBToolHeight : %d", jiYuGBToolHeight);
+					//Find tool bar window
+					//HWND hBtnTop = GetDlgItem(jiYuGBToolWnd, 0x07E5);
+					//HWND hBtnFull = GetDlgItem(jiYuGBToolWnd, 0x03EC);
+					//EnableWindow(hBtnFull, FALSE);
+				}
+			}
+
 			//HOOK TDDesk Render Window for WM_SIZE
 			WNDPROC oldWndProc = (WNDPROC)GetWindowLong(jiYuGBDeskRdWnd, GWL_WNDPROC);
 			if (oldWndProc != (WNDPROC)JiYuTDDeskWndProc) {
 				jiYuTDDeskWndProc = (WNDPROC)oldWndProc;
 				SetWindowLong(jiYuGBDeskRdWnd, GWL_WNDPROC, (LONG)JiYuTDDeskWndProc);
-				VOutPutStatus(L"Hooked jiYuGBDeskRdWnd %d (0x%08x) WNDPROC", jiYuGBDeskRdWnd, jiYuGBDeskRdWnd);
+				VOutPutStatus(L"[J] Hooked jiYuGBDeskRdWnd %d (0x%08x) WNDPROC", jiYuGBDeskRdWnd, jiYuGBDeskRdWnd);
 			}
 		}
 		if (!IsWindow(jiYuGBDeskRdWnd) || GetParent(jiYuGBDeskRdWnd) != hWnd) {
@@ -1783,11 +1951,8 @@ INT_PTR CALLBACK JiYuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		}
 		if (jiYuGBDeskRdWnd != NULL) {
 			ShowWindow(jiYuGBDeskRdWnd, SW_SHOW);
-			if (setToFull) raMoveWindow(jiYuGBDeskRdWnd, 0, 0, screenWidth, screenHeight, TRUE);
-			else {
-				//SendMessage(jiYuGBDeskRdWnd, WM_SIZE, 0, MAKELPARAM(10, 10));
-				raMoveWindow(jiYuGBDeskRdWnd, 0, 0, rcClient.right - rcClient.left, rcClient.bottom - rcClient.top, TRUE);
-			}
+			raMoveWindow(jiYuGBDeskRdWnd, 0, isLocked ? 0 : jiYuGBToolHeight, rcClient.right - rcClient.left,
+				rcClient.bottom - rcClient.top - (isLocked ? 0 : jiYuGBToolHeight), TRUE);
 		}
 	}
 	else if (message == WM_SHOWWINDOW)
@@ -1808,6 +1973,32 @@ INT_PTR CALLBACK JiYuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		VSwitchLockState(false);
 		isGbFounded = false;
 	}
+	else if (message == WM_COMMAND) {
+		switch (wParam)
+		{
+		case IDM_FULL:
+		case IDM_TOPMOST: return SendMessage(hWnd, WM_SYSCOMMAND, wParam, NULL);
+		case IDM_HELP_GB: {
+			MessageBox(hWnd, L"这个右键菜单是 JiYuTrainer 为方便您控制广播全屏和窗口添加的。\n如果您需要打开极域的右键菜单，请在窗口中心右键。\n关于更多帮助，请查看 JiYuTrainer 帮助文档。 ", L"JiYuTrainer 提示", MB_ICONINFORMATION);
+			return 0;
+		}
+		case IDM_HELP_GB2: {
+			VSendMessageBack(L"hkb:showhelp", hWndMsgCenter);
+			return 0;
+		}
+		case IDM_CLOSE_GB: return SendMessage(hWnd, WM_SYSCOMMAND, SC_CLOSE, NULL);
+		}
+		if (jiYuVersion == jiYuVersions::jiYuVersions402016HH) {
+			switch (wParam)
+			{
+			case 0x07E5://Top
+				return SendMessage(hWnd, WM_SYSCOMMAND, IDM_TOPMOST, (LPARAM)-1);
+			case 0x03EC://Full
+				return SendMessage(hWnd, WM_SYSCOMMAND, IDM_FULL, NULL);
+			default: break;
+			}
+		}
+	}
 	else if (message == WM_SYSCOMMAND) {
 		switch (wParam)
 		{
@@ -1817,28 +2008,34 @@ INT_PTR CALLBACK JiYuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 			{
 				gbCurrentIsTop = false;
 
+				CheckMenuItem(hMenuGb, IDM_TOPMOST, MF_UNCHECKED);
 				CheckMenuItem(GetSystemMenu(hWnd, FALSE), IDM_TOPMOST, MF_UNCHECKED);
 				VSendMessageBack(L"hkb:gbuntop", hWndMsgCenter);
 			}
 			else {
 				//通知允许置顶设置
-				if(!allowGbTop) VSendMessageBack(L"hkb:algbtop", hWndMsgCenter);
+				if (!allowGbTop) VSendMessageBack(L"hkb:algbtop", hWndMsgCenter);
 				gbCurrentIsTop = true;
 
+				CheckMenuItem(hMenuGb, IDM_TOPMOST, MF_CHECKED);
 				CheckMenuItem(GetSystemMenu(hWnd, FALSE), IDM_TOPMOST, MF_CHECKED);
 				VSendMessageBack(L"hkb:gbtop", hWndMsgCenter);
 			}
+			if (jiYuVersion == jiYuVersions::jiYuVersions402016HH)
+				CheckDlgButton(jiYuGBToolWnd, 0x07E5, gbCurrentIsTop);
 			break;
 		}
 		case IDM_FULL: {
 			HMENU hMenu = GetSystemMenu(hWnd, FALSE);
 			gbFullManual = !gbFullManual;
 			if (gbFullManual) {
+				CheckMenuItem(hMenuGb, IDM_FULL, MF_CHECKED);
 				CheckMenuItem(hMenu, IDM_FULL, MF_CHECKED);
 				VSendMessageBack(L"hkb:gbmfull", hWndMsgCenter);
 			}
 			else {
-				CheckMenuItem(hMenu, IDM_FULL,  MF_UNCHECKED);
+				CheckMenuItem(hMenuGb, IDM_FULL, MF_UNCHECKED);
+				CheckMenuItem(hMenu, IDM_FULL, MF_UNCHECKED);
 				VSendMessageBack(L"hkb:gbmnofull", hWndMsgCenter);
 			}
 			break;
@@ -1854,20 +2051,26 @@ INT_PTR CALLBACK JiYuWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lPar
 		default: break;
 		}
 	}
+	else if (message == WM_KEYUP) {
+		if (wParam == VK_ESCAPE && fakeFull)
+			SendMessage(hWnd, WM_SYSCOMMAND, IDM_FULL, NULL);
+	}
 	else if (message == WM_RBUTTONUP) {
+
+		bool showMenu = true;
 		POINT pos;
-		HMENU hMenu = GetSystemMenu(hWnd, FALSE);
 		pos.x = GET_X_LPARAM(lParam);
 		pos.y = GET_Y_LPARAM(lParam);
-		if (pos.x > 20 && pos.y > 20)
-		{
+
+		if (jiYuVersion == jiYuVersions::jiYuVersions40 && (pos.x > 60 || pos.y > 20)) 
+			showMenu = false;
+		if (showMenu) {
 			ClientToScreen(hWnd, &pos);
-			int id = TrackPopupMenu(hMenu, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN, pos.x + 30, pos.y + 10, NULL, hWnd, NULL);
-			SendMessage(hWnd, WM_SYSCOMMAND, id, NULL);
+			int id = TrackPopupMenu(hMenuGb, TPM_RETURNCMD | TPM_LEFTALIGN | TPM_TOPALIGN, pos.x + 10, pos.y + 10, NULL, hWnd, NULL);
+			SendMessage(hWnd, WM_COMMAND, id, NULL);
 		}
 	}
-
-	JOUT:
+JOUT:
 	if (jiYuWndProc) return jiYuWndProc(hWnd, message, wParam, lParam);
 	else return DefWindowProc(hWnd, message, wParam, lParam);
 }
@@ -1877,10 +2080,12 @@ INT_PTR CALLBACK JiYuTDDeskWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARA
 		RECT rcParent;
 		GetClientRect(GetParent(hWnd), &rcParent);
 		int w = LOWORD(lParam), h = HIWORD(lParam),
-			rw = rcParent.right - rcParent.left, rh = rcParent.bottom - rcParent.top;
+			rw = rcParent.right - rcParent.left, rh = rcParent.bottom - rcParent.top - (isLocked ? 0 : jiYuGBToolHeight);
 		if (w != rw || h != rh) 
-			raMoveWindow(hWnd, 0, 0, rw, rh, TRUE);
+			raMoveWindow(hWnd, 0, isLocked ? 0 : jiYuGBToolHeight, rw, rh, TRUE);
 	}
+	else if (message == WM_RBUTTONUP) SendMessage(GetParent(hWnd), message, wParam, lParam);
+	else if (message == WM_KEYUP) SendMessage(GetParent(hWnd), message, wParam, lParam);
 	if (jiYuTDDeskWndProc) return jiYuTDDeskWndProc(hWnd, message, wParam, lParam);
 	else return DefWindowProc(hWnd, message, wParam, lParam);
 }

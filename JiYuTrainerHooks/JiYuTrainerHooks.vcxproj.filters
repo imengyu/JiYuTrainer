@@ -114,5 +114,38 @@
     <Image Include="..\..\..\..\图片\编程素材\icoRed.bmp">
       <Filter>资源文件</Filter>
     </Image>
+    <Image Include="..\..\..\..\图片\编程素材\图标\icon1.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\JiYuTrainerLogo.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\JiYuTrainerUI\res\close.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\JiYuTrainerUI\res\help.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\JiYuTrainerUI\res\help-small.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\JiYuTrainerUI\res\icon-main-small.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\JiYuTrainerUI\res\warn.ico">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\JiYuTrainerUI\res\icoGreen.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\JiYuTrainerUI\res\icoGrey.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\JiYuTrainerUI\res\icoRed.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
+    <Image Include="..\JiYuTrainerUI\res\close-small.bmp">
+      <Filter>资源文件</Filter>
+    </Image>
   </ItemGroup>
 </Project>

@@ -4,7 +4,7 @@
 #include "SettingHlp.h"
 #include "TrainerWorker.h" 
 
-#define CURRENT_VERSION "1.6.703.1031" 
+#define CURRENT_VERSION "1.6.916.1221" 
 
 #define FAST_STR_BINDER(str, fstr, size, ...) WCHAR str[size]; swprintf_s(str, fstr, __VA_ARGS__)
 
@@ -26,6 +26,7 @@ enum EXTRACT_RES {
 enum AppOperation {
 	AppOperation1,
 	AppOperation2,
+	AppOperation3,
 	AppOperationKShutdown,
 	AppOperationKReboot,
 	AppOperationUnLoadDriver,
@@ -59,6 +60,8 @@ public:
 	virtual int GetCommandLineArraySize() { return 0; }
 
 	virtual LPCWSTR MakeFromSourceArg(LPCWSTR arg) { return nullptr; }
+
+
 
 	virtual void LoadDriver() {}
 

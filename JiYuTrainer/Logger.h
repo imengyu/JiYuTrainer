@@ -75,7 +75,7 @@ public:
 
 	void LogInternalWithCodeAndLine(LogLevel level, const wchar_t * str, const char*file, int line, const char*functon, va_list arg);
 	void LogInternal(LogLevel level, const wchar_t *str, va_list arg);
-	void LogOutput(LogLevel level, const wchar_t *str);
+	void LogOutput(LogLevel level, const wchar_t *str, size_t len);
 	void CloseLogFile();
 
 private:
