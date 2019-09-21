@@ -89,6 +89,7 @@ public:
 	bool AppointStudentMainLocation(LPCWSTR fullPath);
 
 	bool Kill(bool autoWork = false);
+	bool KillStAuto();
 	bool Rerun(bool autoWork = false);
 private:
 

@@ -154,6 +154,9 @@ sciter::value MainWindow::docunmentComplete()
 	update_message_newver = root.get_element_by_id(L"update_message_newver");
 	update_message_text = root.get_element_by_id(L"update_message_text");
 	update_message = root.get_element_by_id(L"update_message");
+	isnew_message = root.get_element_by_id(L"isnew_message");
+	isnew_message_text = root.get_element_by_id(L"isnew_message_text");
+	isnew_message_title = root.get_element_by_id(L"isnew_message_title");
 
 	domComplete = true;
 
@@ -252,6 +255,7 @@ void MainWindow::OnWmTimer(WPARAM wParam)
 	if (wParam == TIMER_AUTO_SHUT) {
 		autoShutSec--;
 		if (autoShutSec < 0) {
+			currentLogger->LogInfo(L"Achieve shutdown time");
 			KillTimer(_hWnd, TIMER_AUTO_SHUT);
 			OnRunCmd(L"sss");
 		}
@@ -383,9 +387,20 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 				currentWorker->RunOperation(TrainerWorkerOpForceUnLoadVirus);
 			}
 		}
+#if _DEBUG
 		else if (cmd == L"test") currentLogger->Log(L"测试命令，无功能");
 		else if (cmd == L"test2") currentWorker->SendMessageToVirus(L"test2:f");
 		else if (cmd == L"test3") MessageBox(hWndMain, L"MessageBox", L"test3", 0);
+		else if (cmd == L"test5") {
+			ShowUpdateMessage(L"您的JiYu Trainer 是最新版本", L"时常更新是个好习惯，可以给你带来更好的软件使用体验");
+		}
+		else if (cmd == L"test6") {
+			ShowUpdateMessage(L"更新失败", L"检查更新失败，请检查您的网络连接？");
+		}
+		else if (cmd == L"test7") {
+			ShowUpdateMessage(L"更新服务器返回了错误的结果", L"(⊙o⊙)？糟糕，更新服务器出了一点故障，请你稍后再试");
+		}
+#endif
 		else if (cmd == L"version") {
 			currentLogger->Log(L"当前版本是：%hs", CURRENT_VERSION);
 		}
@@ -432,15 +447,22 @@ void MainWindow::OnFirstShow()
 	currentWorker->Start();
 
 	//显示重启提示
-	if (currentApp->IsCommandExists(L"-r1"))
+	if (currentApp->IsCommandExists(L"r1")) {
+		currentLogger->LogInfo(L"Reboot mode 1");
 		ShowFastMessage(L"刚才进程意外退出", L"极域可能试图结束本进程，或是其他软件（比如任务管理器）结束了本进程，为了安全，我们已经重启了软件进程，您如果要退出本软件的话，请手动点击托盘图标>退出软件。");
-	else if (currentApp->IsCommandExists(L"-r2")) 
+	}
+	else if (currentApp->IsCommandExists(L"r2")) {
+		currentLogger->LogInfo(L"Reboot mode 2");
 		ShowFastTip(L"刚才意外与病毒失去联系，现已杀死极域并重启软件主进程");
-	else if (currentApp->IsCommandExists(L"-r3"))
+	}
+	else if (currentApp->IsCommandExists(L"r3")) {
+		currentLogger->LogInfo(L"Reboot mode 3");
 		ShowFastTip(L"软件已重启");
+	}
 
-	if (currentApp->IsCommandExists(L"-ia"))
+	if (currentApp->IsCommandExists(L"ia")) {
 		ShowFastMessage(L"更新完成！", L"您已经更新到软件最新版本，我们努力保证您的最佳使用体验，时常更新是非常好的做法。");
+	}
 
 	//运行更新
 	if (setAutoUpdate)
@@ -496,10 +518,11 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 			ShowFastTip(L"正在检查更新... ");
 			if (JUpdater_CheckInternet()) {
 				int updateStatus = JUpdater_CheckUpdate(true);
-				if (updateStatus == UPDATE_STATUS_LATEST)  ShowFastTip(L"<h4>您的JiYu Trainer 是最新版本！</h4>");
+				CloseFastTip();
+				if (updateStatus == UPDATE_STATUS_LATEST)  ShowUpdateMessage(L"您的JiYu Trainer 是最新版本", L"时常更新是个好习惯，可以给你带来更好的软件使用体验");
 				else if (updateStatus == UPDATE_STATUS_HAS_UPDATE) GetUpdateInfo();
-				else if (updateStatus == UPDATE_STATUS_COULD_NOT_CONNECT) ShowFastTip(L"检查更新失败，请检查您的网络连接？");
-				else if (updateStatus == UPDATE_STATUS_NOT_SUPPORT) ShowFastMessage(L"糟糕，更新服务器出了一点故障，请你稍后再试", L"更新服务器返回了错误的结果");
+				else if (updateStatus == UPDATE_STATUS_COULD_NOT_CONNECT) ShowUpdateMessage(L"更新失败",  L"检查更新失败，请检查您的网络连接？");
+				else if (updateStatus == UPDATE_STATUS_NOT_SUPPORT) ShowUpdateMessage(L"更新服务器返回了错误的结果", L"(⊙o⊙)？糟糕，更新服务器出了一点故障，请你稍后再试");
 			}
 			else ShowFastTip(L"检查更新失败，请检查您的网络连接？");
 		}
@@ -527,10 +550,7 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 				currentApp->UnInstall();
 		}
 		else if (ele.get_attribute("id") == L"link_read_jiyu_password" || ele.get_attribute("id") == L"link_read_jiyu_password2") { OnRunCmd(L"jypasswd"); CloseCmdsTip(); }
-		else if (ele.get_attribute("id") == L"link_uj") { OnRunCmd(L"uj"); CloseCmdsTip(); }
-		else if (ele.get_attribute("id") == L"link_ckend") { OnRunCmd(L"ckend"); CloseCmdsTip();  }
-		else if (ele.get_attribute("id") == L"link_fuljydrv") { OnRunCmd(L"fuljydrv"); CloseCmdsTip(); }
-		else if (ele.get_attribute("id") == L"link_fuldrv") { OnRunCmd(L"unloaddrv"); CloseCmdsTip();  }
+		else if (ele.get_attribute("id") == L"link_hide") { OnRunCmd(L"hide"); }
 		else if (ele.get_attribute("id") == L"link_shutdown") {
 			if (MessageBox(_hWnd, L"你是否真的要关闭电脑？", L"JiYuTrainer - 警告", MB_YESNO | MB_ICONEXCLAMATION) == IDYES) 
 				OnRunCmd(L"sss");
@@ -684,6 +704,18 @@ void MainWindow::ShowFastTip(LPCWSTR text)
 	tooltip_fast.set_html((UCHAR*)textMore2, strlen(textMore2));
 	FreeStringPtr(textMore2);
 	sciter::dom::element(get_root()).call_function("showFastTip");
+}
+void MainWindow::CloseFastTip()
+{
+	sciter::dom::element(get_root()).call_function("closeFastTip");
+}
+void MainWindow::ShowUpdateMessage(LPCWSTR title, LPCWSTR text)
+{
+	isnew_message_title.set_text(title);
+	LPCSTR textMore2 = StringHlp::UnicodeToUtf8(text);
+	isnew_message_text.set_html((UCHAR*)textMore2, strlen(textMore2));
+	FreeStringPtr(textMore2);
+	isnew_message.set_attribute("class", L"window-extend-area with-mask shown");
 }
 void MainWindow::ShowFastMessage(LPCWSTR title, LPCWSTR text)
 {

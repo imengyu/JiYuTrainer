@@ -114,6 +114,7 @@ private:
 	sciter::dom::element body;
 	sciter::dom::element link_read_jiyu_password2;
 
+
 	sciter::dom::element check_auto_fkill;
 	sciter::dom::element check_auto_fck;
 	sciter::dom::element check_allow_op;
@@ -129,6 +130,9 @@ private:
 	sciter::dom::element update_message;
 	sciter::dom::element update_message_newver;
 	sciter::dom::element update_message_text;
+	sciter::dom::element isnew_message;
+	sciter::dom::element isnew_message_text;
+	sciter::dom::element isnew_message_title;
 
 	int autoShutSec = 0;
 
@@ -154,6 +158,8 @@ private:
 	void CloseHelp();
 
 	void ShowFastTip(LPCWSTR text);
+	void CloseFastTip();
+	void ShowUpdateMessage(LPCWSTR title, LPCWSTR text);
 	void ShowFastMessage(LPCWSTR title, LPCWSTR text);
 	void CloseCmdsTip();
 

@@ -206,6 +206,21 @@
             margin: 0;
             padding: 0;
         }
+        #isnew_message {
+            z-index: 11;
+            bottom: 121px;
+            top: 100px;
+            left: 15px;
+            right: 15px;
+            padding: 10px 20px;
+            background-image: url(res:update_bg.png);
+            background-repeat: no-repeat;
+            background-position: left -30px;
+        }
+        #isnew_message_text {
+            margin-top: 55px;
+            padding: 20px;
+        }
 
         /* Window base content */
         .main-state {
@@ -572,6 +587,15 @@
         #link_more_settings::after {
             background: url(res:link-icons.png) no-repeat 0px 0;
         }
+        #commands_help_area {
+            display: block;
+            width: 100%;
+            height: 300px;
+            overflow: scroll;
+            font-size: 12px;
+            vertical-scrollbar: my-v-scrollbar;
+            horizontal-scrollbar: my-h-scrollbar;
+        }
 
         /*Status area*/
         #status_area {
@@ -933,20 +957,35 @@
         </div>
         <div class="window-extend-area-mask"></div>
         <!--更多命令提示框-->
-        <div class="window-extend-area with-mask" id="cmds_message" style="z-index:11; bottom: 100px; top :135px; left: -15px; right: -15px; padding: 10px 20px; ">
+        <div class="window-extend-area with-mask" id="cmds_message" style="z-index:11; bottom: 90px; top :30px; left: -15px; right: -15px; padding: 10px 20px; ">
             <a href="#" class="title-close black" id="cmds_message_close"></a>
-            <h3>测试命令</h3>
-            <p class="text-danger">以下命令仅供测试使用，可能存在危险</p>
-
-            <a href="#" id="link_read_jiyu_password" class="text-info">破解极域密码</a><br /><br />
-            <a href="#" id="link_uj">强制从极域卸载已注入的病毒</a><br />
-            <a href="#" id="link_ckend">分离极域</a><br />
-            <a href="#" id="link_fuljydrv">强制卸载极域的保护驱动 TDProcHook <span class="text-danger">(有蓝屏风险，慎用)</span></a><br />
-            <a href="#" id="link_fuldrv">卸载本软件的驱动</a><br />
-
-            <div class="text-right" style="position: absolute;bottom: 0; left: 15px; right: 15px; height :45px;">
-                <a href="#" class="btn-common btn-primary" id="cmds_message_close2">关闭</a>
+            <h3>调试命令</h3>
+            <p class="text-danger">以下命令仅供调试使用，部分可能存在危险</p>
+            <div id="commands_help_area">
+                <span>killst 杀死极域电子教室</span><br />
+                <span>rerunst 重新运行极域电子教室</span><br />
+                <span>kill [pid] 结束指定 pid 的进程</span><br />
+                <span>findps [processName] 查找指定名称的进程 pid</span><br />
+                <span>ss 查通知极域病毒端强制爆破</span><br />
+                <span>sss 立即关机</span><br />
+                <span>ssr 立即重启</span><br />
+                <span>sst [second] 定时在指定 second 秒后关机</span><br />
+                <span>ssss 内核关机</span><br />
+                <span>sssr 内核重启</span><br />
+                <span>ckend 分离本程序与极域</span><br />
+                <span>whereisi 显示当前程序目录</span><br />
+                <span>version 显示当前程序版本</span><br />
+                <span>testupdate 测试升级模块</span><br />
+                <span>crash 测试崩溃</span><br />
+                <span>exit 强制退出程序</span><br />
+                <a href="#" id="link_hide">hide 隐藏主界面</a><br />
+                <a href="#" id="link_read_jiyu_password" class="text-info">jypasswd 破解极域密码</a><br />
+                <span>uj 强制从极域卸载已注入的病毒</span><br />
+                <span>inspector 启动 UI 调试器</span><br />
+                <span>fuljydrv 强制卸载极域的保护驱动 <span class="text-danger">(有蓝屏风险 慎用)</span></span><br />
+                <span>unloaddrv 卸载本软件的驱动</span><br />
             </div>
+
         </div>
         <div class="window-extend-area-mask"></div>
         <!--初次提示框-->
@@ -985,6 +1024,18 @@
             <div class="text-right" style="position: absolute;bottom: 0; left: 15px; right: 15px; height :45px;text-align:center;">
                 <a href="#" class="btn-common btn-primary" id="update_message_update">立即更新!</a>
                 <a href="#" class="btn-common ml-2" id="update_message_close">下次再说</a>
+            </div>
+        </div>
+        <!--更新最新提示框-->
+        <div class="window-extend-area with-mask" id="isnew_message">
+            <div class="new-ver">
+                <span class="text">检测更新</span>
+                <span class="ver" id="isnew_message_title">你的 JiYuTrainer 是最新的版本！</span>
+            </div>
+            <p id="isnew_message_text">
+            </p>
+            <div class="text-right" style="position: absolute;bottom: 0; left: 15px; right: 15px; height :45px;text-align:center;">
+                <a href="#" class="btn-common btn-primary" id="isnew_message_close">关闭</a>
             </div>
         </div>
         <div class="window-extend-area-mask"></div>
@@ -1066,7 +1117,7 @@
         $(#exit_message_close).onClick =  function (){ common_close_extend_area($(#exit_message)); }
         $(#exit_message_close2).onClick =  function (){ common_close_extend_area($(#exit_message)); }
         $(#cmds_message_close).onClick =  function (){ common_close_extend_area($(#cmds_message)); }
-        $(#cmds_message_close2).onClick =  function (){ common_close_extend_area($(#cmds_message)); }
+        $(#isnew_message_close).onClick =  function (){ common_close_extend_area($(#isnew_message)); }
 
         //Tooltips
         $(#btn_kill).on("mouseenter", function () { $(.tooltip.tooltip-jiyu-pid).attributes.addClass("shown"); });
@@ -1119,6 +1170,9 @@
             const tooltip_fast = $(#tooltip_fast);
             tooltip_fast.attributes.addClass("shown");
             body.timer(4s, function() { tooltip_fast.attributes.removeClass("shown") });
+        }
+        function closeFastTip(){
+            $(#tooltip_fast).attributes.removeClass("shown")
         }
         function showWindow(){
             body.onAnimationEnd = function(){ };

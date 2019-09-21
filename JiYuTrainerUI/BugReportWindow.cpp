@@ -26,7 +26,7 @@ INT_PTR CALLBACK BugReportDlgFunc(HWND hDlg, UINT message, WPARAM wParam, LPARAM
 
 		int  appArgCount = currentApp->GetCommandLineArraySize();
 		LPWSTR *appArgList = currentApp->GetCommandLineArray();
-		int argFIndex = currentApp->FindArgInCommandLine(appArgList, appArgCount, L"-bugfile");
+		int argFIndex = currentApp->FindArgInCommandLine(appArgList, appArgCount, L"bugfile");
 		if (argFIndex >= 0 && (argFIndex + 1) < appArgCount) {
 			LPCWSTR bugFilePath = appArgList[argFIndex + 1];
 			CHAR szTest[1000];

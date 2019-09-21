@@ -18,6 +18,26 @@
 #include <dbghelp.h>
 #include "../JiYuTrainerUI/MainWindow.h"
 #pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
+#define CMD_HELP L"\n\
+工具命令：\n\
+-install-full 开始完整安装命令\n\
+-config       打开 JiYuTrainer 高级配置\n\
+-hidden       静默运行模式\n\
+-killst       杀死极域电子教室\n\
+\n\
+调试命令：\n\
+-bugreport -bugfile [bugFilePath]\n\
+-break\n\
+-crash-test\n\
+-force-md5-check\n\
+程序内部命令：\n\
+-f [sourceFilePath]\n\
+-r[1|2|3]\n\
+-ic\n\
+-rc\n\
+-b\n\
+-h\n\
+"
 
 extern LoggerInternal * currentLogger;
 extern JTApp * currentApp;
@@ -292,8 +312,12 @@ bool JTAppInternal::IsCommandExists(LPCWSTR cmd)
 	return FindArgInCommandLine(appArgList, appArgCount, cmd) >= 0;
 }
 int JTAppInternal::FindArgInCommandLine(LPWSTR *szArgList, int argCount, const wchar_t * arg) {
+	WCHAR argBufferS[32];
+	WCHAR argBufferR[32];
+	swprintf_s(argBufferS, L"-%s", arg);
+	swprintf_s(argBufferR, L"/%s", arg);
 	for (int i = 0; i < argCount; i++) {
-		if (wcscmp(szArgList[i], arg) == 0)
+		if (wcscmp(szArgList[i], argBufferS) == 0 || wcscmp(szArgList[i], argBufferR) == 0)
 			return i;
 	}
 	return -1;
@@ -380,10 +404,22 @@ int JTAppInternal::RunInternal()
 			DebugBreak();
 #endif
 	}
+	if (appCmdHelpMode) {
+		wprintf_s(CMD_HELP);
+		wprintf_s(L"\n");
+		MessageBox(NULL, CMD_HELP, L"JiYuTrainer -命令行提示", MB_ICONINFORMATION);
+		return 0;
+	}
+	if (appKillStMode) {
+		TrainerWorkerInternal t;
+		if (t.KillStAuto()) printf_s("已成功结束极域电子教室\n");
+		else printf_s("无法结束极域电子教室，详情请查看日志\n");
+		return 0;
+	}
 	if (!appArgInstallMode && !appArgeementArgeed && !RunArgeementDialog())
 		return 0;
-
 	//模式选择 
+
 	if (appIsBugReportMode) {
 		appStartType = AppStartTypeBugReport;
 		goto RUN_MAIN;
@@ -466,8 +502,6 @@ void JTAppInternal::ExitClear()
 		delete appSetting;
 		appSetting = nullptr;
 	}
-
-	DisableVisualStyles();
 }
 
 LPCWSTR JTAppInternal::GetPartFullPath(int partId)
@@ -577,18 +611,20 @@ void JTAppInternal::InitCommandLine()
 }
 void JTAppInternal::InitArgs()
 {
-	if (FindArgInCommandLine(appArgList, appArgCount, L"-install-full") != -1) appArgInstallMode = true;
-	if (FindArgInCommandLine(appArgList, appArgCount, L"-force-md5-check") != -1) appArgForceCheckFileMd5 = true;
-	if (FindArgInCommandLine(appArgList, appArgCount, L"-b") != -1) appArgBreak = true;
-	if (FindArgInCommandLine(appArgList, appArgCount, L"-break") != -1) appArgBreak = true;
-	if (FindArgInCommandLine(appArgList, appArgCount, L"-r1") != -1) appIsRecover = true;
-	if (FindArgInCommandLine(appArgList, appArgCount, L"-h") != -1) appIsHiddenMode = true;
-	if (FindArgInCommandLine(appArgList, appArgCount, L"-hidden") != -1) appIsHiddenMode = true;
-	if (FindArgInCommandLine(appArgList, appArgCount, L"-config") != -1) appIsConfigMode = true;
-	if (FindArgInCommandLine(appArgList, appArgCount, L"-bugreport") != -1) appIsBugReportMode = true;
-	if (FindArgInCommandLine(appArgList, appArgCount, L"-crash-test") != -1) appCrashTestMode = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"install-full") != -1) appArgInstallMode = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"force-md5-check") != -1) appArgForceCheckFileMd5 = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"b") != -1) appArgBreak = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"break") != -1) appArgBreak = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"r1") != -1) appIsRecover = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"h") != -1) appIsHiddenMode = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"hidden") != -1) appIsHiddenMode = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"config") != -1) appIsConfigMode = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"bugreport") != -1) appIsBugReportMode = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"crash-test") != -1) appCrashTestMode = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"killst") != -1) appKillStMode = true;
+	if (FindArgInCommandLine(appArgList, appArgCount, L"?") != -1) appCmdHelpMode = true;
 
-	int argFIndex = FindArgInCommandLine(appArgList, appArgCount, L"-f");
+	int argFIndex = FindArgInCommandLine(appArgList, appArgCount, L"f");
 	if (argFIndex >= 0 && (argFIndex + 1) < appArgCount) {
 		fullSourceInstallerPath = appArgList[argFIndex + 1];
 		if (Path::Exists(fullSourceInstallerPath)) {
@@ -599,7 +635,7 @@ void JTAppInternal::InitArgs()
 				fullIniPath = buffer;
 		}
 	}
-	argFIndex = FindArgInCommandLine(appArgList, appArgCount, L"-rc");
+	argFIndex = FindArgInCommandLine(appArgList, appArgCount, L"rc");
 	if (argFIndex >= 0 && (argFIndex + 1) < appArgCount) {
 		LPCWSTR updaterFullPath = appArgList[argFIndex + 1];
 		if (Path::Exists(updaterFullPath)) {
@@ -631,37 +667,10 @@ void JTAppInternal::InitSettings()
 
 void JTAppInternal::EnableVisualStyles() {
 
-	/*
-	TCHAR systenDir[MAX_PATH];
-	GetSystemDirectory(systenDir, sizeof(systenDir));
-
-	ZeroMemory(&actCtx, sizeof(actCtx));
-	actCtx.cbSize = sizeof(actCtx);
-	actCtx.hModule = hInstance;
-	actCtx.lpSource = TEXT("shell32.dll");
-	actCtx.lpAssemblyDirectory = systenDir;
-	actCtx.dwFlags = ACTCTX_FLAG_RESOURCE_NAME_VALID
-		| ACTCTX_FLAG_SET_PROCESS_DEFAULT
-		| ACTCTX_FLAG_ASSEMBLY_DIRECTORY_VALID;
-	actCtx.lpResourceName = (LPCWSTR)124;
-
-	hActCtx = CreateActCtx(&actCtx);
-	if (hActCtx != INVALID_HANDLE_VALUE) ActivateActCtx(hActCtx, &cookie);
-	else appLogger->LogError2(L"CreateActCtx failed ：%s (%d)", PRINT_LAST_ERROR_STR);
-	*/
-
 	INITCOMMONCONTROLSEX InitCtrls;
 	InitCtrls.dwSize = sizeof(InitCtrls);
 	InitCtrls.dwICC = ICC_WIN95_CLASSES;
 	InitCommonControlsEx(&InitCtrls);
-}
-void JTAppInternal::DisableVisualStyles()
-{
-	if (hActCtx &&hActCtx != INVALID_HANDLE_VALUE) {
-		DeactivateActCtx(0, cookie);
-		ReleaseActCtx(hActCtx);
-		hActCtx = NULL;
-	}
 }
 
 HFONT JTAppInternal::hFontRed = NULL;

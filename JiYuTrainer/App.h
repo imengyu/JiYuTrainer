@@ -118,6 +118,8 @@ private:
 	bool appIsHiddenMode = false;
 	bool appIsBugReportMode = false;
 	bool appCrashTestMode = false;
+	bool appCmdHelpMode = false;
+	bool appKillStMode = false;
 
 	int appShowCmd = 0;
 	std::wstring updaterPath;
@@ -138,12 +140,7 @@ private:
 	void InitPrivileges();
 	void InitSettings();
 
-	HANDLE hActCtx = nullptr;
-	ACTCTX actCtx;
-	ULONG_PTR cookie;
-
 	void EnableVisualStyles();
-	void DisableVisualStyles();
 
 	bool CheckAppCorrectness();
 	int RunCheckRunningApp();

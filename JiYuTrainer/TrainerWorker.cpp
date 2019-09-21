@@ -274,6 +274,13 @@ FORCEKILL:
 	CloseHandle(hProcess);
 	return false;
 }
+bool TrainerWorkerInternal::KillStAuto()
+{
+	RunCk();
+	RunResetPid();
+
+	return Kill(true);
+}
 bool TrainerWorkerInternal::Rerun(bool autoWork)
 {
 	if (!_StudentMainFileLocated) {
@@ -524,7 +531,10 @@ READ_EX:
 				_TopDomainPassword = ss;
 				return true;
 			}
-			else return false;
+			else {
+				currentLogger->LogWarn2(L"UnDecryptJiyuKnock failed !");
+				return false;
+			}
 		}
 		else currentLogger->LogWarn2(L"RegQueryValueEx Failed : %d", lastError);
 		RegCloseKey(hKey);
