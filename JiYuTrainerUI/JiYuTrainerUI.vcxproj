@@ -72,16 +72,16 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>E:\Programming\Example\sciter-sdk-master\include;$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);</IncludePath>
-    <LibraryPath>E:\Programming\Example\sciter-sdk-master\lib\32;$(VC_LibraryPath_x86);$(WindowsSdk_71A_LibraryPath_x86);$(SolutionDir)$(Configuration)\</LibraryPath>
+    <IncludePath>$(SolutionDir)JiYuTrainerUI\sciter-sdk\include;$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);</IncludePath>
+    <LibraryPath>$(SolutionDir)JiYuTrainerUI\sciter-sdk\lib\32;$(VC_LibraryPath_x86);$(WindowsSdk_71A_LibraryPath_x86);$(SolutionDir)$(Configuration)\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>E:\Programming\Example\sciter-sdk-master\include;$(IncludePath)</IncludePath>
-    <LibraryPath>E:\Programming\Example\sciter-sdk-master\lib\32;$(VC_LibraryPath_x86);$(WindowsSdk_71A_LibraryPath_x86);$(SolutionDir)$(Configuration)\</LibraryPath>
+    <IncludePath>$(SolutionDir)JiYuTrainerUI\sciter-sdk\include;$(IncludePath)</IncludePath>
+    <LibraryPath>$(SolutionDir)JiYuTrainerUI\sciter-sdk\lib\32;$(VC_LibraryPath_x86);$(WindowsSdk_71A_LibraryPath_x86);$(SolutionDir)$(Configuration)\</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
