@@ -18,7 +18,7 @@
 #include <dbghelp.h>
 #include "../JiYuTrainerUI/MainWindow.h"
 #pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
-#define CMD_HELP L"\n\
+#define CMD_HELP L"\
 工具命令：\n\
 -install-full 开始完整安装命令\n\
 -config       打开 JiYuTrainer 高级配置\n\
@@ -30,6 +30,7 @@
 -break\n\
 -crash-test\n\
 -force-md5-check\n\
+\n\
 程序内部命令：\n\
 -f [sourceFilePath]\n\
 -r[1|2|3]\n\
@@ -82,7 +83,8 @@ int JTAppInternal::CheckAndInstall()
 
 		//写入启动bat
 		std::wstring szTempMainStartBatPathwz;
-		std::wstring szTempMainStartBatPathct = FormatString(L"start \"%s\" -f \"%s\"", szTempMainPath, fullPath.c_str());
+		std::wstring szTempMainStartBatPathct = FormatString(L"@echo off\necho Starting App...\
+\nstart \"\" \"%s\" -f \"%s\"", szTempMainPath, fullPath.c_str());
 		szTempMainStartBatPathwz = szTempMainStartBatPath;
 		if (TxtUtils::WriteStringToTxt(szTempMainStartBatPathwz, szTempMainStartBatPathct)) useBatStart = true;
 
