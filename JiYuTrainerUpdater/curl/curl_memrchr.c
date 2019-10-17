@@ -20,7 +20,6 @@
  *
  ***************************************************************************/
 
-
 #include "curl_setup.h"
 #include "curl_memrchr.h"
 #include "curl_memory.h"

@@ -32,7 +32,6 @@
  * OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF
  * SUCH DAMAGE.  */
 
-
 #include "curl_setup.h"
 
 #if defined(HAVE_GSSAPI) && !defined(CURL_DISABLE_FTP)

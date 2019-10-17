@@ -20,7 +20,6 @@
  *
  ***************************************************************************/
 
-
 #include "curl_setup.h"
 
 #if defined(USE_GSKIT) || defined(USE_NSS) || defined(USE_GNUTLS) || \

@@ -72,7 +72,7 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(SolutionDir)JiYuTrainerUpdater\curl</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(SolutionDir)JiYuTrainerUpdater;$(SolutionDir)JiYuTrainerUpdater\curl</IncludePath>
     <LibraryPath>$(SolutionDir)$(Configuration);$(VC_LibraryPath_x86);$(WindowsSdk_71A_LibraryPath_x86);</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
@@ -80,7 +80,7 @@
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(SolutionDir)JiYuTrainerUpdater\curl</IncludePath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);$(SolutionDir)JiYuTrainerUpdater;$(SolutionDir)JiYuTrainerUpdater\curl</IncludePath>
     <LibraryPath>$(SolutionDir)$(Configuration)\;$(VC_LibraryPath_x86);$(WindowsSdk_71A_LibraryPath_x86);</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -207,8 +207,6 @@
     <ClInclude Include="curl\curl_rtmp.h" />
     <ClInclude Include="curl\curl_sasl.h" />
     <ClInclude Include="curl\curl_sec.h" />
-    <ClInclude Include="curl\curl_setup.h" />
-    <ClInclude Include="curl\curl_setup_once.h" />
     <ClInclude Include="curl\curl_sspi.h" />
     <ClInclude Include="curl\curl_threads.h" />
     <ClInclude Include="curl\dict.h" />

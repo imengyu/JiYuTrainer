@@ -20,7 +20,6 @@
  *
  ***************************************************************************/
 
-
 #include "curl_setup.h"
 
 #if defined(USE_OPENSSL) || defined(USE_AXTLS) || defined(USE_GSKIT)

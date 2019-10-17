@@ -35,7 +35,6 @@
  * 01-29-97 11:32PM <DIR> prog
  */
 
-
 #include "curl_setup.h"
 
 #ifndef CURL_DISABLE_FTP

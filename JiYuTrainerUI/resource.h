@@ -14,6 +14,7 @@
 #define IDI_HELP                        140
 #define IDB_CLOSE                       141
 #define IDB_HELP                        142
+#define IDI_WARN                        147
 #define IDC_CHECK_INI_0                 1001
 #define IDC_CHECK_INI_1                 1002
 #define IDC_CHECK_INI_3                 1003
@@ -34,7 +35,8 @@
 #define IDC_SAVE                        1019
 #define IDC_CHECK_INI_9                 1020
 #define IDC_CHECK_INI_10                1021
-#define IDC_HOTKEY1                     1023
+#define IDC_CHECK_DONOT_SHOW_AGAIN      1024
+#define IDC_MESSAGE                     1025
 #define IDM_HELP                        32774
 #define IDM_EXIT                        32775
 #define IDM_SHOWMAIN                    32776
@@ -43,9 +45,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        143
+#define _APS_NEXT_RESOURCE_VALUE        148
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1024
+#define _APS_NEXT_CONTROL_VALUE         1026
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

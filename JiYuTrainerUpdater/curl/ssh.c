@@ -22,7 +22,6 @@
 
 /* #define CURL_LIBSSH2_DEBUG */
 
-
 #include "curl_setup.h"
 
 #ifdef USE_LIBSSH2

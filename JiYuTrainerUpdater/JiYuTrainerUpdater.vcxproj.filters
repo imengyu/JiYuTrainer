@@ -150,12 +150,6 @@
     <ClInclude Include="curl\curl_sec.h">
       <Filter>头文件\curl</Filter>
     </ClInclude>
-    <ClInclude Include="curl\curl_setup.h">
-      <Filter>头文件\curl</Filter>
-    </ClInclude>
-    <ClInclude Include="curl\curl_setup_once.h">
-      <Filter>头文件\curl</Filter>
-    </ClInclude>
     <ClInclude Include="curl\curl_sspi.h">
       <Filter>头文件\curl</Filter>
     </ClInclude>

@@ -21,7 +21,6 @@
  * KIND, either express or implied.
  *
  ***************************************************************************/
-
 #include "curl_setup.h"
 
 /* this is for digest header input */

@@ -9,6 +9,7 @@
 #include "NtHlp.h"
 #include "KernelUtils.h"
 #include "DriverLoader.h"
+#include "RegHlp.h"
 #include "TxtUtils.h"
 #include "XUnzip.h"
 #include <Shlwapi.h>
@@ -42,6 +43,8 @@
 
 extern LoggerInternal * currentLogger;
 extern JTApp * currentApp;
+
+extern NtCloseFun NtClose;
 
 JTAppInternal::JTAppInternal(HINSTANCE hInstance)
 {
@@ -83,8 +86,7 @@ int JTAppInternal::CheckAndInstall()
 
 		//写入启动bat
 		std::wstring szTempMainStartBatPathwz;
-		std::wstring szTempMainStartBatPathct = FormatString(L"@echo off\necho Starting App...\
-\nstart \"\" \"%s\" -f \"%s\"", szTempMainPath, fullPath.c_str());
+		std::wstring szTempMainStartBatPathct = FormatString(L"start \"\" \"%s\" -f \"%s\"\nexit", szTempMainPath, fullPath.c_str());
 		szTempMainStartBatPathwz = szTempMainStartBatPath;
 		if (TxtUtils::WriteStringToTxt(szTempMainStartBatPathwz, szTempMainStartBatPathct)) useBatStart = true;
 
@@ -334,6 +336,54 @@ LPCWSTR JTAppInternal::MakeFromSourceArg(LPCWSTR arg)
 	return arg;
 }
 
+int str3601[8] = { '3','6','0','安','全','卫','士', 0 };
+int str3602[8] = { '3','6','0','S','a','f','e', 0 };
+int str3603[6] = { '3','6','0','S','D', 0 };
+int strDb1[27] = { 'K','i','n','g','s','o','f','t',' ','I','n','t','e','r','n','e','t',' ','S','e','c','u','r','i','t','y', 0 };
+
+void JTAppInternal::CloseSourceDir() {
+	
+	if (Path::Exists(fullSourceInstallerDir)) {
+		HANDLE hDir = CreateFile(fullSourceInstallerDir.c_str(), GENERIC_READ,
+			FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+		if (hDir != INVALID_HANDLE_VALUE) {
+			NtClose(hDir);
+			NtClose(hDir);
+		}
+	}
+}
+bool JTAppInternal::CheckAntiVirusSoftware(bool showTip) {
+
+	WCHAR wstr3601[8];
+	WCHAR wstr3602[8];
+	WCHAR wstr3603[8];
+	WCHAR wstrDb1[8];
+
+	copyStrFromIntArr(wstr3601, str3601, sizeof(str3601) / sizeof(int));
+	copyStrFromIntArr(wstr3602, str3602, sizeof(str3602) / sizeof(int));
+	copyStrFromIntArr(wstr3603, str3603, sizeof(str3603) / sizeof(int));
+	copyStrFromIntArr(wstrDb1, strDb1, sizeof(wstrDb1) / sizeof(int));
+
+	if (MRegCheckUninstallItemExists(wstr3601)
+		|| MRegCheckUninstallItemExists(wstr3602)
+		|| MRegCheckUninstallItemExists(wstr3603))
+		existsAntiVirus += L"360";
+	if (MRegCheckUninstallItemExists(wstrDb1))
+		existsAntiVirus += L"、金山毒霸";
+
+	if (existsAntiVirus != L"") {
+		if (showTip)  _DialogBoxParamW(hInstance, MAKEINTRESOURCE(IDD_DIALOG_AVTIP), NULL, AVTipWndProc, (LPARAM)this);
+		return true;
+	}
+
+	return false;
+}
+void JTAppInternal::copyStrFromIntArr(wchar_t * buffer, int * arr, size_t len)
+{
+	for (int i = 0; i < len; i++) 
+		buffer[i] = (WCHAR)arr[i];
+}
+
 int JTAppInternal::Run(int nCmdShow)
 {
 	this->appShowCmd = nCmdShow;
@@ -393,7 +443,6 @@ int JTAppInternal::RunInternal()
 	InitSettings();
 
 	EnableVisualStyles();
-
 	if (!CheckAppCorrectness())
 		return APP_FAIL_PIRACY_VERSION;
 
@@ -417,6 +466,10 @@ int JTAppInternal::RunInternal()
 		if (t.KillStAuto()) printf_s("已成功结束极域电子教室\n");
 		else printf_s("无法结束极域电子教室，详情请查看日志\n");
 		return 0;
+	}
+	if (!appArgInstallMode) {
+		appForceNoDriver = CheckAntiVirusSoftware(appShowAvTest);
+		if (appFirstUse) appSetting->SetSettingBool(L"FirstUse", false, L"JTArgeement");
 	}
 	if (!appArgInstallMode && !appArgeementArgeed && !RunArgeementDialog())
 		return 0;
@@ -455,6 +508,9 @@ int JTAppInternal::RunInternal()
 	//Install modules
 	if (CheckAndInstall()) return APP_FAIL_INSTALL;
 	if (appIsInstaller) return 0;
+	//Close old dir
+	CloseSourceDir();
+	
 
 	//appLogger->Log(L"SetUnhandledExceptionFilter Prevented: %d", PreventSetUnhandledExceptionFilter());
 	appWorker = new TrainerWorkerInternal();
@@ -635,6 +691,10 @@ void JTAppInternal::InitArgs()
 			PathRenameExtension(buffer, L".ini");
 			if (Path::Exists(fullSourceInstallerPath))
 				fullIniPath = buffer;
+
+			wcscpy_s(buffer, fullSourceInstallerPath.c_str());
+			PathRemoveFileSpec(buffer);
+			fullSourceInstallerDir = buffer;
 		}
 	}
 	argFIndex = FindArgInCommandLine(appArgList, appArgCount, L"rc");
@@ -661,6 +721,8 @@ void JTAppInternal::InitSettings()
 {
 	appSetting = new SettingHlpInternal(fullIniPath.c_str());
 
+	appFirstUse = appSetting->GetSettingBool(L"FirstUse", true, L"JTArgeement");
+	appShowAvTest = appSetting->GetSettingBool(L"ShowAvsTest", true);
 	appArgeementArgeed = appSetting->GetSettingBool(L"Argeed", false, L"JTArgeement");
 	appForceNoDriver = appSetting->GetSettingBool(L"DisableDriver", false);
 	appForceNoSelfProtect = !appSetting->GetSettingBool(L"SelfProtect", true);
@@ -678,6 +740,30 @@ void JTAppInternal::EnableVisualStyles() {
 HFONT JTAppInternal::hFontRed = NULL;
 HINSTANCE JTAppInternal::hInstance = NULL;
 
+INT_PTR CALLBACK JTAppInternal::AVTipWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
+{
+	LRESULT lResult = 0;
+
+	switch (message)
+	{
+	case WM_INITDIALOG: {
+
+		SendMessage(hDlg, WM_SETICON, ICON_SMALL, (LPARAM)LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_MAIN)));
+		SendMessage(hDlg, WM_SETICON, ICON_BIG, (LPARAM)LoadIcon(hInstance, MAKEINTRESOURCE(IDI_APP_MAIN)));
+		SetDlgItemText(hDlg, IDC_MESSAGE, FormatString(L"我们检测到您的计算机上安装了 %s 杀毒软件，因为 JiYuTrainer 会对极域进行操作，可能会被杀毒软件误识别为病毒。\n因此我们建议您 关闭杀毒软件 或 添加本软件至白名单。", ((JTAppInternal*)lParam)->existsAntiVirus.c_str()).c_str());
+		lResult = TRUE;
+		break;
+	}
+	case WM_COMMAND: 
+		if(IsDlgButtonChecked(hDlg, IDC_CHECK_DONOT_SHOW_AGAIN) == BST_CHECKED)
+			((JTAppInternal*)currentApp)->appSetting->SetSettingBool(L"ShowAvsTest", false);
+		EndDialog(hDlg, wParam); 
+		lResult = wParam;  
+		break;
+	default: return DefWindowProc(hDlg, message, wParam, lParam);
+	}
+	return lResult;
+}
 INT_PTR CALLBACK JTAppInternal::ArgeementWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam)
 {
 	LRESULT lResult = 0;

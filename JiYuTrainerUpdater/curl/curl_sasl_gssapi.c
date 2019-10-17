@@ -23,7 +23,6 @@
  *
  ***************************************************************************/
 
-
 #include "curl_setup.h"
 
 #if defined(HAVE_GSSAPI) && defined(USE_KERBEROS5)

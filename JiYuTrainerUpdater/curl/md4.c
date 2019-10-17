@@ -35,7 +35,6 @@
  * compile-time configuration.
  */
 
-
 #include "curl_setup.h"
 
 /* NSS and OS/400 crypto library do not provide the MD4 hash algorithm, so

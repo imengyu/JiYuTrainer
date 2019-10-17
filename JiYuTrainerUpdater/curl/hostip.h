@@ -22,7 +22,6 @@
  *
  ***************************************************************************/
 
-
 #include "curl_setup.h"
 #include "hash.h"
 #include "curl_addrinfo.h"

@@ -35,7 +35,6 @@
  * page at http://daniel.haxx.se/trio/
  */
 
-
 #include "curl_setup.h"
 
 #if defined(DJGPP) && (DJGPP_MINOR < 4)

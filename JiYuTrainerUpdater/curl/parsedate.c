@@ -73,7 +73,6 @@
 
 */
 
-
 #include "curl_setup.h"
 
 #ifdef HAVE_LIMITS_H

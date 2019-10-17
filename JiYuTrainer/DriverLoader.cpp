@@ -5,49 +5,13 @@
 #include "KernelUtils.h"
 #include "SysHlp.h"
 #include "AppPublic.h"
-#include <shlwapi.h>
+#include "RegHlp.h"
 
 extern JTApp * currentApp;
 extern LoggerInternal * currentLogger;
 
 HANDLE hKDrv = NULL;
 
-//删除注册表键以及子键
-BOOL MRegDeleteKey(HKEY hRootKey, LPWSTR path) {
-
-	DWORD lastErr = SHDeleteKey(hRootKey, path);
-	if (lastErr == ERROR_SUCCESS || lastErr == ERROR_FILE_NOT_FOUND)
-		return TRUE;
-	else
-	{
-		SetLastError(lastErr);
-		return 0;
-	}
-}
-BOOL MRegForceDeleteServiceRegkey(LPWSTR lpszDriverName)
-{
-	BOOL rs = FALSE;
-	wchar_t regPath[MAX_PATH];
-	wsprintf(regPath, L"SYSTEM\\CurrentControlSet\\services\\%s", lpszDriverName);
-	rs = MRegDeleteKey(HKEY_LOCAL_MACHINE, regPath);
-
-	if (!rs) currentLogger->LogWarn2(L"RegDeleteTree failed : %d in delete key HKEY_LOCAL_MACHINE\\%s", GetLastError(), regPath);
-	else currentLogger->LogInfo(L"Service Key deleted : HKEY_LOCAL_MACHINE\\%s", regPath);
-
-	wchar_t regName[MAX_PATH];
-	wcscpy_s(regName, lpszDriverName);
-	_wcsupr_s(regName);
-	wsprintf(regPath, L"SYSTEM\\CurrentControlSet\\Enum\\Root\\LEGACY_%s", regName);
-	rs = MRegDeleteKey(HKEY_LOCAL_MACHINE, regPath);
-
-	if (!rs) {
-		currentLogger->LogWarn2(L"RegDeleteTree failed : %d in delete key HKEY_LOCAL_MACHINE\\%s", GetLastError(), regPath);
-		rs = TRUE;
-	}
-	else currentLogger->LogInfo(L"Service Key deleted : HKEY_LOCAL_MACHINE\\%s", regPath);
-
-	return rs;
-}
 //加载驱动
 //    lpszDriverName：驱动的服务名
 //    driverPath：驱动的完整路径

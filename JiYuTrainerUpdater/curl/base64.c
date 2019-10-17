@@ -22,7 +22,6 @@
 
 /* Base64 encoding/decoding */
 
-
 #include "curl_setup.h"
 #include "curl_printf.h"
 #include "urldata.h" /* for the SessionHandle definition */

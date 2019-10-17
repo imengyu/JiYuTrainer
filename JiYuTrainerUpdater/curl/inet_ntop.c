@@ -18,7 +18,6 @@
  * Original code by Paul Vixie. "curlified" by Gisle Vanem.
  */
 
-
 #include "curl_setup.h"
 
 #ifndef HAVE_INET_NTOP

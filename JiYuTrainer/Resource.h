@@ -3,11 +3,15 @@
 // 供 JiYuTrainer.rc 使用
 //
 #define IDD_DIALOG_ARGEEMENT            104
+#define IDD_DIALOG_AVTIP             105
 #define IDR_DLL_DRIVER                  130
 #define IDR_DLL_HOOKS                   131
 #define IDR_DLL_SCITER                  134
 #define IDI_APP_MAIN                         135
+#define IDI_WARN                        147
 #define IDC_STATIC_RED                  32770
+#define IDC_CHECK_DONOT_SHOW_AGAIN      1024
+#define IDC_MESSAGE                     1025
 #define IDC_STATIC                      -1
 
 // Next default values for new objects

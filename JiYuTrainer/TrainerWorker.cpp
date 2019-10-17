@@ -11,6 +11,7 @@
 #include "KernelUtils.h"
 #include "SysHlp.h"
 #include "SettingHlp.h"
+#include "RegHlp.h"
 
 extern JTApp *currentApp;
 extern LoggerInternal * currentLogger;
@@ -494,28 +495,28 @@ bool TrainerWorkerInternal::ReadTopDomanPassword(BOOL forceKnock)
 
 	if (forceKnock) goto READ_EX;
 	//普通注册表读取，适用于4.0版本
-	
-	lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, SysHlp::Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\TopDomain\\e-Learning Class Standard\\1.00" : L"SOFTWARE\\TopDomain\\e-Learning Class Standard\\1.00", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
-	if (lastError == ERROR_SUCCESS) {
-		DWORD dwType = REG_SZ;
-		WCHAR Data[32];
-		DWORD cbData = 32;
-		lastError = RegQueryValueEx(hKey, L"UninstallPasswd", 0, &dwType, (LPBYTE)Data, &cbData);
-		RegCloseKey(hKey);
 
-		if (lastError == ERROR_SUCCESS) {
-			if (StrEqual(Data, L"Passwd[123456]")) goto READ_EX; //6.0以后读取不了了，都显示Passwd[123456]，用新的方法读取
-			else {
-				_TopDomainPassword = Data;
-				_TopDomainPassword = _TopDomainPassword.substr(6, _TopDomainPassword.size() - 6);
-				return true;
-			}
+	WCHAR Data[32];
+	if (MRegReadKeyString64And32(HKEY_LOCAL_MACHINE,
+		L"SOFTWARE\\TopDomain\\e-Learning Class Standard\\1.00",
+		L"SOFTWARE\\Wow6432Node\\TopDomain\\e-Learning Class Standard\\1.00", L"UninstallPasswd", Data, 32)) {
+		
+		if (StrEqual(Data, L"Passwd[123456]")) goto READ_EX; //6.0以后读取不了了，都显示Passwd[123456]，用新的方法读取
+		else {
+			_TopDomainPassword = Data;
+			_TopDomainPassword = _TopDomainPassword.substr(6, _TopDomainPassword.size() - 6);
+			return true;
 		}
+
 	}
+	else currentLogger->LogWarn2(L"MRegReadKeyString64And32 Failed : %s (%d)", PRINT_LAST_ERROR_STR);
 
 	//HKEY_LOCAL_MACHINE\SOFTWARE\TopDomain\e-Learning Class\Student Knock1
 READ_EX:
-	lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, SysHlp::Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\TopDomain\\e-Learning Class\\Student" : L"SOFTWARE\\TopDomain\\e-Learning Class\\Student", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
+
+	lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, SysHlp::Is64BitOS() ?
+		L"SOFTWARE\\Wow6432Node\\TopDomain\\e-Learning Class\\Student" : 
+		L"SOFTWARE\\TopDomain\\e-Learning Class\\Student", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
 	if (lastError == ERROR_SUCCESS) {
 
 		DWORD dwType = REG_BINARY;
@@ -543,15 +544,14 @@ READ_EX:
 	return false;
 }
 bool TrainerWorkerInternal::AppointStudentMainLocation(LPCWSTR fullPath) {
-	if (Path::GetFileName(fullPath) != L"StudentMain.exe")	
-		return false;
+	if (Path::GetFileName(fullPath) != L"StudentMain.exe")	return false;
 	if (Path::Exists(fullPath)) 
 	{
 		_StudentMainPath = fullPath;
 		_StudentMainFileLocated = true;
 
 		currentApp->GetSettings()->SetSettingStr(L"StudentMainPath", fullPath);
-		currentLogger->Log(L"手动定位极域电子教室位置： %s", fullPath);
+		currentLogger->Log(L"成功手动定位极域电子教室位置： %s", fullPath);
 
 		UpdateStudentMainInfo(false);
 		return true;
@@ -561,27 +561,20 @@ bool TrainerWorkerInternal::AppointStudentMainLocation(LPCWSTR fullPath) {
 bool TrainerWorkerInternal::LocateStudentMainLocation()
 {
 	//注册表查找 极域 路径
-	HKEY hKey;
-	LRESULT lastError = RegOpenKeyEx(HKEY_LOCAL_MACHINE, SysHlp::Is64BitOS() ? L"SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learning Class V6.0" : L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learning Class V6.0", 0, KEY_WOW64_64KEY | KEY_READ, &hKey);
-	if (lastError == ERROR_SUCCESS) {
+	WCHAR Data[MAX_PATH];
+	if (MRegReadKeyString64And32(HKEY_LOCAL_MACHINE,
+		L"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learning Class V6.0",
+		L"SOFTWARE\\Wow6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\e-Learning Class V6.0", 
+		L"DisplayIcon", Data, MAX_PATH)) {
 
-		DWORD dwType = REG_SZ;
-		WCHAR szData[MAX_PATH];
-		DWORD dwSize = MAX_PATH * sizeof(WCHAR);
-		lastError = RegQueryValueEx(hKey, L"DisplayIcon", 0, &dwType, (LPBYTE)szData, &dwSize);
-		if (lastError == ERROR_SUCCESS) {
-			if (Path::Exists(szData)) {
-				_StudentMainPath = szData;
-				_StudentMainFileLocated = true;
-				return true;
-			}
-			else currentLogger->Log(L"读取注册表 [DisplayIcon] 获得了一个无效的极域电子教室路径 : %s", szData);
+		if (Path::Exists(Data)) {
+			_StudentMainPath = Data;
+			_StudentMainFileLocated = true;
+			return true;
 		}
-		else currentLogger->LogWarn2(L"RegQueryValueEx Failed : %d", lastError);
-
-		RegCloseKey(hKey);
+		else currentLogger->Log(L"读取注册表 [DisplayIcon] 获得了一个无效的极域电子教室路径 : %s", Data);
 	}
-	else currentLogger->LogWarn2(L"RegOpenKeyEx Failed : %d", lastError);
+	else currentLogger->LogWarn2(L"MRegReadKeyString64And32 Failed : %s (%d)", PRINT_LAST_ERROR_STR);
 
 	//读取用户指定的路径
 	wstring appointStudentMainPath  = currentApp->GetSettings()->GetSettingStr(L"StudentMainPath", L"", MAX_PATH);

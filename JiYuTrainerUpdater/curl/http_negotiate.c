@@ -20,7 +20,6 @@
  *
  ***************************************************************************/
 
-
 #include "curl_setup.h"
 
 #if defined(HAVE_GSSAPI) && !defined(CURL_DISABLE_HTTP) && defined(USE_SPNEGO)

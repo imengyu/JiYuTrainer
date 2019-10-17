@@ -199,8 +199,10 @@
     <ResourceCompile Include="JiYuTrainerUI.rc" />
   </ItemGroup>
   <ItemGroup>
+    <Image Include="..\icon1.ico" />
     <Image Include="..\JiYuTrainerBug.ico" />
     <Image Include="..\JiYuTrainerLogo.ico" />
+    <Image Include="..\JiYuTrainerWarn.ico" />
     <Image Include="..\JiYuTrainer\JiYuKillerLoader.ico" />
     <Image Include="res\bg-area.png" />
     <Image Include="res\bg-main-state.png" />

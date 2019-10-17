@@ -178,6 +178,7 @@
     <ClInclude Include="MsgCenter.h" />
     <ClInclude Include="NtHlp.h" />
     <ClInclude Include="PathHelper.h" />
+    <ClInclude Include="RegHlp.h" />
     <ClInclude Include="Resource.h" />
     <ClInclude Include="SettingHlp.h" />
     <ClInclude Include="stdafx.h" />
@@ -203,6 +204,7 @@
     <ClCompile Include="MsgCenter.cpp" />
     <ClCompile Include="NtHlp.cpp" />
     <ClCompile Include="PathHelper.cpp" />
+    <ClCompile Include="RegHlp.cpp" />
     <ClCompile Include="SettingHlp.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>

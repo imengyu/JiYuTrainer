@@ -45,13 +45,14 @@ public:
 
 	LPCWSTR MakeFromSourceArg(LPCWSTR arg);
 
+	void CloseSourceDir();
+	bool CheckAntiVirusSoftware(bool showTip);
+
 	int Run(int nCmdShow);
 	int GetResult() { return appResult; }
 	void Exit(int code);
 
 	void LoadDriver();
-
-
 
 	HINSTANCE GetInstance() {
 		return hInstance;
@@ -79,6 +80,7 @@ private:
 	std::wstring fullPath;
 	std::wstring fullDir;
 	std::wstring fullSourceInstallerPath;
+	std::wstring fullSourceInstallerDir;
 	std::wstring fullIniPath;
 	std::wstring fullLogPath;
 	std::wstring fullArgBuffer;
@@ -86,6 +88,8 @@ private:
 	std::wstring fullDriverPath;
 	std::wstring fullHookerPath;
 	std::wstring fullSciterPath;
+
+	std::wstring existsAntiVirus;
 
 	enum AppStartType {
 		AppStartTypeNormal,
@@ -103,6 +107,8 @@ private:
 	PVOID pSciterAPI = NULL;
 	fnDialogBoxParamW _DialogBoxParamW = NULL;
 
+	bool appFirstUse = false;
+	bool appShowAvTest = false;
 	bool appArgeementArgeed = false;
 	bool appForceNoSelfProtect = false;
 	bool appArgInstallMode = false;
@@ -152,6 +158,9 @@ private:
 
 	static HFONT hFontRed;
 
+	void copyStrFromIntArr(wchar_t*buffer, int *arr, size_t len);
+
+	static INT_PTR CALLBACK AVTipWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 	static INT_PTR CALLBACK ArgeementWndProc(HWND hDlg, UINT message, WPARAM wParam, LPARAM lParam);
 };
 
