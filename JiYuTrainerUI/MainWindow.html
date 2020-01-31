@@ -561,27 +561,35 @@
             font-weight: bold;
         }
 
-        .cfg-right-link {
+        .cfg-link {
             display: inline-block;
-            float: right;
             width: 132px;
             margin-top: 4px;
+            position: relative;
         }
-        .cfg-right-link::after {
+        .cfg-link-left {
+            
+        }
+        .cfg-link-right {
+            float: right;
+        }
+        .cfg-link::after {
             display: inline-block;
             position: absolute;
-            right: 162px;
-            top: 1px;
+            left: -29px;
+            top: -3px;
             width: 26px;
             height: 26px;
             background: url(res:link-icons.png) no-repeat 0px 0;
+        }
+
+        #link_unload_netfilter::after {
+            background-position: -78px 0px;
         }
         #link_locate_jiyu_position::after {
             background-position: -52px 0px;
         }
         #link_read_jiyu_password2::after {
-            right: 162px;
-            top: 1px;
             background-position: -26px 0px;
         }
         #link_more_settings::after {
@@ -707,6 +715,10 @@
 
         /* Check box */
         .form-check {
+            position: relative;
+            display: inline-block;
+        }
+        .form-item {
             position: relative;
             display: block;
         }
@@ -838,7 +850,7 @@
             <div class="tooltip" id="tooltip_fast" style="top: 100px; left: 30px; right: 30px"></div>
         </div>
         <div class="window-tooltips-bottom">
-            <div class="tooltip tooltip-vesion" style="bottom: 90px; left: 75px; width: 150px">当前版本 ：V1.6<br /><small>点击查看帮助</small></div>
+            <div class="tooltip tooltip-vesion" style="bottom: 90px; left: 75px; width: 150px">当前版本 ：V1.7<br /><small>点击查看帮助</small></div>
             <div class="tooltip tooltip-jiyu-pid" style="bottom: 86px; left: 30px; width: 300px;padding-top:8px;padding-bottom:8px">StudentMain.exe PID : <span id="status_jiyu_pid">未知</span><br /><small>点击杀死极域电子教室</small></div>
             <div class="tooltip tooltip-jiyu-restart" style="bottom: 86px; left: 30px; width: 300px;padding-top:8px;padding-bottom:8px"><h4 class="m-0">极域位置</h4><span id="status_jiyu_path" style="color: #cecece">未找到极域电子教室</span></div>
             <div class="tooltip tooltip-topmost" id="tooltip_top" style="bottom: 83px; left: 83px; width: 70px">本窗口置顶</div>
@@ -875,41 +887,52 @@
             <div class="window-page active" id="page_setting">
                 <h4 class="mb-0">程序配置</h4>
                 <div class="from-group">
-                    <div class="form-check" style="display: inline-block; width: 180px;" title="勾选该选项可严格控制极域窗口，不仅仅是屏幕广播窗口和黑屏窗口，极域的其他窗口也会被控制">
-                        <input type="checkbox" id="check_auto_fck">
-                        <label for="check_auto_fck">启用严格窗口控制模式</label>
-                    </div>
-                    <div class="form-check" style="display: inline-block; width: 120px;" title="是否启用自动强制清除模式，勾选该模式会在操作失败时直接清除极域有关进程，不建议使用">
-                        <input type="checkbox" id="check_auto_fkill" />
-                        <label for="check_auto_fkill">不客气模式</label>
-                    </div>
-                    <div style="display: inline-block; width: 180px;" class="form-check" title=" （重要）控制器和检测器负责检查和控制极域，如果关闭将导致极域脱离控制或无法检测到极域的操作。不建议关闭，仅调试时使用">
-                        <input type="checkbox" id="check_ck" checked="checked" />
-                        <label for="check_ck" style="color: #007bff">是否启用控制器</label>
-                    </div>
-                    <div style="display: inline-block; width: 160px;" class="form-check" title=" 是否监控极域运行进程，通常教师可以通过极域远程执行应用程序，如果你勾选此项则会监控极域运行进程，你可以选择允许或阻止教师在此电脑上运行程序">
+
+                    <div style="width: 180px;" class="form-check" title=" 是否监控极域运行进程，通常教师可以通过极域远程执行应用程序，如果你勾选此项则会监控极域运行进程，你可以选择允许或阻止教师在此电脑上运行程序">
                         <input type="checkbox" id="check_allow_op" checked="checked" />
                         <label for="check_allow_op">监控极域运行进程</label>
                     </div>
-                    <div class="form-check" title="如果你需要将屏幕广播窗口置顶，请勾选此选项，然后在屏幕广播中选择置顶。本软件默认不允许屏幕广播窗口置顶">
+                    <div class="form-check" style="width: 150px;" title="勾选此选项后极域运行程序或CMD将不会提醒您而是直接拒绝（用极域打开文件也不能）">
+                        <input type="checkbox" id="check_band_op">
+                        <label for="check_band_op">禁止极域运行进程</label>
+                    </div>
+
+                    <div class="form-check" style="width: 180px;" title="如果你需要将屏幕广播窗口置顶，请勾选此选项，然后在屏幕广播中选择置顶。本软件默认不允许屏幕广播窗口置顶">
                         <input type="checkbox" id="check_allow_top" />
                         <label for="check_allow_top">允许屏幕广播窗口置顶</label>
                     </div>
-                    <div class="form-check" title="取消勾选此选项后教师将无法通过极域查看你的电脑屏幕。本软件默认允许此选项">
+                    <div style="width: 140px;" class="form-check" title="是否允许教师通过极域结束您电脑上的进程，默认不允许。">
+                        <input type="checkbox" id="check_probit_terminate_process" checked="checked" />
+                        <label for="check_probit_terminate_process">禁止极域结束进程</label>
+                    </div>
+
+                    <div class="form-check" style="width: 180px;" title="取消勾选此选项后教师将无法通过极域查看你的电脑屏幕。默认允许此选项">
                         <input type="checkbox" id="check_allow_monitor" />
                         <label for="check_allow_monitor">允许教师监视你的电脑</label>
-                        <a href="#" id="link_read_jiyu_password2" style="" class="cfg-right-link text-info" title="本软件可尝试破解极域电子教室的卸载和解锁密码">破解极域的密码</a><br />
                     </div>
-                    <div class="form-check" title="勾选此选项后教师可通过极域控制您的电脑。本软件默认不允许此选项">
+                    <div class="form-check" style="width: 140px;" title="是否允许教师通过极域关闭您电脑上的窗口，默认不允许。 ">
+                        <input type="checkbox" id="check_probit_close_window" />
+                        <label for="check_probit_close_window">禁止极域关闭窗口</label>
+                    </div>
+
+                    <div class="form-check" style="width: 180px;" title="勾选此选项后教师可通过极域控制您的电脑。默认不允许此选项">
                         <input type="checkbox" id="check_allow_control" />
                         <label for="check_allow_control">允许教师控制你的电脑</label>
-                        <a href="#" id="link_locate_jiyu_position" style="" class="cfg-right-link text-info" title="如果本软件并没有找到极域电子教室或者是寻找的路径不正确，您可以手动选择">选择极域主进程位置</a><br />
                     </div>
-                    <div class="form-check">
+                    <div class="form-check" style="width: 140px;">
                         <input type="checkbox" id="check_auto_update">
                         <label for="check_auto_update">自动更新软件</label>
-                        <a href="#" id="link_more_settings" class="cfg-right-link text-info">软件高级配置</a>
                     </div>
+
+                    <div class="form-item" style="margin-top: 15px; ">
+                        <a href="#" id="link_unload_netfilter" class="cfg-link cfg-link-left text-info" style="margin-left: 30px" title="本功能可以卸载极域的网络过滤驱动，来防止教师通过极域限制您电脑的上网。本功能开机后卸载一次即可。">解除网络控制</a>
+                        <a href="#" id="link_read_jiyu_password2" style="" class="cfg-link cfg-link-right text-info" title="本软件可尝试破解极域电子教室的卸载和解锁密码">破解极域的密码</a>
+                    </div>
+                    <div class="form-item">
+                        <a href="#" id="link_more_settings" class="cfg-link cfg-link-left text-info" style="margin-left: 30px">软件高级配置</a>
+                        <a href="#" id="link_locate_jiyu_position" style="" class="cfg-link cfg-link-right text-info" title="如果本软件并没有找到极域电子教室或者是寻找的路径不正确，您可以手动选择">选择极域主进程位置</a>
+                    </div>
+
                 </div>
                 <div class="text-center" style="margin-top:28px;">
                     <a href="#" id="link_save_setting" class="btn-common">保存设置</a>&nbsp;
@@ -934,8 +957,8 @@
                     <img src="res:logo-text.png" style="width:230px; height:auto" />
                 </div>
                 <div style="text-align:center">
-                    V.1.6.916.1221
-                    &copy; 2019 DreamFish
+                    V.1.7.016.0202
+                    &copy; 2020 DreamFish
                 </div>
                 <br />
                 <a href="#" id="link_help" class="link">软件帮助</a>&nbsp;|&nbsp;<a href="#" id="link_checkupdate" class="link">检查更新</a>&nbsp;<!--|&nbsp;<a href="#" id="link_github" class="link">Github</a>&nbsp;-->|&nbsp;<a href="#" id="link_uninstall" class="link" style="color: rgb(228, 126, 0);font-size: 12px;" title="从此计算机上卸载 JiYu Trainer ">卸载软件</a><br />

@@ -82,6 +82,7 @@ BOOL MRegReadKeyString(HKEY hRootKey, LPCWSTR path, LPCWSTR keyName, LPWSTR buff
 	SetLastError(lastError);
 	return rs;
 }
+/*
 BOOL MRegCheckUninstallItemExists(LPCWSTR keyName) {
 	WCHAR Data[MAX_PATH];
 	if (MRegReadKeyString64And32(HKEY_LOCAL_MACHINE,
@@ -94,3 +95,4 @@ BOOL MRegCheckUninstallItemExists(LPCWSTR keyName) {
 
 	return FALSE;
 }
+*/

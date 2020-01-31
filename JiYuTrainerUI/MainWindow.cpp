@@ -138,14 +138,16 @@ sciter::value MainWindow::docunmentComplete()
 	btn_protect_stat = root.get_element_by_id(L"btn_protect_stat");
 	status_protect = root.get_element_by_id(L"status_protect");
 	
-	check_auto_fkill = root.get_element_by_id(L"check_auto_fkill");
-	check_auto_fck = root.get_element_by_id(L"check_auto_fck");
+	check_band_op = root.get_element_by_id(L"check_band_op");
+	check_probit_close_window = root.get_element_by_id(L"check_probit_close_window");
+	check_probit_terminate_process = root.get_element_by_id(L"check_probit_terminate_process");
 	check_allow_op = root.get_element_by_id(L"check_allow_op");
 	check_allow_top = root.get_element_by_id(L"check_allow_top");
 	check_auto_update = root.get_element_by_id(L"check_auto_update");
 	check_allow_control = root.get_element_by_id(L"check_allow_control");
 	check_allow_monitor = root.get_element_by_id(L"check_allow_monitor");
 	link_read_jiyu_password2 = root.get_element_by_id(L"link_read_jiyu_password2");
+	link_unload_netfilter = root.get_element_by_id(L"link_unload_netfilter");
 
 	cmds_message = root.get_element_by_id(L"cmds_message");
 	common_message = root.get_element_by_id(L"common_message");
@@ -181,8 +183,9 @@ void MainWindow::OnWmCommand(WPARAM wParam)
 	{
 	case IDM_SHOWMAIN: {
 		if (IsWindowVisible(_hWnd)) {
-			sciter::dom::element root(get_root());
-			root.call_function("closeWindow");
+			//sciter::dom::element root(get_root());
+			//root.call_function("closeWindow");
+			ShowWindow(_hWnd, SW_HIDE);
 		}
 		else
 		{
@@ -199,7 +202,7 @@ void MainWindow::OnWmCommand(WPARAM wParam)
 		else Close();
 		break;
 	}
-	case IDM_HELP:ShowHelp(); break;
+	case IDM_HELP: ShowHelp(); break;
 	case IDC_UPDATE_CLOSE: {
 		Close();
 		break;
@@ -353,7 +356,8 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 			currentApp->RunOperation(AppOperationForceLoadDriver);
 		}
 		else if (cmd == L"fuljydrv") {
-			currentApp->RunOperation(AppOperation2);
+			currentWorker->RunOperation(TrainerWorkerOp4);
+			currentLogger->LogWarn2(L"此操作过于危险，已经弃用");
 		}
 		else if (cmd == L"inspector") sciter::dom::element(get_root()).call_function("runInspector");
 		else if (cmd == L"whereisi") {
@@ -379,6 +383,11 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 				}
 			}
 			else MessageBox(_hWnd, L"极域电子教室密码读取失败！或许你可以用 mythware_super_password 试试", L"JiYuTrainer - 提示", MB_ICONEXCLAMATION);
+		}
+		else if (cmd == L"unload_netfilter") {
+			if (MessageBox(_hWnd, L"您是否希望解除极域的网络控制？此操作会卸载极域的网络过滤驱动，卸载以后网络将不受其控制。\n卸载过程中可能卡顿，请等待程序执行完成。\n此操作只需执行一次即可。", L"JiYuTrainer - 提示", MB_ICONWARNING | MB_YESNO) == IDYES)
+				if (currentWorker->RunOperation(TrainerWorkerOp5))
+					MessageBox(_hWnd, L"卸载极域的网络过滤驱动成功", L"JiYuTrainer - 提示", MB_ICONINFORMATION);
 		}
 		else if (cmd == L"uj") {
 			if (currentWorker) {
@@ -412,10 +421,10 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 			currentWorker->RunOperation(TrainerWorkerOpVirusQuit);
 			SendMessage(hWndMain, WM_COMMAND, IDM_EXIT, NULL);
 		}
-		else if (cmd == L"hide")  SendMessage(hWndMain, WM_COMMAND, IDM_SHOWMAIN, NULL);
+		else if (cmd == L"hide") { ShowWindow(hWndMain, SW_HIDE); }
 		else {
 			succ = false;
-			ShowFastMessage(L"未知命令", L"这是调试功能，如果您执意要使用，请在源代码中查看命令帮助。");
+			ShowFastMessage(L"未知命令", L"要查看所有命令及使用方法，请在源代码中查看。");
 		}
 		if (succ) input_cmd.set_value(sciter::value(L""));
 	}
@@ -425,8 +434,8 @@ void MainWindow::OnFirstShow()
 	//热键
 	hotkeyShowHide = GlobalAddAtom(L"HotKeyShowHide");
 	hotkeySwFull = GlobalAddAtom(L"HotKeySwFull");
-	if (!RegisterHotKey(_hWnd, hotkeyShowHide, MOD_ALT | MOD_CONTROL, 'J'))
-		currentLogger->LogWarn(L"热键 Ctrl+Alt+J 注册失败，请检查是否有程序占用，错误：%d", GetLastError());
+	if (!RegisterHotKey(_hWnd, hotkeyShowHide, MOD_ALT | MOD_CONTROL, 'D'))
+		currentLogger->LogWarn(L"热键 Ctrl+Alt+D 注册失败，请检查是否有程序占用，错误：%d", GetLastError());
 	if (!RegisterHotKey(_hWnd, hotkeySwFull, MOD_ALT | MOD_CONTROL, 'F'))
 		currentLogger->LogWarn(L"热键 Ctrl+Alt+F 注册失败，请检查是否有程序占用，错误：%d", GetLastError());
 
@@ -550,6 +559,7 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 				currentApp->UnInstall();
 		}
 		else if (ele.get_attribute("id") == L"link_read_jiyu_password" || ele.get_attribute("id") == L"link_read_jiyu_password2") { OnRunCmd(L"jypasswd"); CloseCmdsTip(); }
+		else if (ele.get_attribute("id") == L"link_unload_netfilter") { OnRunCmd(L"unload_netfilter"); CloseCmdsTip(); }
 		else if (ele.get_attribute("id") == L"link_hide") { OnRunCmd(L"hide"); }
 		else if (ele.get_attribute("id") == L"link_shutdown") {
 			if (MessageBox(_hWnd, L"你是否真的要关闭电脑？", L"JiYuTrainer - 警告", MB_YESNO | MB_ICONEXCLAMATION) == IDYES) 
@@ -746,6 +756,9 @@ void MainWindow::LoadSettings()
 	setAllowMonitor = settings->GetSettingBool(L"AllowMonitor", true);
 	setAllowControl = settings->GetSettingBool(L"AllowControl", false);
 	setAllowGbTop = settings->GetSettingBool(L"AllowGbTop", false);
+	setProhibitKillProcess = settings->GetSettingBool(L"ProhibitKillProcess", true);
+	setProhibitCloseWindow = settings->GetSettingBool(L"ProhibitCloseWindow", true);
+	setBandAllRunOp = settings->GetSettingBool(L"BandAllRunOp", false);
 	setCkInterval = settings->GetSettingInt(L"CKInterval", 3100);
 	if (setCkInterval < 1000 || setCkInterval > 10000) setCkInterval = 3000;
 }
@@ -754,9 +767,11 @@ void MainWindow::LoadSettingsToUi()
 	if (setTopMost) { setTopMost = false;  on_event(btn_top, btn_top, HYPERLINK_CLICK, 0); }
 	else { setTopMost = true;  on_event(btn_top, btn_top, HYPERLINK_CLICK, 0); }
 
-	check_auto_fck.set_value(sciter::value(setAutoIncludeFullWindow));
+	check_band_op.set_value(sciter::value(setBandAllRunOp));
+	check_probit_close_window.set_value(sciter::value(setProhibitCloseWindow));
+	check_probit_terminate_process.set_value(sciter::value(setProhibitKillProcess));
+
 	check_allow_op.set_value(sciter::value(!setAllowAllRunOp));
-	check_auto_fkill.set_value(sciter::value(setAutoForceKill));
 	check_auto_update.set_value(sciter::value(setAutoUpdate));
 	check_allow_control.set_value(sciter::value(setAllowControl));
 	check_allow_monitor.set_value(sciter::value(setAllowMonitor));
@@ -764,9 +779,12 @@ void MainWindow::LoadSettingsToUi()
 }
 void MainWindow::SaveSettings()
 {
-	setAutoIncludeFullWindow = check_auto_fck.get_value().get(false);
+	setBandAllRunOp = check_band_op.get_value().get(false);
+	setProhibitCloseWindow = check_probit_close_window.get_value().get(true);
+	setProhibitKillProcess = check_probit_terminate_process.get_value().get(true);
+
 	setAllowAllRunOp = !check_allow_op.get_value().get(true);
-	setAutoForceKill = check_auto_fkill.get_value().get(false);
+	
 	setAutoUpdate = check_auto_update.get_value().get(true);
 	setAllowControl = check_allow_control.get_value().get(false);
 	setAllowMonitor = check_allow_monitor.get_value().get(false);
@@ -799,6 +817,9 @@ void MainWindow::ResetSettings()
 	setAllowControl = false;
 	setAllowMonitor = true;
 	setAllowGbTop = false;
+	setProhibitKillProcess = true;
+	setProhibitCloseWindow = true;
+	setBandAllRunOp = false;
 
 	LoadSettingsToUi();
 	SaveSettings();

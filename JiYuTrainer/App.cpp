@@ -336,11 +336,6 @@ LPCWSTR JTAppInternal::MakeFromSourceArg(LPCWSTR arg)
 	return arg;
 }
 
-int str3601[8] = { '3','6','0','°²','È«','ÎÀ','Ê¿', 0 };
-int str3602[8] = { '3','6','0','S','a','f','e', 0 };
-int str3603[6] = { '3','6','0','S','D', 0 };
-int strDb1[27] = { 'K','i','n','g','s','o','f','t',' ','I','n','t','e','r','n','e','t',' ','S','e','c','u','r','i','t','y', 0 };
-
 void JTAppInternal::CloseSourceDir() {
 	
 	if (Path::Exists(fullSourceInstallerDir)) {
@@ -354,6 +349,7 @@ void JTAppInternal::CloseSourceDir() {
 }
 bool JTAppInternal::CheckAntiVirusSoftware(bool showTip) {
 
+	/*
 	WCHAR wstr3601[8];
 	WCHAR wstr3602[8];
 	WCHAR wstr3603[8];
@@ -375,12 +371,13 @@ bool JTAppInternal::CheckAntiVirusSoftware(bool showTip) {
 		if (showTip)  _DialogBoxParamW(hInstance, MAKEINTRESOURCE(IDD_DIALOG_AVTIP), NULL, AVTipWndProc, (LPARAM)this);
 		return true;
 	}
-
+	
+	*/
 	return false;
 }
 void JTAppInternal::copyStrFromIntArr(wchar_t * buffer, int * arr, size_t len)
 {
-	for (int i = 0; i < len; i++) 
+	for (size_t i = 0; i < len; i++)
 		buffer[i] = (WCHAR)arr[i];
 }
 

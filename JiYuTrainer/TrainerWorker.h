@@ -11,6 +11,7 @@ enum TrainerWorkerOp {
 	TrainerWorkerOp2,
 	TrainerWorkerOp3,
 	TrainerWorkerOp4,
+	TrainerWorkerOp5,
 };
 
 class TrainerWorkerCallback
@@ -153,6 +154,8 @@ private:
 	bool InjectDll(DWORD pid, LPCWSTR dllPath);
 	bool UnInjectDll(DWORD pid, LPCWSTR moduleName);
 	bool UnLoadAllVirus();
+	bool UnLoadNetFilterDriver();
+	bool UnLoadJiYuProtectDriver();
 
 	/*Window resolver*/
 

@@ -9,6 +9,7 @@ BOOL MLoadKernelDriver(const wchar_t* lpszDriverName, const wchar_t* driverPath,
 //卸载驱动
 //    szSvrName：服务名
 BOOL MUnLoadKernelDriver(const wchar_t* szSvrName);
+BOOL MUnLoadDriverServiceWithMessage(const wchar_t * szSvrName);
 //打开驱动
 BOOL XOpenDriver();
 //返回驱动是否加载

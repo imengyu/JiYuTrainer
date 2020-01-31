@@ -325,6 +325,12 @@ void* TrainerWorkerInternal::RunOperation(TrainerWorkerOp op)
 			return (LPVOID)_TopDomainPassword.c_str();
 		return nullptr;
 	}
+	case TrainerWorkerOp4: {
+		return (void*)UnLoadJiYuProtectDriver();
+	}
+	case TrainerWorkerOp5: {
+		return (void*) UnLoadNetFilterDriver();
+	}
 	}
 	return nullptr;
 }
@@ -825,6 +831,14 @@ bool TrainerWorkerInternal::UnLoadAllVirus()
 		if (UnInjectDll(_StudentMainPid, L"JiYuTrainerHooks.dll"))
 			currentLogger->Log(L"“—«ø÷∆–∂‘ÿ StudentMain ≤°∂æ");
 
+	return false;
+}
+bool TrainerWorkerInternal::UnLoadNetFilterDriver()
+{
+	return MUnLoadDriverServiceWithMessage(L"TDNetFilter");
+}
+bool TrainerWorkerInternal::UnLoadJiYuProtectDriver()
+{
 	return false;
 }
 
