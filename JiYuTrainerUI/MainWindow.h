@@ -115,14 +115,15 @@ private:
 	sciter::dom::element tooltip_top;
 	sciter::dom::element tooltip_fast;
 	sciter::dom::element body;
+
+	sciter::dom::element extend_area;
+
 	sciter::dom::element link_read_jiyu_password2;
 	sciter::dom::element link_unload_netfilter;
 
 	sciter::dom::element check_band_op;
 	sciter::dom::element check_probit_close_window;
 	sciter::dom::element check_probit_terminate_process;
-	//sciter::dom::element check_auto_fkill;
-	//sciter::dom::element check_auto_fck;
 	sciter::dom::element check_allow_op;
 	sciter::dom::element check_allow_control;
 	sciter::dom::element check_allow_monitor;

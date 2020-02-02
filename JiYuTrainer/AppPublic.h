@@ -4,7 +4,7 @@
 #include "SettingHlp.h"
 #include "TrainerWorker.h" 
 
-#define CURRENT_VERSION "1.6.916.1221" 
+#define CURRENT_VERSION "1.7.016.0202" 
 
 #define FAST_STR_BINDER(str, fstr, size, ...) WCHAR str[size]; swprintf_s(str, fstr, __VA_ARGS__)
 

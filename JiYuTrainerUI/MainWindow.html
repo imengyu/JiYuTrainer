@@ -166,6 +166,9 @@
              transform: scale(0.8) ;
              opacity: 0;
         }
+        .window-extend-area.upper {
+           z-index: 15;
+        }
         .window-extend-area-mask {
             display: none;
             opacity: 0;
@@ -176,6 +179,10 @@
             left: 0;
             background-color: #000;
             transition: opacity linear 150ms;
+            z-index: 1;
+        }
+        .window-extend-area-mask.upper {
+            z-index: 11;
         }
         .window-extend-area.shown.with-mask + .window-extend-area-mask {
             display: block;
@@ -186,20 +193,20 @@
             padding: 10px 20px;
             top: 150px;
             bottom: 150px;
-            z-index: 13;
         }
         #update_message {
-            z-index: 11;
-            bottom: 85px;
-            top: 75px;
+
+            bottom: 70px;
+            top: 60px;
             left: 15px;
             right: 15px;
             padding: 10px 20px;
             background-image: url(res:update_bg.png);
-            background-repeat: no-repeat
+            background-repeat: no-repeat;
+            background-position: 0 -44px;
         }
         #update_message_text {
-            margin-top: 25px;
+            margin-top: 30px;
             padding:  20px;
         }
         #update_message_text ol, #update_message_text ul {
@@ -207,7 +214,6 @@
             padding: 0;
         }
         #isnew_message {
-            z-index: 11;
             bottom: 121px;
             top: 100px;
             left: 15px;
@@ -595,6 +601,10 @@
         #link_more_settings::after {
             background: url(res:link-icons.png) no-repeat 0px 0;
         }
+
+        #link_close_extend_area {
+            z-index: 20;
+        }
         #commands_help_area {
             display: block;
             width: 100%;
@@ -970,7 +980,7 @@
         </div>
         <!--扩展区域结束-->
         <!--普通提示框-->
-        <div class="window-extend-area with-mask" id="common_message">
+        <div class="window-extend-area with-mask upper" id="common_message">
             <a href="#" class="title-close black" id="common_message_close"></a>
             <h3 id="common_message_title">测试消息</h3>
             <p id="common_message_text">测试消息文字，尝试 DEBUG</p>
@@ -978,9 +988,9 @@
                 <a href="#" class="btn-common btn-primary" id="common_message_close2">我知道了</a>
             </div>
         </div>
-        <div class="window-extend-area-mask"></div>
+        <div class="window-extend-area-mask upper"></div>
         <!--更多命令提示框-->
-        <div class="window-extend-area with-mask" id="cmds_message" style="z-index:11; bottom: 90px; top :30px; left: -15px; right: -15px; padding: 10px 20px; ">
+        <div class="window-extend-area with-mask upper" id="cmds_message" style="bottom: 90px; top :30px; left: -15px; right: -15px; padding: 10px 20px; ">
             <a href="#" class="title-close black" id="cmds_message_close"></a>
             <h3>调试命令</h3>
             <p class="text-danger">以下命令仅供调试使用，部分可能存在危险</p>
@@ -1010,15 +1020,15 @@
             </div>
 
         </div>
-        <div class="window-extend-area-mask"></div>
+        <div class="window-extend-area-mask upper"></div>
         <!--初次提示框-->
-        <div class="window-extend-area with-mask" id="hello_message" style="z-index:11; ">
+        <div class="window-extend-area with-mask upper" id="hello_message">
             <a href="#" id="link_close_hello_message" class="btn-close-extend-area"><i>&nbsp;</i></a>
 
         </div>
-        <div class="window-extend-area-mask"></div>
+        <div class="window-extend-area-mask upper"></div>
         <!--电源提示框-->
-        <div class="window-extend-area with-mask" id="power_message" " style="z-index:12; bottom: 130px; top :105px; left: -10px; right: -10px; padding: 10px 20px; ">
+        <div class="window-extend-area with-mask upper" id="power_message" " style="bottom: 130px; top :105px; left: -10px; right: -10px; padding: 10px 20px; ">
             <a href="#" id="link_close_power_message" class="btn-close-extend-area"><i>&nbsp;</i></a>
             <h3>选择要执行的操作</h3>
             <a class="op-item" id="link_shutdown" href="#">
@@ -1034,23 +1044,24 @@
                 <span>退出本软件</span>
             </a>
         </div>
-        <div class="window-extend-area-mask"></div>
+        <div class="window-extend-area-mask upper"></div>
         <!--更新提示框-->
-        <div class="window-extend-area with-mask" id="update_message">
+        <div class="window-extend-area with-mask upper" id="update_message">
             <div class="new-ver">
-                <span class="text">发现新版本</span>
+                <span class="text">发现软件新版本</span>
                 <span class="ver"><span id="update_message_newver"></span> 更新内容</span>
             </div>
             <p id="update_message_text">
             </p>
-            <p style="position: absolute;bottom: 50px; left: 15px; right: 15px; height :28px;text-align:center; font-size: 12px;color:rgb(108, 117, 125)">更新到最新版本，可以获得更稳定的使用体验！<br />更新过程中会暂时关闭极域</p>
+            <p style="position: absolute;bottom: 60px; left: 15px; right: 15px; height :28px;text-align:center; font-size: 12px;color:rgb(108, 117, 125)">更新到最新版本，可以获得更稳定的使用体验！<br />更新过程中会暂时关闭极域</p>
             <div class="text-right" style="position: absolute;bottom: 0; left: 15px; right: 15px; height :45px;text-align:center;">
                 <a href="#" class="btn-common btn-primary" id="update_message_update">立即更新!</a>
                 <a href="#" class="btn-common ml-2" id="update_message_close">下次再说</a>
             </div>
         </div>
+        <div class="window-extend-area-mask upper"></div>
         <!--更新最新提示框-->
-        <div class="window-extend-area with-mask" id="isnew_message">
+        <div class="window-extend-area with-mask upper" id="isnew_message">
             <div class="new-ver">
                 <span class="text">检测更新</span>
                 <span class="ver" id="isnew_message_title">你的 JiYuTrainer 是最新的版本！</span>
@@ -1061,9 +1072,9 @@
                 <a href="#" class="btn-common btn-primary" id="isnew_message_close">关闭</a>
             </div>
         </div>
-        <div class="window-extend-area-mask"></div>
+        <div class="window-extend-area-mask upper"></div>
         <!--退出提示框-->
-        <div class="window-extend-area with-mask" id="exit_message" style="z-index:20; bottom: 135px; top :135px; left: -10px; right: -10px; padding: 10px 20px;">
+        <div class="window-extend-area with-mask upper" id="exit_message" style="bottom: 135px; top :135px; left: -10px; right: -10px; padding: 10px 20px;">
             <a href="#" class="btn-close-extend-area" id="exit_message_close"><i>&nbsp;</i></a>
             <h3>极域正在运行，您是否还要退出？</h3>
             <p>
@@ -1076,7 +1087,7 @@
                 <a href="#" class="btn-common btn-primary" id="exit_message_close2">取消</a>
             </div>
         </div>
-        <div class="window-extend-area-mask"></div>
+        <div class="window-extend-area-mask upper"></div>
     </div>
     <script type="text/tiscript">
 
@@ -1184,7 +1195,7 @@
             if(!view.inspectorIsPresent()) // native function, defined in sciter.cpp
                 System.exec( System.home("inspector.exe") );
             // give it a time to start ...
-            this.timer(200ms, function() {
+             $(body).timer(500, function() {
                 if( var connectToInspector = view.connectToInspector )
                     connectToInspector($(html));
             });

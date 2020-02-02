@@ -124,6 +124,8 @@ sciter::value MainWindow::docunmentComplete()
 	status_jiyu_pid = root.get_element_by_id(L"status_jiyu_pid");
 	status_jiyu_path = root.get_element_by_id(L"status_jiyu_path");
 
+	extend_area = root.get_element_by_id(L"extend_area");
+
 	status_icon = root.get_element_by_id(L"status_icon");
 	status_text_main = root.get_element_by_id(L"status_text_main");
 	status_text_more = root.get_element_by_id(L"status_text_more");
@@ -401,7 +403,7 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 		else if (cmd == L"test2") currentWorker->SendMessageToVirus(L"test2:f");
 		else if (cmd == L"test3") MessageBox(hWndMain, L"MessageBox", L"test3", 0);
 		else if (cmd == L"test5") {
-			ShowUpdateMessage(L"您的JiYu Trainer 是最新版本", L"时常更新是个好习惯，可以给你带来更好的软件使用体验");
+			ShowUpdateMessage(L"您的 JiYu Trainer 是最新版本", L"您的 JiYu Trainer 是最新的版本! 时常更新是个好习惯，可以给你带来更好的软件使用体验");
 		}
 		else if (cmd == L"test6") {
 			ShowUpdateMessage(L"更新失败", L"检查更新失败，请检查您的网络连接？");
@@ -528,7 +530,7 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 			if (JUpdater_CheckInternet()) {
 				int updateStatus = JUpdater_CheckUpdate(true);
 				CloseFastTip();
-				if (updateStatus == UPDATE_STATUS_LATEST)  ShowUpdateMessage(L"您的JiYu Trainer 是最新版本", L"时常更新是个好习惯，可以给你带来更好的软件使用体验");
+				if (updateStatus == UPDATE_STATUS_LATEST)  ShowUpdateMessage(L"您的 JiYu Trainer 是最新版本", L"您的 JiYu Trainer 是最新的版本！时常更新是个好习惯，可以给你带来更好的软件使用体验");
 				else if (updateStatus == UPDATE_STATUS_HAS_UPDATE) GetUpdateInfo();
 				else if (updateStatus == UPDATE_STATUS_COULD_NOT_CONNECT) ShowUpdateMessage(L"更新失败",  L"检查更新失败，请检查您的网络连接？");
 				else if (updateStatus == UPDATE_STATUS_NOT_SUPPORT) ShowUpdateMessage(L"更新服务器返回了错误的结果", L"(⊙o⊙)？糟糕，更新服务器出了一点故障，请你稍后再试");
@@ -725,13 +727,13 @@ void MainWindow::ShowUpdateMessage(LPCWSTR title, LPCWSTR text)
 	LPCSTR textMore2 = StringHlp::UnicodeToUtf8(text);
 	isnew_message_text.set_html((UCHAR*)textMore2, strlen(textMore2));
 	FreeStringPtr(textMore2);
-	isnew_message.set_attribute("class", L"window-extend-area with-mask shown");
+	isnew_message.set_attribute("class", L"window-extend-area upper with-mask shown");
 }
 void MainWindow::ShowFastMessage(LPCWSTR title, LPCWSTR text)
 {
 	common_message_title.set_text(title);
 	common_message_text.set_text(text);
-	common_message.set_attribute("class", L"window-extend-area shown");
+	common_message.set_attribute("class", L"window-extend-area upper with-mask shown");
 }
 void MainWindow::CloseCmdsTip() {
 	sciter::dom::element root(get_root());
@@ -742,7 +744,7 @@ void MainWindow::GetUpdateInfo() {
 	if (JUpdater_GetUpdateNew(newUpdateMessage, 256))
 		update_message_text.set_html((UCHAR*)newUpdateMessage, strlen(newUpdateMessage));
 	update_message_newver.set_text(JUpdater_GetUpdateNewVer());
-	update_message.set_attribute("class", L"window-extend-area shown");
+	update_message.set_attribute("class", L"window-extend-area upper with-mask shown");
 }
 
 void MainWindow::LoadSettings()

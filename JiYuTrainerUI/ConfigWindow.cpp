@@ -185,8 +185,14 @@ void InitSettings(HWND hDlg) {
 	CheckDlgButton(hTabMore, IDC_CHECK_INI_13, currentSettings->GetSettingBool(L"BandAllRunOp", false) ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hTabMore, IDC_CHECK_INI_14, currentSettings->GetSettingBool(L"AutoIncludeFullWindow", false) ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hTabMore, IDC_CHECK_INI_15, currentSettings->GetSettingBool(L"DoNotShowVirusWindow", false) ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(hTabMore, IDC_CHECK_INI_16, currentApp->GetTrainerWorker()->Running() ? BST_CHECKED : BST_UNCHECKED);
 	
+	if(currentApp->GetTrainerWorker())
+		CheckDlgButton(hTabMore, IDC_CHECK_INI_16, currentApp->GetTrainerWorker()->Running() ? BST_CHECKED : BST_UNCHECKED);
+	else {
+		CheckDlgButton(hTabMore, IDC_CHECK_INI_16, BST_CHECKED);
+		EnableWindow(GetDlgItem(hTabMore, IDC_CHECK_INI_16), FALSE);
+	}
+
 	CheckDlgButton(hTabDebug, IDC_CHECK_INI_21, currentSettings->GetSettingBool(L"AlwaysCheckUpdate", false) ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hTabDebug, IDC_CHECK_INI_24, currentSettings->GetSettingBool(L"ForceInstallInCurrentDir", false) ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hTabDebug, IDC_CHECK_INI_25, currentSettings->GetSettingBool(L"ForceDisableWatchDog", false) ? BST_CHECKED : BST_UNCHECKED);
