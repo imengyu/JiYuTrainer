@@ -1,17 +1,17 @@
 <p align="center">
   <a href="#">
-    <img alt="JiYu Trainer" src="https://raw.githubusercontent.com/717021/JiYuTrainer/master/JiYuTrainerLogo256.png" width="128">
+    <img alt="JiYu Trainer" src="https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/JiYuTrainerLogo256.png" width="128">
   </a>
 </p>
 <p align="center">
-  <img alt="JiYu Trainer Title" src="https://raw.githubusercontent.com/717021/JiYuTrainer/master/JiYuTrainerTitle.png">
+  <img alt="JiYu Trainer Title" src="https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/JiYuTrainerTitle.png">
 </p>
 <p align="center">不再被极域电子教室控制</p>
 
 <p align="center">
   <a href="#"><img src="https://img.shields.io/badge/language-C++-blue.svg"></a>
-  <a href="https://github.com/717021/JiYuTrainer/releases"><img src="https://img.shields.io/badge/version-1.6-greeb.svg"></a>
-  <a href="https://github.com/717021/JiYuTrainer/blob/master/LICENSE"><img src="https://img.shields.io/badge/liscence-MIT-orange.svg"></a>
+  <a href="https://github.com/imengyu/JiYuTrainer/releases"><img src="https://img.shields.io/badge/version-1.6-greeb.svg"></a>
+  <a href="https://github.com/imengyu/JiYuTrainer/blob/master/LICENSE"><img src="https://img.shields.io/badge/liscence-MIT-orange.svg"></a>
 </p>
 
 ---
@@ -31,7 +31,7 @@
 
 如果你觉得这个软件不错，不妨加个小星星⭐吧，你的喜欢是对我最大的支持！
 
-主要功能
+功能
 ---
 * 在不影响极域正常运行的情况下将 全屏的广播 转为 窗口广播 模式，您不仅可自己操作，也可看老师讲解课程。
 * 内置强杀、启停极域 StudentMain.exe 进程功能，无需依赖其他软件。
@@ -41,43 +41,73 @@
 * 监控极域远程执行命令，您可以自由选择是否允许教师端远程执行的命令。
 * 更多功能开发中……
 
-# 直接下载：
+下载
+---
 
-* [下载软件最新版已编译版本](https://raw.githubusercontent.com/717021/JiYuTrainer/master/Release/JiYuTrainer.exe) 
-* [备用地址（如果上面的地址下载缓慢，请使用这个）](http://jiyutrainer.imyzc.com/JiYuTrainer.exe) 
+* [下载软件最新版已编译版本](https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/Release/JiYuTrainer.exe) 
+* [备用地址](http://jiyutrainer.imyzc.com/JiYuTrainer.exe) 
+
+提示：**由于本软件会对极域电子教室进行必要的操作（远程注入、替换模块），某些杀毒软件可能会报毒，您可能需要关闭杀毒软件或添加白名单**。
 
 ---
 
-![软件主要界面](https://raw.githubusercontent.com/717021/JiYuTrainer/master/ScreenShots.png)
+![截图](https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/ScreenShots.png)
 
-# 操作方法
+操作方法
+---
 
 本软件专为小白设计，默认情况下，您不需要修改任何参数，直接运行exe，并最小化即可，软件会自动进行操作。
 
-> 附加说明：本软件不依赖任何运行库，您只需复制一个 **JiYuTrainer.exe** 至目标电脑即可运行，本软件已将需要的DLL打包，它会自动进行安装。 **由于本软件会对极域电子教室进行操作，某些杀毒软件可能会报毒，您可能需要关闭杀毒软件或添加白名单**。
+> 附加说明：本软件不依赖任何运行库，您只需复制一个 **JiYuTrainer.exe** 至目标电脑即可运行，本软件已将需要的DLL打包，它会自动进行安装。 
 
-# 软件源码
+[完整帮助文档](https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/帮助.png)
+
+---
+
+#### 已测试极域电子教室版本：
+
+* 2010版 （5.01.64.942 / 5.01 Baseline）
+* 2016豪华版 （2.07.0.13488 / 2.07 CMPC） 
+
+*(这是现在学校使用最广泛的两个版本，其他版本应该也可以正常运行。假如你的学校使用其他版本的极域而本软件不能正常运行的话，你可以向我提供极域样本，我会尽力修改程序以适配更多的极域电子教室版本)*
+
+#### 操作系统版本: 
+* 系统最低需求: Windows XP SP3, Win7/Win8/Win10
+
+## 软件源码
 
 编译以及生成
 ---
 
-* VS2013-VS2019
-* 驱动需要 WDK8 以上
+你需要安装 [Visual Studio](https://www.visualstudio.com/) (MSVC) 或 gcc
+
+支持的编译工具：
+* MSVC 最低 v141 (Visual Studio 2017)
+* gcc 4.7+
+
+提示：如果使用 Visual Studio 2019，无法编译支持XP的程序集，如果要编译支持XP，必须使用 v141 ，并且设置生成工具为 v141xp
+
+
+如果需要编译驱动模块，您还需要安装
+* [WDK8](https://www.microsoft.com/en-us/download/details.aspx?id=42273) 或以上
 
 
 使用的第三方库
 ---
+
+*第三方库已经包含在项目中，不需要您自己安装*
 
 - [curl](https://github.com/curl/curl) (用于自动更新模块)
 - [mhook](https://github.com/martona/mhook) (用于 JiYu HOOKER 模块)
 
 其他
 ---
-如果您在使用软件过程中发现Bug，欢迎向我反馈！<br>
-如果您有什么软件上的问题、更好的建议或者要求，也可以提issue哦，我会尽量修改程序以满足您的需求。 <br>
-您也可以联系我本人 QQ：1501076885 （请备注 **来自JiYuTrainer**）<br>
+如果您在使用软件过程中发现Bug、软件上的问题、更好的建议或者要求，也可以提issue，欢迎向我反馈！<br>
+您也可以联系我本人 QQ：1501076885 （请备注 **来自JiYuTrainer**）
 
-已测试的版本：
-* 极域电子教室：4.0 和 6.0 (这是现在学校使用最广泛的两个版本，如果你的学校使用其他版本的极域而本软件不能正常运行的话，你可以向我提供极域样本，我会尽力修改程序以适配更多的极域电子教室版本)
-* 操作系统版本: WinXP SP3,Win7,Win10
-* 系统最低需求: Windows XP SP3 ，远古版本的系统不支持
+许可
+---
+
+[MIT License](https://github.com/imengyu/JiYuTrainer/blob/master/LICENSE) (free, open source)
+
+
