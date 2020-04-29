@@ -10,7 +10,7 @@
 
 <p align="center">
   <a href="#"><img src="https://img.shields.io/badge/language-C++-blue.svg"></a>
-  <a href="https://github.com/imengyu/JiYuTrainer/releases"><img src="https://img.shields.io/badge/version-1.6-greeb.svg"></a>
+  <a href="https://github.com/imengyu/JiYuTrainer/releases"><img src="https://img.shields.io/badge/version-1.7-greeb.svg"></a>
   <a href="https://github.com/imengyu/JiYuTrainer/blob/master/LICENSE"><img src="https://img.shields.io/badge/liscence-MIT-orange.svg"></a>
 </p>
 
@@ -72,24 +72,20 @@
 *(这是现在学校使用最广泛的两个版本，其他版本应该也可以正常运行。假如你的学校使用其他版本的极域而本软件不能正常运行的话，你可以向我提供极域样本，我会尽力修改程序以适配更多的极域电子教室版本)*
 
 #### 操作系统版本: 
-* 系统最低需求: Windows XP SP3, Win7/Win8/Win10
+* 系统最低需求: Windows XP SP3, 支持 Win7/Win8/Win10
 
-## 软件源码
 
 编译以及生成
 ---
 
-你需要安装 [Visual Studio](https://www.visualstudio.com/) (MSVC) 或 gcc
+| 支持的编译工具：||
+|:-|:-:|
+| [Visual Studio](https://www.visualstudio.com/) 2017 | (推荐) |
+| gcc 4.7+ (需要自己配置环境) | (不推荐) |
+|**如果需要编译驱动模块，您还需要安装:**||
+|[WDK8](https://www.microsoft.com/en-us/download/details.aspx?id=42273) 或以上||
 
-支持的编译工具：
-* MSVC 最低 v141 (Visual Studio 2017)
-* gcc 4.7+
-
-提示：如果使用 Visual Studio 2019，无法编译支持XP的程序集，如果要编译支持XP，必须使用 v141 ，并且设置生成工具为 v141xp
-
-
-如果需要编译驱动模块，您还需要安装
-* [WDK8](https://www.microsoft.com/en-us/download/details.aspx?id=42273) 或以上
+> 提示：如果使用 Visual Studio 2019，无法编译支持XP的程序集，如果要编译支持XP，必须使用 Visual Studio 2017 ，并且设置生成工具为 v141xp
 
 
 使用的第三方库
@@ -99,6 +95,8 @@
 
 - [curl](https://github.com/curl/curl) (用于自动更新模块)
 - [mhook](https://github.com/martona/mhook) (用于 JiYu HOOKER 模块)
+- [MemoryModule](https://github.com/fancycode/MemoryModule)
+- [XZip-XUnZip](https://github.com/yuanjia1011/XZip-XUnZip)
 
 其他
 ---
