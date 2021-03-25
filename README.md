@@ -71,13 +71,13 @@ Q: 教师端限制了U盘，要怎么运行 JiYuTrainer ？<br/>
 A: 你可以先卸载掉极域的驱动再插入U盘。具体操作方法如下：<br/>
 
 1. 先以管理员身份运行cmd：
-[CMD](https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/sc0.png)
+![CMD](https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/sc0.png)
 2. 输入以下命令卸载TDFileFilter驱动：
 ```
 sc stop TDFileFilter 
 sc delete TDFileFilter 
 ```
-[sc](https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/sc1.png)
+![sc](https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/sc1.png)
 
 然后再插入U盘，就没有限制了，可以直接运行JiYuTrainer。
 
@@ -89,7 +89,7 @@ A: JiYuTrainer 可以自动卸载网络驱动，这可能有效，如果该方�
 3. 稍等一下，刷新网页，此时网络即可正常访问。
 4. 最好你也可顺便把极域的其他进程一并杀死，防止它因为驱动卸载掉还操作而导致系统蓝屏。
 
-[pch](https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/pchunter1.png)
+![pch](https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/pchunter1.png)
 
 #### 已测试极域电子教室版本：
 
