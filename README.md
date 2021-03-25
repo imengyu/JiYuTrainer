@@ -67,8 +67,8 @@
 一些提示
 ---
 
-**Q: 教师端限制了U盘，要怎么把 JiYuTrainer 复制到电脑上运行？**<br/>
-**A: **你可以先卸载掉极域的驱动再插入U盘。具体操作方法如下：<br/>
+**Q: 教师端限制了U盘，要怎么把 JiYuTrainer 复制到电脑上运行？** <br/>
+**A: 你可以先卸载掉极域的驱动再插入U盘。具体操作方法如下：** <br/>
 
 1. 先以管理员身份运行cmd：
 ![CMD](https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/sc0.png)
@@ -81,8 +81,8 @@ sc delete TDFileFilter
 
 然后再插入U盘，就没有限制了，可以直接运行JiYuTrainer。
 
-**Q: 教师端限制了网络，要怎么办？**<br/>
-**A: **JiYuTrainer 可以自动卸载网络驱动，这可能有效，如果该方法无效，<br/>可尝试下载PCHunter软件，该软件有最强力的方法删除驱动（也可用它来杀死任何进程）<br/>
+**Q: 教师端限制了网络，要怎么办？** <br/>
+**A: JiYuTrainer 可以自动卸载网络驱动，这可能有效，如果该方法无效，<br/>可尝试下载PCHunter软件，该软件有最强力的方法删除驱动（也可用它来杀死任何进程）**<br/>
 
 1. 如图打开PCHunter软件，打开“驱动模块”页面。
 2. 找到极域的网络驱动“TDNetFilter.sys”，并选择卸载驱动。
