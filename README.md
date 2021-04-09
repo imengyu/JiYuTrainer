@@ -115,6 +115,13 @@ sc delete TDFileFilter
 |:-|:-:|
 |[WDK8](https://www.microsoft.com/en-us/download/details.aspx?id=42273) 或以上||
 
+构建步骤：
+1. 使用Visual Studio打开项目JiYuTrainer.sln
+2. 在顶部工具栏选择配置为Release，平台为x86.
+3. 在解决方案资源管理器中右键“JiYuTrainer”项目，点击“生成”。
+4. 等待生成完毕。不用理会JiYuTrainerDriver的编译错误，因为无须生成驱动，源码里已经有生成好的驱动了。
+5. 在项目目录/Release下就有构建完成的程序了。
+
 使用的第三方库
 ---
 
