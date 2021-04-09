@@ -1,0 +1,2 @@
+D:\Programming\WinProjects\JiYuTrainer\Debug\JiYuTrainerUpdater.pdb
+D:\Programming\WinProjects\JiYuTrainer\JiYuTrainerUpdater\Debug\JiYuTrainerUpdater.pdb

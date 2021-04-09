@@ -42,6 +42,18 @@
     <ClInclude Include="BugReportWindow.h">
       <Filter>头文件</Filter>
     </ClInclude>
+    <ClInclude Include="AttackWindow.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="ScanIPWindow.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="messags.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="CommonWindow.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -63,6 +75,15 @@
       <Filter>源文件</Filter>
     </ClCompile>
     <ClCompile Include="BugReportWindow.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="AttackWindow.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="ScanIPWindow.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="CommonWindow.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
@@ -182,5 +203,7 @@
     <None Include="MainWindow.html" />
     <None Include="HelpWindow.html" />
     <None Include="UpdaterWindow.html" />
+    <None Include="AttackWindow.html" />
+    <None Include="ScanIPWindow.html" />
   </ItemGroup>
 </Project>

@@ -85,7 +85,7 @@ bool outlineEndJiy = false;
 HWND hWndOpConformNoBtn = NULL;
 bool bandAllRunOp = false, allowNextRunOp = false, allowAllRunOp  = false, ProhibitKillProcess = false, ProhibitCloseWindow = false;
 bool allowMonitor = false, allowControl = false, allowGbTop = false, fakeFull = false, gbFullManual = false,
-doNotShowVirusWindow = false, forceDisableWatchDog = false;
+doNotShowVirusWindow = true, forceDisableWatchDog = false;
 bool isLocked = false, gbCurrentIsTop = false, isGbFounded = false;
 std::list<std::wstring> runOPWhiteList;
 bool forceKill = false;
@@ -310,7 +310,7 @@ void VInitSettings()
 	if (!StrEqual(w, L"TRUE") && !StrEqual(w, L"true") && !StrEqual(w, L"1")) ProhibitCloseWindow = false;
 	else ProhibitCloseWindow = true;
 	
-	GetPrivateProfileString(L"JTSettings", L"DoNotShowVirusWindow", L"FALSE", w, 32, mainIniPath);
+	GetPrivateProfileString(L"JTSettings", L"DoNotShowVirusWindow", L"TRUE", w, 32, mainIniPath);
 	if (!StrEqual(w, L"TRUE") && !StrEqual(w, L"true") && !StrEqual(w, L"1")) doNotShowVirusWindow = false;
 	else doNotShowVirusWindow = true;
 
@@ -429,14 +429,20 @@ void VOutPutStatus(const wchar_t* str, ...) {
 	SendMessage(hListBoxStatus, LB_SETTOPINDEX, ListBox_GetCount(hListBoxStatus) - 1, 0);
 	va_end(arg);
 }
+bool VWindowTextIsGb(const wchar_t* text) {
+
+	return StringHlp::StrContainsW(text, L"广播", nullptr) || StringHlp::StrContainsW(text, L"演示", nullptr)
+		|| StringHlp::StrContainsW(text, L"共享", nullptr) || StringHlp::StrEqualW(text, L"屏幕演播室窗口") 
+		|| StringHlp::StrContainsW(text, L"共享屏幕", nullptr);
+}
 void VHookFWindow(const wchar_t* hWndStr) {
 	HWND hWnd = (HWND)_wtol(hWndStr);
 	if (IsWindow(hWnd)) {
 		//GuangBo window fix
 		if (hWnd != jiYuGBWnd) {
-			WCHAR text[16];
-			GetWindowText(hWnd, text, 16);
-			if (StrEqual(text, L"屏幕广播") || StrEqual(text, L"屏幕演播室窗口")) {
+			WCHAR text[50];
+			GetWindowText(hWnd, text, 50);
+			if (VWindowTextIsGb(text)) {
 				VFixGuangBoWindow(hWnd);
 				jiYuGBWnd = hWnd;
 			}
@@ -451,9 +457,9 @@ void VHookWindow(const wchar_t* hWndStr) {
 	if (IsWindow(hWnd)) {
 		//GuangBo window fix
 		if (hWnd != jiYuGBWnd) {
-			WCHAR text[16];
-			GetWindowText(hWnd, text, 16);
-			if (StrEqual(text, L"屏幕广播") || StrEqual(text, L"屏幕演播室窗口")) {
+			WCHAR text[50];
+			GetWindowText(hWnd, text, 50);
+			if (VWindowTextIsGb(text)) {
 				VFixGuangBoWindow(hWnd);
 				jiYuGBWnd = hWnd;
 			}
@@ -590,19 +596,19 @@ void VManualQuit()
 	jiYuWnds.clear();
 	loaded = false;
 }
+
 bool VIsWindowGbOrHp(HWND hWnd) {
-	WCHAR text[32];
-	GetWindowText(hWnd, text, 32);
-	return StrEqual(text, L"屏幕广播") || StrEqual(text, L"屏幕演播室窗口") || StrEqual(text, L"BlackScreen Window");
+	WCHAR text[50];
+	GetWindowText(hWnd, text, 50);
+	return VWindowTextIsGb(text) || StrEqual(text, L"BlackScreen Window");
 }
 bool VIsWindowGb(HWND hWnd) {
-	WCHAR text[32];
-	GetWindowText(hWnd, text, 32);
-	return StrEqual(text, L"屏幕广播") || StrEqual(text, L"屏幕演播室窗口");
+	WCHAR text[50]; GetWindowText(hWnd, text, 50);
+	return VWindowTextIsGb(text);
 }
 bool VIsWindowHp(HWND hWnd) {
-	WCHAR text[32];
-	GetWindowText(hWnd, text, 32);
+	WCHAR text[50];
+	GetWindowText(hWnd, text, 50);
 	return StrEqual(text, L"BlackScreen Window");
 }
 void VSwitchLockState(bool l) {
@@ -1204,7 +1210,6 @@ LRESULT WINAPI LowLevelKeyboardProc(int nCode, WPARAM wParam, LPARAM lParam)
 
 BOOL WINAPI hkSetForegroundWindow(HWND hWnd)
 {
-	if (loaded && VIsInIllegalWindows(hWnd))
 		return TRUE;
 	return raSetForegroundWindow(hWnd);
 }

@@ -3,21 +3,19 @@
     <title>JiYu Trainer 帮助文档</title>
     <style>
         html {
-            overflow: hidden;
-            overflow-y: scroll;
-            vertical-scrollbar: my-v-scrollbar;
+            position: relative;
         }
         body {
+            position: relative;
             font-family: "Microsoft YaHei", Tahoma, sans-serif;
             margin: 15px;
             padding: 0;
         }
-        body .img {
-            width: 100%;
-            text-align: center;
+        .img {
+           text-align: center; 
         }
         img {
-            max-width: 100%;
+            max-width: 90%;
         }
 
         .alert {
@@ -108,7 +106,7 @@
                 background: #888;
             }
             .base:disabled {
-                background: #aaa;
+                background: transparent;
             }
             .base {
                 width: 10px;
@@ -117,6 +115,31 @@
             .corner {
                 background: transparent;
             }
+        }
+        .area {
+            position: absolute;
+            left: 150px;
+            top: 100px;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            overflow-y: scroll;
+            vertical-scrollbar: my-v-scrollbar;
+        }
+        .area .page {
+            margin: 10px;
+        }
+        .catalog {
+            position: absolute;
+            width: 150px;
+            top: 100px;
+            left: 0;
+            bottom: 0;
+            border-right: 1px solid #a0a0a0;
+        }
+        .catalog a {
+            display: block;
+            cursor: pointer;
         }
     </style>
 
@@ -128,136 +151,168 @@
     <div style="text-align: center; padding-top: 8px;"><img src="res:logo-text.png" /></div>
     <h2 style="text-align: center; padding-top: 0;margin-top: 0;">帮助文档</h2>
 
-    <h3 style="color:#ff8b0d">简介</h3>
-    <p>
-        <span style="color:#006bef">本软件研发目的就是为了对抗极域电子教室，如果您的学校机房使用极域电子教室来控制学生电脑的话，本软件很可能会帮到你。</span><br />
-        这是一个可以使 <span class="mark">极域电子教室全屏广播失效</span>  的软件，也就是说，在被老师全屏广播时，会将其自动调整为<span class="mark">窗口模式</span>，<b>你不仅可以自由操作电脑，也还可以看老师的演示，自由+学习两不误，这不是很爽的事情吗</b>？其还可以防止被老师控制（有点狠），以及自动关闭 “<b>黑屏安静</b>” 这种东西；由于本软件是将全屏调整为窗口，因此老师并不会发现你断线或是进行了非法操作。
-    </p>
-    <h5 style="color:#ff8b0d">主要功能</h5>
-    <ul>
-        <li>在不影响极域正常运行的情况下将 全屏的广播 转为 窗口广播 模式，您不仅可自己操作，也可看老师讲解课程。</li>
-        <li>本软件内置了强杀、启停极域 StudentMain.exe 进程功能，无需依赖其他软件。</li>
-        <li>内置破解极域解锁卸载密码功能，支持新版极域。</li>
-        <li>防监视功能，开启反监视，教师端就无法监视您所用的电脑。</li>
-        <li>防控制功能，防止教师通过极域控制您所用的电脑。</li>
-        <li>监控极域远程执行命令，您可以自由选择是否允许教师端远程执行的命令。</li>
-        <li>解除网络控制，防止教师通限制您电脑的网络。</li>
-        <li>更多功能开发中……</li>
-    </ul>
-    <h3 style="color:#ff8b0d">安装方法</h3>
-    <p>
-        本软件不依赖任何运行库，您只需复制一个 <b>JiYuTrainer.exe</b> 至目标电脑即可运行，本软件已将需要的DLL打包，它会自动进行安装。
-    </p>
-    <h3 style="color:#ff8b0d">操作方法</h3>
-    <p>
-        <span style="color:#006bef">本软件专为小白设计，默认情况下，您不需要修改任何参数，直接运行exe，并最小化即可，软件会自动进行操作。</span><br />
-        如果默认模式无法满足您的需求，可点主界面右下角的“<span class="mark">控制台</span>”按钮打开控制台进行配置。
-    </p>
+    <div class="area">
+        <div id="introd" class="page">
+            <h3 style="color:#ff8b0d">简介</h3>
+            <p>
+                <span style="color:#006bef">本软件研发目的就是为了对抗极域电子教室，如果您的学校机房使用极域电子教室来控制学生电脑的话，本软件很可能会帮到你。</span><br />
+                这是一个可以使 <span class="mark">极域电子教室全屏广播失效</span>  的软件，也就是说，在被老师全屏广播时，会将其自动调整为<span class="mark">窗口模式</span>，<b>你不仅可以自由操作电脑，也还可以看老师的演示，自由+学习两不误，这不是很爽的事情吗</b>？其还可以防止被老师控制（有点狠），以及自动关闭 “<b>黑屏安静</b>” 这种东西；由于本软件是将全屏调整为窗口，因此老师并不会发现你断线或是进行了非法操作。
+            </p>
+            <h5 style="color:#ff8b0d">主要功能</h5>
+            <ul>
+                <li>在不影响极域正常运行的情况下将 全屏的广播 转为 窗口广播 模式，您不仅可自己操作，也可看老师讲解课程。</li>
+                <li>本软件内置了强杀、启停极域 StudentMain.exe 进程功能，无需依赖其他软件。</li>
+                <li>内置破解极域解锁卸载密码功能，支持新版极域。</li>
+                <li>防监视功能，开启反监视，教师端就无法监视您所用的电脑。</li>
+                <li>防控制功能，防止教师通过极域控制您所用的电脑。</li>
+                <li>监控极域远程执行命令，您可以自由选择是否允许教师端远程执行的命令。</li>
+                <li>解除网络控制，防止教师通限制您电脑的网络。</li>
+                <li>更多功能开发中……</li>
+            </ul>
+            <h3 style="color:#ff8b0d">安装方法</h3>
+            <p>
+                本软件不依赖任何运行库，您只需复制一个 <b>JiYuTrainer.exe</b> 至目标电脑即可运行，本软件已将需要的DLL打包，它会自动进行安装。
+            </p>
+            <h3 style="color:#ff8b0d">操作方法</h3>
+            <p>
+                <span style="color:#006bef">本软件专为小白设计，默认情况下，您不需要修改任何参数，直接运行exe，并最小化即可，软件会自动进行操作。</span><br />
+                如果默认模式无法满足您的需求，可点主界面右下角的“控制台”按钮打开控制台进行自定义配置。<br />
+                具体配置帮助可参见“主界面”>“程序配置说明”章节。
+            </p>
+        </div>
+        <div id="interface" class="page" style="display: none;">
+            <h5 style="color:#ff8b0d">主界面</h5>
+            <p>
+                主界面上半部分是控制极域的状态信息，下半部分是操作按钮：
+            </p>
+            <div class="img"><img src="res:JiYuTrainerHelp1.png" /></div>
+            <ol>
+                <li>打开此帮助窗口</li>
+                <li>置顶/不置顶本软件主窗口</li>
+                <li>杀死/启动极域主进程</li>
+                <li>打开<span class="mark">控制台</span></li>
+                <li>计算机电源操作和退出软件</li>
+            </ol>
+            <h5 style="color:#ff8b0d">控制台界面</h5>
+            <div class="img"><img src="res:JiYuTrainerHelp2.png" style="width:280px" /></div><br />
+        
+            程序配置说明：
+            <ol>
+                <li>是否监控极域运行进程。因为教师可以通过极域远程运行exe，这可能会对你造成影响，勾选此项以后教师远程执行任何exe都会提醒您是否允许操作。</li>
+                <li>勾选此选项后可以允许屏幕广播窗口置顶（如果你需要屏幕广播窗口置顶，边看边操作的话），默认是不允许的。</li>
+                <li>是否允许教师通过极域结束您电脑上的进程，默认不允许。 </li>
+                <li>是否允许教师通过极域在您的电脑上运行程序，或是执行CMD命令，默认情况下会在执行时弹出对话框询问您是否允许，如果勾选此选项后则不提醒您，直接阻止。</li>
+                <li>是否允许教师通过极域关闭您电脑上的窗口，默认不允许。 </li>
+                <li>是否自动检测更新，更新到最新版本可以使您得到最好的软件使用体验，包括新功能和问题修复。 </li>
+                <li>高级配置，里面有更多的配置。</li>
+                <li>本功能可以卸载极域的网络过滤驱动，来防止教师通过极域限制您电脑的上网。本功能开机后卸载一次即可。</li>
+                <li>是否允许教师通过极域控制你的电脑，不勾选此项时教师不能使用极域远程控制你的电脑。默认不允许。 </li>
+                <li>是否允许教师通过极域监视你的电脑，不勾选此项时教师在教师端所看到您的屏幕是黑色的，而且也不能使用“监视”功能监视您的电脑。默认允许。 </li>
+                <li>本软件可以破解极域的解锁、卸载密码，支持已加密的新版极域。</li>
+                <li>本软件默认会去寻找极域主进程的位置，但是假如您所在电脑上的极域安装在非默认位置时，软件就可能无法定位极域的默认位置，您可以点击此项定义极域主进程的位置。</li>
+            </ol>
+            提示：<b>设置必须保存才能生效。</b><br />
+            在复制程序到U盘里时可一并复制配置文件 JiYuTrainer.ini ，这样您可以不用每次复制到新电脑上都重新配置一次设置。
+        </div>
+        <div id="bordcast" class="page" style="display: none;">
+            <h3 style="color:#ff8b0d">屏幕广播窗口的改动</h3>
+            <div class="img"><img src="res:JiYuTrainerHelp3.png" /></div>
+            <p style="color:#006bef">
+                为了保护您免受极域的控制，JiYuTrainer 添加了两个菜单项，点击图标或在广播窗口上右键打开此菜单，您可以点击它们操作屏幕广播窗口。
+            </p>
+        </div>
+        <div id="key" class="page" style="display: none;">
+            <h3 style="color:#ff8b0d">快捷键</h3>
 
-    <h3 style="color:#ff8b0d">软件界面</h3>
-    <h5 style="color:#ff8b0d">主界面</h5>
-    <p>
-        主界面上半部分是控制极域的状态信息，下半部分是操作按钮：
-    </p>
-    <div class="img"><img src="res:JiYuTrainerHelp1.png" /></div>
-    <ol>
-        <li>打开此帮助窗口</li>
-        <li>置顶/不置顶本软件主窗口</li>
-        <li>杀死/启动极域主进程</li>
-        <li>打开<span class="mark">控制台</span></li>
-        <li>计算机电源操作和退出软件</li>
-    </ol>
-    <h5 style="color:#ff8b0d">控制台界面</h5>
-    <div class="img"><img src="res:JiYuTrainerHelp2.png" /></div><br />
+            <h5 style="color:#ff8b0d"><span class="kbd">Ctrl+Alt+D</span>快速显示/隐藏窗口</h5>
+            <p>
+                这个快捷键在老师来的时候用来快速隐藏JiYuTrainer的窗口。
+            </p>
+            <h5 style="color:#ff8b0d"><span class="kbd">Ctrl+Alt+F</span>紧急全屏</h5>
+            <p>
+                这个快捷键在老师来的时候快速把窗口调成全屏，等老师走后再次按这个快捷键重新切换回窗口（教师端开启了全屏广播这个快捷键才有效）。<br />
+                （当然，您也可以在广播窗口右键，选择“广播窗口全屏”来切换全屏状态）。
+            </p>
+            <hr/>
+            <p>
+                提示：您可以在 软件高级配置 中自定义快捷键。
+            </p>
+        </div>
+        <div id="others" class="page" style="display: none;">
+            <h3 style="color:#ff8b0d">其他</h3>
+            <ul>
+                <li>
+                    如果您在使用本软件的内核驱动时出现蓝屏的错误，表明驱动不适用于您的系统，我们会努力改进程序以尽快支持您的系统，<br/>
+                    目前您可以在“软件高级配置”(如果不能打开软件，请在启动本程序时按住“ALT”键即可打开配置 ) 中勾选“禁用软件内核驱动”以解决蓝屏问题。
+                </li>
+                <li>
+                    <b>提示：</b>如果您在可移动介质（比如U盘）中直接运行 JiYuTrainer ，为了防止长时间占用您的 U 盘，我们默认会
+                    将主程序安装至 C 盘的临时目录下，运行程序后您依然可以弹出 U 盘。
+                </li>
+                <li>
+                    <b>说明：</b>由于本软件需要对极域电子教室进行操作，可能会被某些杀毒软件误识别为病毒，<b>您可能需要关闭杀毒软件或者添加本软件到白名单</b>。
+                </li>
+                <li>
+                    <b>说明：</b>如果你的学校使用其他版本的极域而本软件不能正常运行的话，你可以向我提供极域样本，我会尽力修改程序以适配更多的极域电子教室版本)。
+                </li>
+                <li>
+                    <b>如果您在使用软件过程中发现Bug，或是有意见和建议，欢迎至项目主页反馈</b><br/>
+                    项目 Github 地址：<a href="#" id="link_github" class="link" title="点击到Github">JiYu Trainer </a>
+                </li>
+                <li>
+                    <div class="alert alert-success">
+                        如果你喜欢这个软件，不妨向你的好友推荐一下吧！
+                    </div>
+                </li>
+            </ul>
 
-    程序配置说明：
-    <ol>
-        <li>是否监控极域运行进程。因为教师可以通过极域远程运行exe，这可能会对你造成影响，勾选此项以后教师远程执行任何exe都会提醒您是否允许操作。</li>
-        <li>勾选此选项后可以允许屏幕广播窗口置顶（如果你需要屏幕广播窗口置顶，边看边操作的话），默认是不允许的。</li>
-        <li>是否允许教师通过极域结束您电脑上的进程，默认不允许。 </li>
-        <li>是否允许教师通过极域在您的电脑上运行程序，或是执行CMD命令，默认情况下会在执行时弹出对话框询问您是否允许，如果勾选此选项后则不提醒您，直接阻止。</li>
-        <li>是否允许教师通过极域关闭您电脑上的窗口，默认不允许。 </li>
-        <li>是否自动检测更新，更新到最新版本可以使您得到最好的软件使用体验，包括新功能和问题修复。 </li>
-        <li>高级配置。调试时使用。</li>
-        <li>本功能可以卸载极域的网络过滤驱动，来防止教师通过极域限制您电脑的上网。本功能开机后卸载一次即可。</li>
-        <li>是否允许教师通过极域控制你的电脑，不勾选此项时教师不能使用极域远程控制你的电脑。默认不允许。 </li>
-        <li>是否允许教师通过极域监视你的电脑，不勾选此项时教师在教师端所看到您的屏幕是黑色的，而且也不能使用“监视”功能监视您的电脑。默认允许。 </li>
-        <li>本软件可以破解极域的解锁、卸载密码，支持已加密的新版极域。</li>
-        <li>本软件默认会去寻找极域主进程的位置，但是假如您所在电脑上的极域安装在非默认位置时，软件就可能无法定位极域的默认位置，您可以点击此项定义极域主进程的位置。</li>
-    </ol>
-    <b>提示：设置必须保存才能生效。</b><br />
+            <hr />
+            <b style="color:#006bef">已测试的版本：</b>
+            <ul>
+                <li>极域电子教室:  4.0 和 6.0（2010 和 2015/2016版本）</li>
+                <li>已测试的系统:  Win7、Win10</li>
+            </ul>
+            <b style="color:#006bef">软件需求：</b>
+            <ul>
+                <li>本软件支持系统 Win7/Win8/Win8.1/Win10</li>
+                <li>极域电子教室 推荐在 4.0/6.0 版本，其他版本可能无法达到最好的防御效果 </li>
+            </ul>
+            
+            <br />
+        </div>
+        <div id="note" class="page" style="display: none;">
+            <h3 style="color:#ff0000">免责声明</h3>
+            <div class="alert alert-warning">
+                <b>注意：</b>本软件研发之初仅供学习交流使用，<span style="color:red;font-weight:bold;">严禁将该软件用于不符合法律、道德的行为，本软件仅供技术交流，擅自用于不正当行为所造成的后果将由您自行承担！</span>自您使用本软件起，即表明您同意了该声明。
+            </div>
 
-    <h3 style="color:#ff8b0d">快捷键</h3>
-    <h5 style="color:#ff8b0d"><span class="kbd">Ctrl+Alt+D</span>快速显示/隐藏窗口</h5>
-    <h5 style="color:#ff8b0d"><span class="kbd">Ctrl+Alt+F</span>紧急全屏 ↓ </h5>
-    <p>
-        <span class="mark">如果老师经过你的电脑，发现唯独只有你一个人没有被控制，这有点糟糕啊... </span> ，所以本软件有一个暂时全屏的功能：<br />
-        您可以使用 <b>Ctrl+Alt+F</b> 暂时将广播或黑屏窗口调整至全屏，等老师走后再次按 <b>Ctrl+Alt+F</b> 重新切换回窗口。<br />
-        <b>当然，您也可以右键广播窗口，选择“广播窗口全屏”来切换全屏状态。</b>。
-    </p>
+            <hr />
 
-    <h3 style="color:#ff8b0d">屏幕广播窗口的改动</h3>
-    <div class="img"><img src="res:JiYuTrainerHelp3.png" /></div>
-    <p style="color:#006bef">
-        为了保护您免受极域的控制，JiYuTrainer 添加了两个菜单项，点击图标或在广播窗口上右键打开此菜单，您可以点击它们操作屏幕广播窗口。
-    </p>
+            <p>
+                版权所有 © 2021 快乐的梦鱼<br/>
+                <br/>
+                这款软件是为了学习而开发的免费开源软件，如果有人拿他收费卖的话，请不要上当，本软件永久开源免费，可在项目 Github 主页下载到程序和源码。<br/>
+                <br/>
+                在您传播分发这款软件时，请尊重作者劳动成果，不要删掉软件的任何作者标识、署名。
+            </p>
 
-    <h3 style="color:#ff8b0d">其他</h3>
-    <div class="alert alert-primary alert-hollow">
-        如果您在使用本软件的内核驱动时出现蓝屏的错误，表明驱动不适用于您的系统，我们会努力改进程序以尽快支持您的系统，
-        目前您可以在“软件高级配置”(如果不能打开软件，请添加命令行 -config ) 中勾选“禁用软件内核驱动”以解决蓝屏问题。
+            <br />
+        </div>
     </div>
-    <div class="alert alert-primary">
-        <b>提示：</b>如果您在可移动介质（比如U盘）中直接运行 JiYuTrainer ，为了防止长时间占用您的 U 盘，我们默认会
-        将主程序安装至 C 盘的临时目录下，运行程序后您依然可以弹出 U 盘。
+    <div class="catalog">
+        <a data-type="catalog" data-id="introd" style="color: #ff8b0d">介绍</a>
+        <a data-type="catalog" data-id="interface">软件界面</a>
+        <a data-type="catalog" data-id="bordcast">屏幕广播窗口的改动</a>
+        <a data-type="catalog" data-id="key">快捷键</a>
+        <a data-type="catalog" data-id="others">其他</a>
+        <a data-type="catalog" data-id="note">免责声明</a>
     </div>
-    <div class="alert alert-primary alert-hollow">
-        <b>说明：</b>由于本软件需要对极域电子教室进行操作，可能会被某些杀毒软件误识别为病毒，<b>您可能需要关闭杀毒软件或者添加本软件到白名单</b>。
-    </div>
-    <br />
-    <div class="alert alert-blcak">
-        <b>如果您在使用软件过程中发现Bug，或是有意见和建议，欢迎向我反馈！</b>
-    </div>
-    <ul>
-        <!--<li>该项目 Github 地址：<a href="#" id="link_github" class="link">JiYu Trainer </a></li>-->
-        <li>作者邮箱：1501076885@qq.com </li>
-        <li>作者 QQ：1501076885 （请备注 <input style="display:inline-block;text-decoration:underline; border: 1px solid #fff; width: 95px" value="来自JiYuTrainer" />）</li>
-    </ul>
-    <div class="alert alert-success">
-        如果你喜欢这个软件，不妨向你的好友推荐一下吧！
-    </div>
-    <br />
-    <b style="color:#006bef">已测试的版本：</b>
-    <ul>
-        <li>极域电子教室 :  4.0 和 6.0（2010 和 2016版本）</li>
-        <li>已测试的系统 :  WinXP、 Win7、Win10</li>
-    </ul>
-    <b style="color:#006bef">软件需求：</b>
-    <ul>
-        <li>本软件最低最低也要在 Windows XP SP3上运行，上古版本的系统不支持 </li>
-        <li>极域电子教室 推荐在 4.0/6.0 版本，其他版本可能无法达到最好的防御效果 </li>
-    </ul>
-
-    <div class="alert alert-primary">
-        <b>说明：</b>如果你的学校使用其他版本的极域而本软件不能正常运行的话，你可以向我提供极域样本，我会尽力修改程序以适配更多的极域电子教室版本)。
-    </div>
-
-    <h3 style="color:#ff0000">免责声明</h3>
-    <div class="alert alert-warning">
-        <b>注意：</b>本软件研发之初仅供学习交流使用，<span style="color:red;font-weight:bold;">严禁将该软件用于不符合法律、道德的行为，本软件仅供技术交流，擅自用于不正当行为所造成的后果将由您自行承担！</span>自您使用本软件起，即表明您同意了该声明。
-    </div>
-    <br />
-    <div class="alert alert-danger">
-        <b>注意：</b>该软件商标与版权受到国际法的保护，任何人不得将本软件用于任何商业用途！您在传播、分发本软件的副本时不得删除本软件的任何所有权声明或商标。
-    </div>
-
-    <br />
-    <a href="#" id="link_exit" class="btn" style="float: right;">关闭</a><br />
-
+    
     <script type="text/tiscript">
-        const body = $(body);
-        const extend_area = $(#extend_area);
-        $(#link_exit).onClick = function (){ view.close(); }
+        function self.ready()
+        {
+            view.docunmentComplete();
+        }
     </script>
 
 </body>

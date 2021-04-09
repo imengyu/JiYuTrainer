@@ -7,6 +7,7 @@
 //
 
 #include <gtk/gtk.h>
+#include <locale.h>
 
 #include "sciter-x-window.hpp"
 
@@ -19,6 +20,8 @@ int main (int argc, char *argv[])
   g_log_set_handler ("Gtk", G_LOG_LEVEL_WARNING, (GLogFunc) gtk_false, NULL);
   gtk_init (&argc, &argv);
   g_log_set_handler ("Gtk", G_LOG_LEVEL_WARNING, g_log_default_handler, NULL);
+
+  setlocale(LC_TIME,"");
 
   for( int i = 0; i < argc; ++i ) {
       aux::a2w w(argv[i]);
@@ -51,19 +54,6 @@ namespace sciter {
     }
   }
 
-  bool window::load( aux::bytes utf8_html, const WCHAR* base_url)
-  {
-     return FALSE != SAPI()->SciterLoadHtml(_hwnd,utf8_html.start,utf8_html.length, base_url);
-  }
-  bool window::load( aux::chars utf8_html, const WCHAR* base_url)
-  {
-     return FALSE != SAPI()->SciterLoadHtml(_hwnd,(LPCBYTE)utf8_html.start,utf8_html.length, base_url);
-  }
-  bool window::load( const WCHAR* url)
-  {
-     return FALSE != SAPI()->SciterLoadFile(_hwnd,url);
-  }
-
   void window::collapse() {
     if(_hwnd) gtk_window_iconify (gwindow(_hwnd));
   }
@@ -78,12 +68,8 @@ namespace sciter {
 
   window::window( UINT creationFlags, RECT frame): _hwnd(NULL)
   {
+    asset_add_ref();
     _hwnd = SAPI()->SciterCreateWindow(creationFlags, (frame.right - frame.left) > 0 ? &frame: NULL,NULL,this,NULL);
-    if( _hwnd ) {
-      add_ref();
-      setup_callback();
-      sciter::attach_dom_event_handler(get_hwnd(),this);
-    }
   }
 
 }

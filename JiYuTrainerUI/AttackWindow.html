@@ -1,0 +1,199 @@
+<html>
+<head>
+    <style>
+        html {
+            overflow: hidden;
+            overflow-y: scroll;
+            vertical-scrollbar: my-v-scrollbar;
+        }
+        body {
+            font-family: "Microsoft YaHei", Tahoma, sans-serif;
+            margin: 15px;
+            padding: 0;
+        }
+
+
+        .alert {
+            display: block;
+            position: relative;
+            padding: 12px 20px;
+            margin-bottom: 1rem;
+            border: 1px solid transparent;
+            border-radius: 4px;
+        }
+        .alert-danger {
+            color: #721c24;
+            background-color: #f8d7da;
+            border-color: #f5c6cb;
+        }
+        .alert-warning {
+            color: #856404;
+            background-color: #fff3cd;
+            border-color: #ffeeba;
+        }
+        .alert-success {
+            color: #155724;
+            background-color: #d4edda;
+            border-color: #c3e6cb;
+        }
+        .alert-primary {
+            color: #004085;
+            background-color: #cce5ff;
+            border-color: #b8daff;
+        }
+        .alert-hollow {
+            background-color: #fff;
+        }
+        .alert-blcak {
+            background-color: #fff;
+            border-color: #999;
+            color: #000;
+        }
+
+        #result_list {
+            display: block;
+            height: 70px;
+            overflow: hidden;
+            overflow-y: scroll;
+            font-size: 12px;
+            vertical-scrollbar: my-v-scrollbar;
+        }
+        textarea {
+            vertical-scrollbar: my-v-scrollbar;
+        }
+
+        .kbd {
+            display: inline-block;
+            color: #fff;
+            background-color: #282828;
+            border-radius: 6px;
+            padding: 5px 10px;
+            margin: 0 8px;
+        }
+
+        .input-item {
+            position: relative;
+        }
+        .input-item span {
+            display: inline-block;
+            width: 130px;
+        }
+
+        .mark {
+            background-color: #ffd04c;
+        }
+        .btn{
+            display: inline-block;
+            text-decoration: none;
+            color: #fff;
+            background-color: #37b0ff;
+            border-radius: 14px;
+            padding: 5px 10px;
+        }
+        .btn:hover,.btn:active {
+            background-color: #006bef;
+            text-decoration: none;
+        }
+
+        /* style block defining vertical scrollbar */
+        @set my-v-scrollbar {
+            .prev {
+                display: none;
+            }
+            .next {
+                display: none;
+            }
+            .base,
+            .next-page,
+            .prev-page {
+                background-color: #f3f3f3;
+                border: none;
+            }
+            .slider {
+                background: #ccc;
+                border-radius: 6px;
+                border: 2px solid #f3f3f3;
+            }
+            .slider:hover {
+                background: #999;
+            }
+            .slider:active {
+                background: #888;
+            }
+            .base:disabled {
+                background: transparent;
+            }
+            .base {
+                width: 10px;
+            }
+            /* explicit declaration of its width */
+            .corner {
+                background: transparent;
+            }
+        }
+    </style>
+
+</head>
+
+<body>
+
+    <h2 style="text-align: center; padding-top: 0;margin-top: 0;">极域电子教室数据包(udp)重放攻击</h2>
+
+    <div class="input-item">
+        <span>目标主机IP，多个IP使用英文逗号（,）分隔</span>
+        <textarea id="input_target_ip" placeholder="输入目标主机IP，多个IP使用英文逗号（,）分隔" style="height: 40px;width:200px"></textarea>
+        <button id="btn_scan_ip" style="margin-left: 10px;">扫描局域网内在线主机IP</button>
+    </div>
+    <div class="input-item">
+        <span>极域监听端口</span>
+        <input id="input_target_port" type="number" placeholder="输入目标主机极域监听端口(1-65535)" value="4705" />
+    </div>
+    <div class="input-item">
+        <span>发送文字</span>
+        <textarea id="input_send_message" placeholder="发送文字，长度在100个字符以内" style="height: 30px;"></textarea>
+        <button id="btn_send_msg">发送</button>
+    </div>
+    <div class="input-item">
+        <span>执行CMD命令</span>
+        <textarea id="input_send_cmd" placeholder="CMD命令，例如C:\Windows\system32\NOTEPAD.EXE" style="height: 40px;"></textarea>
+        <button id="btn_send_cmd">执行</button>
+    </div>
+    <div class="input-item">
+        <span>对方电脑关机</span>
+        <button id="btn_send_shutdown">执行</button>
+    </div>
+    <div class="input-item">
+        <span>对方电脑重启</span>
+        <button id="btn_send_reboot">执行</button>
+    </div>
+
+    <hr />
+
+    <div id="result_list">
+        <div>点击上方按钮发送指令</div>
+    </div>
+
+    <hr />
+
+    <p>
+        功能原理由 <a href="https://github.com/ht0Ruial" target="_blank">ht0Ruial</a> 大佬提供，
+        <br/>欢迎访问他的项目主页哦：<a href="https://github.com/ht0Ruial/Jiyu_udp_attack" target="_blank">https://github.com/ht0Ruial/Jiyu_udp_attack</a>。
+    </p>
+
+    <hr />
+
+    <p class="alert alert-danger">
+        提示：本功能仅供测试使用。因为您使用本功能而 扰乱上课秩序、造成机房设备损坏、机房瘫痪 等等事故，责任由您自己承担。请慎重使用本功能。
+    </p>
+    <p class="alert alert-warning">
+        提示：如果对方主机上也运行了 JiYu Trainer，那么上面的功能不一定有用，因为 JiYu Trainer 会在底层拦截住 StudentMain 执行某些操作。
+    </p>
+
+    <script type="text/tiscript">
+        function self.ready()
+        {
+            view.docunmentComplete();
+        }
+    </script>
+</body>
+</html>

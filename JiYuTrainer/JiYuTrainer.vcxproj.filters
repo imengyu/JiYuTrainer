@@ -96,6 +96,15 @@
     <ClInclude Include="RegHlp.h">
       <Filter>头文件\Utils</Filter>
     </ClInclude>
+    <ClInclude Include="JyUdpAttack.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="NetUtils.h">
+      <Filter>头文件\Utils</Filter>
+    </ClInclude>
+    <ClInclude Include="CAutoLock.h">
+      <Filter>头文件\Utils</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -159,6 +168,15 @@
       <Filter>源文件\Utils</Filter>
     </ClCompile>
     <ClCompile Include="RegHlp.cpp">
+      <Filter>源文件\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="JyUdpAttack.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="NetUtils.cpp">
+      <Filter>源文件\Utils</Filter>
+    </ClCompile>
+    <ClCompile Include="CAutoLock.cpp">
       <Filter>源文件\Utils</Filter>
     </ClCompile>
   </ItemGroup>

@@ -22,7 +22,7 @@ SAMPLE:
 struct camera_stream: public event_handler
 {
     com::ptr<camera::capture> pcapt;
-    aux::asset_ptr<sciter::video_destination> rendering_site;
+    sciter::om::hasset<sciter::video_destination> rendering_site;
     // ctor
     camera_stream() {}
     virtual ~camera_stream() {}
@@ -34,8 +34,8 @@ struct camera_stream: public event_handler
     }
 
     virtual void attached  (HELEMENT he ) { } 
+    virtual void detached  (HELEMENT he ) { asset_release(); } 
 
-    virtual void detached  (HELEMENT he ) { delete this; } 
     virtual bool on_event (HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UINT_PTR reason ) 
     { 
       if(type != VIDEO_BIND_RQ)

@@ -48,11 +48,11 @@ namespace aux
 template <typename T >
    struct slice
    {
-      const T*       start;
-      unsigned int   length;
+      const T*  start;
+      size_t    length;
 
       slice(): start(0), length(0) {}
-      slice(const T* start_, size_t length_) { start = start_; length = (unsigned int)length_; }
+      slice(const T* start_, size_t length_) { start = start_; length = length_; }
       slice(const slice& src): start(src.start), length(src.length) {}
 
       slice& operator = (const slice& src) { start = src.start; length = src.length; return *this; }
@@ -117,7 +117,7 @@ template <typename T >
 
       int last_index_of( T e ) const
       {
-        for( unsigned int i = length; i > 0 ;) if( start[--i] == e ) return i;
+        for( size_t i = length; i > 0 ;) if( start[--i] == e ) return int(i);
         return -1;
       }
 
@@ -125,12 +125,12 @@ template <typename T >
       {
         if( s.length > length ) return -1;
         if( s.length == 0 ) return -1;
-        unsigned int l = length - s.length;
+        size_t l = length - s.length;
         for( unsigned int i = 0; i < l ; ++i)
           if( start[i] == *s.start )
           {
             const T* p = s.start;
-            unsigned int last = i + s.length;
+            size_t last = i + s.length;
             for( unsigned int j = i + 1; j < last; ++j )
               if( *(++p) != start[j])
                 goto next_i;
@@ -145,29 +145,65 @@ template <typename T >
         if( s.length > length ) return -1;
         if( s.length == 0 ) return -1;
         const T* ps = s.end() - 1;
-        for( unsigned int i = length; i > 0 ; )
+        for( size_t i = length; i > 0 ; )
           if( start[--i] == *ps )
           {
             const T* p = ps;
-            unsigned int j, first = i - s.length + 1;
+            size_t j, first = i - s.length + 1;
             for( j = i; j > first; )
               if( *(--p) != start[--j])
                 goto next_i;
-            return j;
+            return int(j);
             next_i: continue;
           }
         return -1;
       }
 
-      void prune(unsigned int from_start, unsigned int from_end = 0)
+      template <class Y>
+      bool starts_with(const slice<Y> &s) const {
+        if (length < s.length)
+          return false;
+        slice t(start, s.length);
+        return t == s;
+      }
+
+      bool ends_with(const slice &s) const {
+        if (length < s.length)
+          return false;
+        slice t(start + length - s.length, s.length);
+        return t == s;
+      }
+
+      void prune(size_t from_start, size_t from_end = 0)
       {
-        unsigned int s = from_start >= length? length : from_start;
-        unsigned int e = length - (from_end >= length? length: from_end);
+        size_t s = from_start >= length? length : from_start;
+        size_t e = length - (from_end >= length? length: from_end);
         start += s;
         if( s < e ) length = e-s;
         else length = 0;
       }
 
+      bool split(const slice &delimeter, slice &head, slice &tail) const {
+        int d = index_of(delimeter);
+        if (d < 0)
+          return false;
+        const T *s = start;
+        size_t   l = length;
+        head = slice(s, d);
+        tail = slice(s + d + delimeter.length, l - d - delimeter.length);
+        return true;
+      }
+
+
+#ifdef CPP11
+      explicit
+#endif
+      operator bool() const { return length > 0; }
+
+      T operator *() const { return length ? start[0] : T(); }
+
+      T operator++() { if (length) { ++start; if (--length) return *start; } return T(); }
+      T operator++(int) { if (length) { --length; ++start; return *(start - 1); } return T(); }
 
       bool like(const T* pattern) const;
 

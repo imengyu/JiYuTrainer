@@ -38,7 +38,7 @@ namespace sciter
   struct writer
   {
     virtual bool write( aux::bytes data ) = 0; // redefine to do actual writing of data.start/data.length
-    static BOOL SCAPI image_write_function(LPVOID prm, const BYTE* data, UINT data_length)
+    static SBOOL SCAPI image_write_function(LPVOID prm, const BYTE* data, UINT data_length)
     {
       writer* pw = (writer* )prm;
       return pw->write( aux::bytes(data,data_length) );
@@ -96,7 +96,7 @@ namespace sciter
     static image load( aux::bytes data ) // loads image from png or jpeg encoded data
     {
       HIMG himg;
-      GRAPHIN_RESULT r = gapi()->imageLoad( data.start, data.length, &himg); assert(r == GRAPHIN_OK); (void)(r);
+      GRAPHIN_RESULT r = gapi()->imageLoad( data.start, UINT(data.length), &himg); assert(r == GRAPHIN_OK); (void)(r);
       if( himg )
         return image( himg );
       return image(0);
@@ -136,7 +136,7 @@ namespace sciter
     
     bool dimensions( UINT& width, UINT& height ) {
       if( himg ) {
-        BOOL usesAlpha;
+        SBOOL usesAlpha;
         GRAPHIN_RESULT r = gapi()->imageGetInfo(himg,&width,&height,&usesAlpha); assert(r == GRAPHIN_OK); (void)(r);
         return true;
       }
@@ -257,17 +257,20 @@ namespace sciter
 
     text(HTEXT h) : htext(h) { }
   public:
-    text(aux::wchars chars, const SCITER_TEXT_FORMAT& format) : htext(0) { 
-      GRAPHIN_RESULT r = gapi()->textCreate(&htext,chars.start,UINT(chars.length),&format);
-      assert(r == GRAPHIN_OK); (void)(r);
-    }
-    text(aux::wchars chars, HELEMENT he) : htext(0) {
+    text(aux::wchars chars, HELEMENT he, LPCWSTR className = NULL) : htext(0) {
       assert(he);
-      GRAPHIN_RESULT r = gapi()->textCreateForElement(&htext, chars.start, UINT(chars.length), he);
+      GRAPHIN_RESULT r = gapi()->textCreateForElement(&htext, chars.start, UINT(chars.length), he, className);
       assert(r == GRAPHIN_OK); (void)(r);
     }
-        
+            
     text(const text& pa) : htext(pa.htext) { if (htext) gapi()->textAddRef(htext); }
+
+    static text create_with_style(aux::wchars chars, HELEMENT he, aux::wchars style) {
+      HTEXT htext;
+      GRAPHIN_RESULT r = gapi()->textCreateForElementAndStyle(&htext, chars.start, UINT(chars.length), he, style.start, UINT(style.length));
+      assert(r == GRAPHIN_OK); (void)(r);
+      return text(htext);
+    }
 
     ~text()
     {
@@ -777,6 +780,12 @@ namespace sciter
     {
       assert(hgfx);
       GRAPHIN_RESULT r = gapi()->gPopClip( hgfx); 
+      assert(r == GRAPHIN_OK); (void)(r);
+    }
+
+    void flush() {
+      assert(hgfx);
+      GRAPHIN_RESULT r = gapi()->gFlush(hgfx);
       assert(r == GRAPHIN_OK); (void)(r);
     }
   };

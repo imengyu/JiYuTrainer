@@ -88,7 +88,7 @@ typedef enum SCITER_LINE_CAP_TYPE
   SCITER_LINE_CAP_ROUND = 2,
 } SCITER_LINE_CAP_TYPE;
 
-typedef enum SCITER_TEXT_ALIGNMENT
+/*typedef enum SCITER_TEXT_ALIGNMENT
 {
   TEXT_ALIGN_DEFAULT,
   TEXT_ALIGN_START,
@@ -102,7 +102,7 @@ typedef enum SCITER_TEXT_DIRECTION
   TEXT_DIRECTION_LTR,
   TEXT_DIRECTION_RTL,
   TEXT_DIRECTION_TTB,
-} SCITER_TEXT_DIRECTION;
+} SCITER_TEXT_DIRECTION; */
 
 typedef enum SCITER_IMAGE_ENCODING
 {
@@ -112,21 +112,21 @@ typedef enum SCITER_IMAGE_ENCODING
   SCITER_IMAGE_ENCODING_WEBP,
 } SCITER_IMAGE_ENCODING;
 
-typedef struct SCITER_TEXT_FORMAT
+/* typedef struct SCITER_TEXT_FORMAT
 {
     LPWSTR                fontFamily;
     UINT                  fontWeight; // 100...900, 400 - normal, 700 - bold
-    BOOL                  fontItalic;
+    SBOOL                  fontItalic;
     float                 fontSize;   // dips
     float                 lineHeight; // dips
     SCITER_TEXT_DIRECTION textDirection;
     SCITER_TEXT_ALIGNMENT textAlignment; // horizontal alignment
     SCITER_TEXT_ALIGNMENT lineAlignment; // a.k.a. vertical alignment for roman writing systems
     LPWSTR                localeName;
-} SCITER_TEXT_FORMAT;
+} SCITER_TEXT_FORMAT; */
 
 // imageSave callback:
-typedef BOOL SCAPI image_write_function(LPVOID prm, const BYTE* data, UINT data_length);
+typedef SBOOL SCAPI image_write_function(LPVOID prm, const BYTE* data, UINT data_length);
 // imagePaint callback:
 typedef VOID SCAPI image_paint_function(LPVOID prm, HGFX hgfx, UINT width, UINT height);
 
@@ -134,12 +134,12 @@ struct SciterGraphicsAPI
 {
 // image primitives
   GRAPHIN_RESULT
-        SCFN(imageCreate)( HIMG* poutImg, UINT width, UINT height, BOOL withAlpha );
+        SCFN(imageCreate)( HIMG* poutImg, UINT width, UINT height, SBOOL withAlpha );
 
   // construct image from B[n+0],G[n+1],R[n+2],A[n+3] data.
   // Size of pixmap data is pixmapWidth*pixmapHeight*4
   GRAPHIN_RESULT
-        SCFN(imageCreateFromPixmap)( HIMG* poutImg, UINT pixmapWidth, UINT pixmapHeight, BOOL withAlpha, const BYTE* pixmap );
+        SCFN(imageCreateFromPixmap)( HIMG* poutImg, UINT pixmapWidth, UINT pixmapHeight, SBOOL withAlpha, const BYTE* pixmap );
 
   GRAPHIN_RESULT
         SCFN(imageAddRef)( HIMG himg );
@@ -151,7 +151,7 @@ struct SciterGraphicsAPI
         SCFN(imageGetInfo)( HIMG himg,
              UINT* width,
              UINT* height,
-             BOOL* usesAlpha );
+             SBOOL* usesAlpha );
 
   //GRAPHIN_RESULT
   //      SCFN(imageGetPixels)( HIMG himg,
@@ -229,19 +229,19 @@ struct SciterGraphicsAPI
         SCFN(pathRelease) ( HPATH path );
 
   GRAPHIN_RESULT
-        SCFN(pathMoveTo) ( HPATH path, SC_POS x, SC_POS y, BOOL relative );
+        SCFN(pathMoveTo) ( HPATH path, SC_POS x, SC_POS y, SBOOL relative );
 
   GRAPHIN_RESULT
-        SCFN(pathLineTo) ( HPATH path, SC_POS x, SC_POS y, BOOL relative );
+        SCFN(pathLineTo) ( HPATH path, SC_POS x, SC_POS y, SBOOL relative );
 
   GRAPHIN_RESULT
-        SCFN(pathArcTo) ( HPATH path, SC_POS x, SC_POS y, SC_ANGLE angle, SC_DIM rx, SC_DIM ry, BOOL is_large_arc, BOOL clockwise, BOOL relative );
+        SCFN(pathArcTo) ( HPATH path, SC_POS x, SC_POS y, SC_ANGLE angle, SC_DIM rx, SC_DIM ry, SBOOL is_large_arc, SBOOL clockwise, SBOOL relative );
 
   GRAPHIN_RESULT
-        SCFN(pathQuadraticCurveTo) ( HPATH path, SC_POS xc, SC_POS yc, SC_POS x, SC_POS y, BOOL relative );
+        SCFN(pathQuadraticCurveTo) ( HPATH path, SC_POS xc, SC_POS yc, SC_POS x, SC_POS y, SBOOL relative );
 
   GRAPHIN_RESULT
-        SCFN(pathBezierCurveTo) ( HPATH path, SC_POS xc1, SC_POS yc1, SC_POS xc2, SC_POS yc2, SC_POS x, SC_POS y, BOOL relative );
+        SCFN(pathBezierCurveTo) ( HPATH path, SC_POS xc1, SC_POS yc1, SC_POS xc2, SC_POS yc2, SC_POS x, SC_POS y, SBOOL relative );
 
   GRAPHIN_RESULT
         SCFN(pathClosePath) ( HPATH path );
@@ -324,17 +324,17 @@ struct SciterGraphicsAPI
         SCFN(gFillGradientRadial)( HGFX hgfx, SC_POS x, SC_POS y, SC_DIM rx, SC_DIM ry, const SC_COLOR_STOP* stops, UINT nstops );
 
   GRAPHIN_RESULT
-        SCFN(gFillMode) ( HGFX hgfx, BOOL even_odd /* false - fill_non_zero */ );
+        SCFN(gFillMode) ( HGFX hgfx, SBOOL even_odd /* false - fill_non_zero */ );
 
 // SECTION: text
 
-  // create text layout using element's styles
+  // create text layout for host element
   GRAPHIN_RESULT
-        SCFN(textCreateForElement)(HTEXT* ptext, LPCWSTR text, UINT textLength, HELEMENT he );
+        SCFN(textCreateForElement)(HTEXT* ptext, LPCWSTR text, UINT textLength, HELEMENT he, LPCWSTR classNameOrNull );
 
-  // create text layout using explicit format declaration
+  // create text layout using explicit style declaration
   GRAPHIN_RESULT
-        SCFN(textCreate)(HTEXT* ptext, LPCWSTR text, UINT textLength, const SCITER_TEXT_FORMAT* format );
+        SCFN(textCreateForElementAndStyle)(HTEXT* ptext, LPCWSTR text, UINT textLength, HELEMENT he, LPCWSTR style, UINT styleLength); 
 
   GRAPHIN_RESULT
         SCFN(textAddRef) (HTEXT path);
@@ -382,7 +382,7 @@ struct SciterGraphicsAPI
   // pop clip layer previously set by gPushClipBox or gPushClipPath
   GRAPHIN_RESULT
         SCFN(gPopClip) ( HGFX hgfx);
-
+    
   // image painter
 
     GRAPHIN_RESULT
@@ -414,6 +414,8 @@ struct SciterGraphicsAPI
   GRAPHIN_RESULT
         SCFN(vUnWrapText) ( const VALUE* fromValue, HTEXT *phtext);
 
+  GRAPHIN_RESULT
+        SCFN(gFlush) (HGFX hgfx);
 
 
 };

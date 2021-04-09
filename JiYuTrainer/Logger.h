@@ -1,6 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include <stdio.h>
+#include <string>
 #include <io.h>
 #include <stdarg.h>
 #include <list>

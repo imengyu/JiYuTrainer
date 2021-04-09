@@ -71,6 +71,7 @@ public:
 	SettingHlp* GetSettings() { return appSetting; };
 	bool GetSelfProtect() { return !appForceNoSelfProtect; }
 	TrainerWorker* GetTrainerWorker() { return appWorker; };
+	JyUdpAttack* GetJyUdpAttack() { return appJyUdpAttack; };
 	void*GetSciterAPI() {	return pSciterAPI;}
 
 	LPVOID RunOperation(AppOperation op);
@@ -136,6 +137,7 @@ private:
 	Logger *appLogger = nullptr;
 	SettingHlp *appSetting = nullptr;
 	TrainerWorker *appWorker = nullptr;
+	JyUdpAttack* appJyUdpAttack = nullptr;
 	MD5Utils * appMd5Utils = nullptr;
 
 	void MergePathString();

@@ -49,9 +49,11 @@ struct native_textarea: public event_handler
 
       this_hwnd = ::CreateWindow(TEXT("EDIT"), 
                                  TEXT(""), 
-                                 WS_CHILD | WS_VISIBLE | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL | ES_WANTRETURN | ES_MULTILINE,
+                                 WS_CHILD | WS_CLIPSIBLINGS | WS_VISIBLE | WS_BORDER | ES_LEFT | ES_AUTOHSCROLL | ES_WANTRETURN | ES_MULTILINE,
                                  rc.left, rc.top, rc.right - rc.left, rc.bottom - rc.top,
                                  parent, NULL, THIS_HINSTANCE, 0);
+
+      ::SendMessage(this_hwnd, WM_SETFONT, (WPARAM)GetStockObject(DEFAULT_GUI_FONT), true);
 
       self.attach_hwnd(this_hwnd);
     }
@@ -59,7 +61,7 @@ struct native_textarea: public event_handler
     { 
       if (this_hwnd)
         ::DestroyWindow(this_hwnd);
-      delete this; 
+      asset_release();
     }
 
     virtual bool handle_method_call(HELEMENT he, METHOD_PARAMS& params) { 

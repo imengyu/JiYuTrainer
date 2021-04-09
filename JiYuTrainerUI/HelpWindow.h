@@ -2,39 +2,24 @@
 #include "stdafx.h"
 #include "sciter-x.h"
 #include "sciter-x-host-callback.h"
+#include "CommonWindow.h"
 #include "../JiYuTrainer/AppPublic.h"
 
 extern JTApp* currentApp;
 
-class HelpWindow  : public sciter::host<HelpWindow>, public sciter::event_handler
+class HelpWindow : public CommonWindow, public sciter::host<HelpWindow>
 {
 public:
 	HelpWindow(HWND parentHWnd);
 	~HelpWindow();
 
-	HWND _hWnd, _parentHWnd;
-	bool _firstShow = true;
+private:
+	sciter::dom::element root;
+protected:
+	sciter::value docunmentComplete();
 
-	int RunLoop();
-	void Close();
-
-	static LRESULT CALLBACK	wndProc(HWND, UINT, WPARAM, LPARAM);
-	static HelpWindow* ptr(HWND hwnd);
-	static bool initClass();
-
-	sciter::value goToFullHelp();
-
-	bool init();
-
-	BEGIN_FUNCTION_MAP
-		FUNCTION_0("goToFullHelp", goToFullHelp);
-	END_FUNCTION_MAP
-
-public:
-	// notification_handler traits:
-	HWND get_hwnd() { return _hWnd; }
-	HINSTANCE get_resource_instance() { return currentApp->GetInstance(); }
-
-	bool isValid() const { return _hWnd != 0; }
+	bool on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UINT_PTR reason) override;
+	LRESULT onWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, BOOL* handled) override;
+	bool onLoadHtml(LPCBYTE pData, DWORD len) override { return load_html(pData, len); };
 };
 

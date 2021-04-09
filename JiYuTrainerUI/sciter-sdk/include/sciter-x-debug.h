@@ -84,7 +84,11 @@ inline  VOID    SCAPI SciterSetupDebugOutput ( HWINDOW hwndOrNull, LPVOID param,
         char buffer [ 2049 ];
         va_list args;
         va_start ( args, fmt );
+#if _MSC_VER == 1400
+        int len = vsnprintf( buffer, sizeof(buffer), _TRUNCATE, fmt, args );
+#else
         int len = vsnprintf( buffer, sizeof(buffer), fmt, args );
+#endif
         va_end ( args );
         buffer [ len ] = 0;
         buffer [ 2048 ] = 0;
@@ -143,6 +147,13 @@ inline  VOID    SCAPI SciterSetupDebugOutput ( HWINDOW hwndOrNull, LPVOID param,
           freopen("conin$", "r", stdin);
           freopen("conout$", "w", stdout);
           freopen("conout$", "w", stderr);
+#if 0          
+          DWORD cm;
+          if(GetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE),&cm))
+            SetConsoleMode(GetStdHandle(STD_OUTPUT_HANDLE), cm | ENABLE_VIRTUAL_TERMINAL_INPUT);
+          if (GetConsoleMode(GetStdHandle(STD_ERROR_HANDLE), &cm))
+            SetConsoleMode(GetStdHandle(STD_ERROR_HANDLE), cm | ENABLE_VIRTUAL_TERMINAL_INPUT);
+#endif            
 #pragma warning( pop )
           initialized = true;
         }
@@ -169,7 +180,9 @@ inline  VOID    SCAPI SciterSetupDebugOutput ( HWINDOW hwndOrNull, LPVOID param,
         fputs(text, f);
       }
 #endif
+
     };
+
   }
 
 #endif

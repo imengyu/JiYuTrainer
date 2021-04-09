@@ -4,7 +4,6 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
-#pragma pack(push,1)
 
 #include <windows.h>
 #include "misc.h"
@@ -12,6 +11,8 @@ extern "C" {
 ////////////////////////////////////////////////////////
 // System descriptors
 ////////////////////////////////////////////////////////
+
+#pragma pack(push,1)
 
 #define GDT_NULL 0
 #define GDT_R0_CODE 0x08

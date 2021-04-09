@@ -17,7 +17,8 @@
 *.pch
 *.log
 *.dll
-*.sys
 *.ini
 *.bat
+*.enc
+*.recipe
 

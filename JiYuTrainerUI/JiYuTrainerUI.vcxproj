@@ -23,32 +23,32 @@
     <ProjectGuid>{B6EF0CE6-FCCD-4869-9B3D-420DDF39C67D}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>JiYuTrainerUI</RootNamespace>
-    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141_xp</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141_xp</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>DynamicLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -72,16 +72,16 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <IncludePath>$(SolutionDir)JiYuTrainerUI\sciter-sdk\include;$(VC_IncludePath);$(WindowsSdk_71A_IncludePath);</IncludePath>
-    <LibraryPath>$(SolutionDir)JiYuTrainerUI\sciter-sdk\lib\32;$(VC_LibraryPath_x86);$(WindowsSdk_71A_LibraryPath_x86);$(SolutionDir)$(Configuration)\</LibraryPath>
+    <LibraryPath>$(SolutionDir)JiYuTrainerUI\sciter-sdk\lib\32;$(SolutionDir)$(Configuration)\;$(LibraryPath)</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)JiYuTrainerUI\sciter-sdk\include;</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <IncludePath>$(SolutionDir)JiYuTrainerUI\sciter-sdk\include;$(IncludePath)</IncludePath>
-    <LibraryPath>$(SolutionDir)JiYuTrainerUI\sciter-sdk\lib\32;$(VC_LibraryPath_x86);$(WindowsSdk_71A_LibraryPath_x86);$(SolutionDir)$(Configuration)\</LibraryPath>
+    <IncludePath>$(VC_IncludePath);$(WindowsSDK_IncludePath);$(SolutionDir)JiYuTrainerUI\sciter-sdk\include;</IncludePath>
+    <LibraryPath>$(SolutionDir)JiYuTrainerUI\sciter-sdk\lib\32;$(SolutionDir)$(Configuration)\;$(LibraryPath)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -171,22 +171,29 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="AttackWindow.h" />
     <ClInclude Include="BugReportWindow.h" />
+    <ClInclude Include="CommonWindow.h" />
     <ClInclude Include="ConfigWindow.h" />
     <ClInclude Include="HelpWindow.h" />
     <ClInclude Include="JiYuTrainerUI.h" />
     <ClInclude Include="MainWindow.h" />
+    <ClInclude Include="messags.h" />
     <ClInclude Include="resource.h" />
+    <ClInclude Include="ScanIPWindow.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
     <ClInclude Include="UpdaterWindow.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="AttackWindow.cpp" />
     <ClCompile Include="BugReportWindow.cpp" />
+    <ClCompile Include="CommonWindow.cpp" />
     <ClCompile Include="ConfigWindow.cpp" />
     <ClCompile Include="HelpWindow.cpp" />
     <ClCompile Include="JiYuTrainerUI.cpp" />
     <ClCompile Include="MainWindow.cpp" />
+    <ClCompile Include="ScanIPWindow.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -236,8 +243,10 @@
     <Image Include="res\version-text.png" />
   </ItemGroup>
   <ItemGroup>
+    <None Include="AttackWindow.html" />
     <None Include="HelpWindow.html" />
     <None Include="MainWindow.html" />
+    <None Include="ScanIPWindow.html" />
     <None Include="UpdaterWindow.html" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

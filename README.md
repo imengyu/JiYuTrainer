@@ -1,10 +1,10 @@
 <p align="center">
   <a href="#">
-    <img alt="JiYu Trainer" src="https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/JiYuTrainerLogo256.png" width="128">
+    <img alt="JiYu Trainer" src="https://imengyu.top/assets/images/jy/JiYuTrainerLogo256.png" width="128">
   </a>
 </p>
 <p align="center">
-  <img alt="JiYu Trainer Title" src="https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/JiYuTrainerTitle.png">
+  <img alt="JiYu Trainer Title" src="https://imengyu.top/assets/images/jy/JiYuTrainerTitle.png">
 </p>
 <p align="center">不再被极域电子教室控制</p>
 
@@ -39,19 +39,18 @@
 * 反监视功能，经测试，开启反监视，教师端就无法监视您所用的电脑。
 * 防控制功能，防止教师通过极域控制您所用的电脑。
 * 监控极域远程执行命令，您可以自由选择是否允许教师端远程执行的命令。
-* 更多功能开发中……
+* 通过极域电子教室对同学的电脑远程发送信息或远程执行命令。
 
 下载
 ---
 
 * [下载软件最新版已编译版本](https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/Release/JiYuTrainer.exe) 
-* [备用地址](http://jiyutrainer.imyzc.com/JiYuTrainer.exe) 
 
 提示：**由于本软件会对极域电子教室进行必要的操作（远程注入、替换模块），某些杀毒软件可能会报毒，您可能需要关闭杀毒软件或添加白名单**。
 
 ---
 
-![截图](https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/ScreenShots.png)
+![截图](https://imengyu.top/assets/images/jy/ScreenShots.png)
 
 操作方法
 ---
@@ -71,13 +70,13 @@
 **A: 你可以先卸载掉极域的驱动再插入U盘。具体操作方法如下：** <br/>
 
 1. 先以管理员身份运行cmd：
-![CMD](https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/sc0.png)
+![CMD](https://imengyu.top/assets/images/jy/sc0.png)
 2. 输入以下命令卸载TDFileFilter驱动：
 ```
 sc stop TDFileFilter 
 sc delete TDFileFilter 
 ```
-![sc](https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/sc1.png)
+![sc](https://imengyu.top/assets/images/jy/sc1.png)
 
 然后再插入U盘，就没有限制了，可以直接运行JiYuTrainer。
 
@@ -89,35 +88,39 @@ sc delete TDFileFilter
 3. 稍等一下，刷新网页，此时网络即可正常访问。
 4. 最好你也可顺便把极域的其他进程一并杀死，防止它因为驱动卸载掉还操作而导致系统蓝屏。
 
-![pch](https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/pchunter1.png)
+![pch](https://imengyu.top/assets/images/jy/pchunter1.png)
 
 #### 已测试极域电子教室版本：
 
 * 2010版 （5.01.64.942 / 5.01 Baseline）
+* 2015豪华版
 * 2016豪华版 （2.07.0.13488 / 2.07 CMPC） 
 
 #### 操作系统版本: 
-* 系统最低需求: Windows XP SP3,
-* 支持 Win7/Win8/Win8.1/Win10
+
+* 系统版本要求: Win7/Win8/Win8.1/Win10
+
+> 抱歉：因为最近一次做了较大改动，一些功能XP适配不了了，所以此后JiYuTrainer都不再支持WindowXP了，
+如果您要在WindowXP上使用JiYuTrainer，只能使用[旧版](https://raw.githubusercontent.com/imengyu/JiYuTrainer/master/Release/JiYuTrainerOldForWinXP.exe)。
 
 编译以及生成
 ---
 
 | 支持的编译工具：||
 |:-|:-:|
-| [Visual Studio](https://www.visualstudio.com/) 2017 | (推荐) |
+| [Visual Studio](https://www.visualstudio.com/) 2019 | (推荐) |
 | gcc 4.7+ (需要自己配置环境) | (不推荐) |
-|**如果需要编译驱动模块，您还需要安装:**||
+
+|如果需要编译驱动模块，您还需要安装:||
+|:-|:-:|
 |[WDK8](https://www.microsoft.com/en-us/download/details.aspx?id=42273) 或以上||
-
-> 提示：如果使用 Visual Studio 2019，无法编译支持XP的程序集，如果要编译支持XP，必须使用 Visual Studio 2017 ，并且设置生成工具为 v141xp
-
 
 使用的第三方库
 ---
 
 *第三方库已经包含在项目中，不需要您自己安装*
 
+- [Jiyu_udp_attack](https://github.com/ht0Ruial/Jiyu_udp_attack) (由ht0Ruial大佬提供UDP攻击的原理代码)
 - [curl](https://github.com/curl/curl) (用于自动更新模块)
 - [mhook](https://github.com/martona/mhook) (用于 JiYu HOOKER 模块)
 - [MemoryModule](https://github.com/fancycode/MemoryModule)
@@ -125,13 +128,17 @@ sc delete TDFileFilter
 
 其他
 ---
-OBSOLETE!
 
-维护终止。<br/>
-本项目大致功能目标已经完成，<br/>
-其他的与极域无关的功能基本不可能被添加到本软件。<br/>
-如果您有其他功能需求，可以fork项目之后自己开发。<br/>
-本项目将不再更新。
+这个项目大致功能目标已经完成了，<br/>
+作者也毕业要工作了，再不会去机房上课了😔，<br/>
+以后可能没有太多时间更新，所以基本除了BUG修复可能不会做大修改了。<br/>
+<br/>
+如果您有其他功能需求，可以fork项目之后自己研究开发。<br/>
+如果你想把自己开发的特殊功能放在JiYuTrainer供大家使用的话，
+你可以把功能开发完成后PullRequest让我把你的代码合并到主分支中。<br/>
+<br/>
+如果你喜欢这个项目，<br/>
+不妨推荐给你的好友吧😉
 
 许可
 ---

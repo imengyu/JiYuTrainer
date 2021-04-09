@@ -2,6 +2,7 @@
 #include "MainWindow.h"
 #include "UpdaterWindow.h"
 #include "ConfigWindow.h"
+#include "AttackWindow.h"
 #include "resource.h"
 #include "../JiYuTrainer/JiYuTrainer.h"
 #include "../JiYuTrainer/AppPublic.h"
@@ -31,6 +32,7 @@ MainWindow::MainWindow()
 {
 	currentLogger = currentApp->GetLogger();
 
+	asset_add_ref();
 	swprintf_s(wndClassName, MAIN_WND_CLS_NAME);
 
 	if (!initClass()) return;
@@ -50,7 +52,13 @@ MainWindow::MainWindow()
 		ShowWindow(_hWnd, SW_SHOW);
 	else 
 		ShowWindow(_hWnd, currentApp->GetAppShowCmd());
+
 	UpdateWindow(_hWnd);
+}
+MainWindow::~MainWindow()
+{
+	fuck();
+	_hWnd = nullptr;
 }
 
 bool MainWindow::initClass()
@@ -176,6 +184,7 @@ sciter::value MainWindow::exitClick()
 	return sciter::value::null();
 }
 sciter::value MainWindow::toGithub() {
+	SysHlp::OpenUrl(L"https://github.com/imengyu/JiYuTrainer");
 	return sciter::value::null();
 }
 
@@ -237,7 +246,17 @@ void MainWindow::OnWmDestroy()
 }
 void MainWindow::OnWmHotKey(WPARAM wParam)
 {
-	if (wParam == hotkeyShowHide) SendMessage(_hWnd, WM_COMMAND, IDM_SHOWMAIN, NULL);
+	if (wParam == hotkeyShowHide) {
+
+		if (IsWindowVisible(_hWnd)) {
+			if (currentAttackWindow) 
+				SendMessage(currentAttackWindow->get_hwnd(), WM_MY_FORCE_HIDE, 0, 0);
+			if (currentHelpWindow)
+				SendMessage(currentHelpWindow->get_hwnd(), WM_MY_FORCE_HIDE, 0, 0);
+		}
+
+		SendMessage(_hWnd, WM_COMMAND, IDM_SHOWMAIN, NULL);
+	}
 	if (wParam == hotkeySwFull) {
 		if(!currentWorker->SwitchFakeFull())
 			ShowTrayBaloonTip(L"JiYu Trainer 提示", L"您已退出假装全屏模式");
@@ -387,7 +406,9 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 			else MessageBox(_hWnd, L"极域电子教室密码读取失败！或许你可以用 mythware_super_password 试试", L"JiYuTrainer - 提示", MB_ICONEXCLAMATION);
 		}
 		else if (cmd == L"unload_netfilter") {
-			if (MessageBox(_hWnd, L"您是否希望解除极域的网络控制？此操作会卸载极域的网络过滤驱动，卸载以后网络将不受其控制。\n卸载过程中可能卡顿，请等待程序执行完成。\n此操作只需执行一次即可。", L"JiYuTrainer - 提示", MB_ICONWARNING | MB_YESNO) == IDYES)
+			if (MessageBox(_hWnd, L"您是否希望解除极域的网络控制？此操作会卸载极域的网络过滤驱动，卸载以后网络将不受其控制。\n" 
+				"卸载过程中可能卡顿，请等待程序执行完成。\n此操作只需执行一次即可。\n提示：在卸载完成以后最好在“控制面板”>"
+				"“网络和共享中心”>“更改适配器选项”，选本地连接，右键禁用再启用，这样可以重启网络使设置生效。", L"JiYuTrainer - 提示", MB_ICONWARNING | MB_YESNO) == IDYES)
 				if (currentWorker->RunOperation(TrainerWorkerOp5))
 					MessageBox(_hWnd, L"卸载极域的网络过滤驱动成功", L"JiYuTrainer - 提示", MB_ICONINFORMATION);
 		}
@@ -436,10 +457,18 @@ void MainWindow::OnFirstShow()
 	//热键
 	hotkeyShowHide = GlobalAddAtom(L"HotKeyShowHide");
 	hotkeySwFull = GlobalAddAtom(L"HotKeySwFull");
-	if (!RegisterHotKey(_hWnd, hotkeyShowHide, MOD_ALT | MOD_CONTROL, 'D'))
-		currentLogger->LogWarn(L"热键 Ctrl+Alt+D 注册失败，请检查是否有程序占用，错误：%d", GetLastError());
-	if (!RegisterHotKey(_hWnd, hotkeySwFull, MOD_ALT | MOD_CONTROL, 'F'))
-		currentLogger->LogWarn(L"热键 Ctrl+Alt+F 注册失败，请检查是否有程序占用，错误：%d", GetLastError());
+
+	int setHotKeyFakeFull = currentApp->GetSettings()->GetSettingInt(L"HotKeyFakeFull", 1606);
+	int setHotKeyShowHide = currentApp->GetSettings()->GetSettingInt(L"HotKeyShowHide", 1604);
+
+	UINT mod = 0, vk = 0;
+	SysHlp::HotKeyCtlToKeyCode(setHotKeyShowHide, &mod, &vk);
+	if (!RegisterHotKey(_hWnd, hotkeyShowHide, mod, vk))
+		currentLogger->LogWarn(L"热键 快速显示/隐藏窗口 注册失败，请检查是否有程序占用，错误：%d", GetLastError());
+
+	SysHlp::HotKeyCtlToKeyCode(setHotKeyFakeFull, &mod, &vk);
+	if (!RegisterHotKey(_hWnd, hotkeySwFull, mod, vk))
+		currentLogger->LogWarn(L"热键 紧急全屏 注册失败，请检查是否有程序占用，错误：%d", GetLastError());
 
 	//托盘图标
 	WM_TASKBARCREATED = RegisterWindowMessage(TEXT("TaskbarCreated"));
@@ -545,6 +574,12 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 		else if (ele.get_attribute("id") == L"update_message_update") {
 			UpdaterWindow updateWindow(_hWnd);
 			updateWindow.RunLoop();
+		}
+		else if (ele.get_attribute("id") == L"link_attact") {
+			if (currentAttackWindow == nullptr)
+				currentAttackWindow = new AttackWindow(_hWnd);
+			else
+				currentAttackWindow->Show();
 		}
 		else if (ele.get_attribute("id") == L"exit_message_kill_and_exit") {
 			isUserCancel = true;
@@ -695,12 +730,10 @@ void MainWindow::OnShowHelp()
 
 void MainWindow::ShowHelp()
 {
-	if (currentHelpWindow == nullptr) {
+	if (currentHelpWindow == nullptr)
 		currentHelpWindow = new	HelpWindow(_hWnd);
-		currentHelpWindow->RunLoop();
-		delete currentHelpWindow;
-		currentHelpWindow = nullptr;
-	}
+	else
+		currentHelpWindow->Show();
 }
 void MainWindow::CloseHelp()
 {
@@ -710,6 +743,7 @@ void MainWindow::CloseHelp()
 		currentHelpWindow = nullptr;
 	}
 }
+
 void MainWindow::ShowFastTip(LPCWSTR text) 
 {
 	LPCSTR textMore2 = StringHlp::UnicodeToUtf8(text);
@@ -761,6 +795,8 @@ void MainWindow::LoadSettings()
 	setProhibitKillProcess = settings->GetSettingBool(L"ProhibitKillProcess", true);
 	setProhibitCloseWindow = settings->GetSettingBool(L"ProhibitCloseWindow", true);
 	setBandAllRunOp = settings->GetSettingBool(L"BandAllRunOp", false);
+	setDoNotShowTrayIcon = settings->GetSettingBool(L"DoNotShowTrayIcon", false);
+	
 	setCkInterval = settings->GetSettingInt(L"CKInterval", 3100);
 	if (setCkInterval < 1000 || setCkInterval > 10000) setCkInterval = 3000;
 }
@@ -881,6 +917,9 @@ void MainWindow::Close()
 //Tray
 
 void MainWindow::CreateTrayIcon(HWND hDlg) {
+	if (setDoNotShowTrayIcon)
+		return;
+
 	nid.cbSize = sizeof(nid);
 	nid.hWnd = hDlg;
 	nid.uID = 0;
@@ -891,6 +930,9 @@ void MainWindow::CreateTrayIcon(HWND hDlg) {
 	Shell_NotifyIcon(NIM_ADD, &nid);
 }
 void MainWindow::ShowTrayBaloonTip(const wchar_t* title, const wchar_t* text) {
+	if (setDoNotShowTrayIcon)
+		return;
+
 	lstrcpy(nid.szInfo, text);
 	nid.dwInfoFlags = NIIF_NONE;
 	lstrcpy(nid.szInfoTitle, title);
@@ -974,6 +1016,19 @@ LRESULT CALLBACK MainWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPA
 	case WM_DESTROY: self = ptr(hWnd); self->OnWmDestroy(); break;
 	case WM_TIMER:  self = ptr(hWnd); self->OnWmTimer(wParam);
 	case WM_USER: self = ptr(hWnd); self->OnWmUser(wParam, lParam); break;
+	case WM_MY_WND_CLOSE: {
+		self = ptr(hWnd);
+		void* wnd = (void*)wParam;
+		if (wnd == static_cast<CommonWindow*>(self->currentHelpWindow)) {
+			self->currentHelpWindow->Release();
+			self->currentHelpWindow = nullptr;
+		}
+		if (wnd == static_cast<CommonWindow*>(self->currentAttackWindow)) {
+			self->currentAttackWindow->Release();
+			self->currentAttackWindow = nullptr;
+		}
+		break;
+	}
 	case WM_QUERYENDSESSION: {
 		DestroyWindow(hWnd);
 		break;

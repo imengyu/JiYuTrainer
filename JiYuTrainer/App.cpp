@@ -9,6 +9,7 @@
 #include "NtHlp.h"
 #include "KernelUtils.h"
 #include "DriverLoader.h"
+#include "JyUdpAttack.h"
 #include "RegHlp.h"
 #include "TxtUtils.h"
 #include "XUnzip.h"
@@ -17,6 +18,7 @@
 #include <CommCtrl.h>
 #include <ShellAPI.h>
 #include <dbghelp.h>
+#include <locale>
 #include "../JiYuTrainerUI/MainWindow.h"
 #pragma comment(linker,"\"/manifestdependency:type='win32' name='Microsoft.Windows.Common-Controls' version='6.0.0.0' processorArchitecture='*' publicKeyToken='6595b64144ccf1df' language='*'\"")
 #define CMD_HELP L"\
@@ -443,6 +445,8 @@ int JTAppInternal::RunInternal()
 	if (!CheckAppCorrectness())
 		return APP_FAIL_PIRACY_VERSION;
 
+	if (GetAsyncKeyState(VK_LMENU) && 0x8000 || GetAsyncKeyState(VK_RMENU) && 0x8000)
+		appIsConfigMode = true;
 	if (appArgBreak) {
 #ifdef _DEBUG
 		if (MessageBox(NULL, L"This is a Debug version", L"JiYuTrainer - Debug Break", MB_YESNO | MB_ICONEXCLAMATION) == IDYES)
@@ -511,6 +515,7 @@ int JTAppInternal::RunInternal()
 
 	//appLogger->Log(L"SetUnhandledExceptionFilter Prevented: %d", PreventSetUnhandledExceptionFilter());
 	appWorker = new TrainerWorkerInternal();
+	appJyUdpAttack = new JyUdpAttack();
 	appLogger->Log(L"初始化正常");
 
 RUN_MAIN:
@@ -552,6 +557,10 @@ void JTAppInternal::ExitClear()
 	if (appWorker) {
 		delete appWorker;
 		appWorker = nullptr;
+	}
+	if (appJyUdpAttack) {
+		delete appJyUdpAttack;
+		appJyUdpAttack = nullptr;
 	}
 	if (appSetting) {
 		delete appSetting;

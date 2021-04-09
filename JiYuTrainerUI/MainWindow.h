@@ -13,6 +13,7 @@
 #include "../JiYuTrainer/Logger.h"
 #include "../JiYuTrainer/SysHlp.h"
 #include "HelpWindow.h"
+#include "AttackWindow.h"
 #include <list>
 #include "../JiYuTrainer/AppPublic.h"
 
@@ -36,6 +37,7 @@ public:
 	WCHAR wndClassName[64];
 
 	MainWindow();
+	~MainWindow();
 	bool init(); // instance
 	bool isValid() const { return _hWnd != 0; }
 
@@ -84,11 +86,13 @@ private:
 	bool setProhibitKillProcess = true;
 	bool setProhibitCloseWindow = true;
 	bool setBandAllRunOp = false;
+	bool setDoNotShowTrayIcon = false;
 	bool setAutoUpdate = true;
 
 	int setCkInterval = 3100;
 
 	HelpWindow*currentHelpWindow = nullptr;
+	AttackWindow*currentAttackWindow = nullptr;
 
 	Logger* currentLogger = nullptr;
 	TrainerWorker * currentWorker = nullptr;

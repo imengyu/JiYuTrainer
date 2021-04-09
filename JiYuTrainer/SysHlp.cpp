@@ -6,6 +6,7 @@
 #include <ShellAPI.h>
 #include <WinIoCtl.h>
 #include <CommDlg.h>
+#include <Commctrl.h>
 #include <string>
 
 SHSTDAPI_(BOOL) SHGetSpecialFolderPathW(__reserved HWND hwnd, __out_ecount(MAX_PATH) LPWSTR pszPath, __in int csidl, __in BOOL fCreate);
@@ -189,7 +190,26 @@ bool SysHlp::Is64BitOS()
 	}
 	return _Is64BitOS;
 }
-
+bool SysHlp::CopyToClipBoard(LPCWSTR str)
+{
+	if (OpenClipboard(NULL))
+	{
+		int len = (wcslen(str) + 1) * sizeof(wchar_t);
+		HGLOBAL hmem = GlobalAlloc(GHND, len);
+		void* pmem = GlobalLock(hmem);
+		EmptyClipboard();
+		memcpy_s(pmem, len, str, len);
+		SetClipboardData(CF_UNICODETEXT, hmem);
+		CloseClipboard();
+		GlobalFree(hmem);
+		return true;
+	}
+	return false;
+}
+void SysHlp::OpenUrl(LPCWSTR str)
+{
+	ShellExecute(NULL, L"open", str, NULL, NULL, SW_SHOW);
+}
 bool SysHlp::ChooseFileSingal(HWND hWnd, LPCWSTR startDir, LPCWSTR title, LPCWSTR fileFilter, LPCWSTR fileName, LPCWSTR defExt, LPCWSTR strrs, size_t bufsize)
 {
 	if (strrs) {
@@ -218,4 +238,18 @@ bool SysHlp::ChooseFileSingal(HWND hWnd, LPCWSTR startDir, LPCWSTR title, LPCWST
 		}
 	}
 	return 0;
+}
+bool SysHlp::HotKeyCtlToKeyCode(int code, UINT *outModf, UINT* outVk) {
+	WORD loword = LOWORD(code);
+	BYTE mode = HIBYTE(loword);
+
+	if ((mode & HOTKEYF_ALT) == HOTKEYF_ALT)
+		*outModf |= MOD_ALT;
+	if ((mode & HOTKEYF_CONTROL) == HOTKEYF_CONTROL)
+		*outModf |= MOD_CONTROL;
+	if ((mode & HOTKEYF_SHIFT) == HOTKEYF_SHIFT)
+		*outModf |= MOD_SHIFT;
+
+	*outVk = LOBYTE(code);
+	return true;
 }

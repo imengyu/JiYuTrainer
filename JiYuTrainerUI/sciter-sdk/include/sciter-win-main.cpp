@@ -1,6 +1,3 @@
-#include "stdafx.h"
-
-#include <vector>
 
 #include "sciter-x-window.hpp"
 #include "sciter-x-threads.h"
@@ -9,6 +6,8 @@
 // Windows Header Files:
 #include <windows.h>
 #include <shellapi.h>
+
+#include <vector>
 
 HINSTANCE ghInstance = THIS_HINSTANCE;
 
@@ -85,21 +84,8 @@ namespace sciter {
       return true;
     }
   }
-
-  bool window::load( aux::bytes utf8_html, const WCHAR* base_url)
-  {
-     return FALSE != ::SciterLoadHtml(_hwnd,utf8_html.start,utf8_html.length, base_url);
-  }
-  bool window::load( aux::chars utf8_html, const WCHAR* base_url)
-  {
-     return FALSE != ::SciterLoadHtml(_hwnd,(LPCBYTE)utf8_html.start,utf8_html.length, base_url);
-  }
-  bool window::load( const WCHAR* url)
-  {
-     return FALSE != ::SciterLoadFile(_hwnd,url);
-  }
   
-  LRESULT window::on_message( HWINDOW hwnd, UINT msg, WPARAM wParam, LPARAM lParam, BOOL& pHandled )
+  LRESULT window::on_message( HWINDOW hwnd, UINT msg, WPARAM wParam, LPARAM lParam, SBOOL& pHandled )
   {
      //switch(msg) {
      //  case WM_SIZE: on_size(); break; 
@@ -108,7 +94,7 @@ namespace sciter {
      return 0;
   }
 
-  LRESULT SC_CALLBACK window::msg_delegate(HWINDOW hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LPVOID pParam, BOOL* pHandled)
+  LRESULT SC_CALLBACK window::msg_delegate(HWINDOW hwnd, UINT msg, WPARAM wParam, LPARAM lParam, LPVOID pParam, SBOOL* pHandled)
   {
     window* win = static_cast<window*>( pParam );
     return win->on_message( hwnd, msg, wParam, lParam,*pHandled);
@@ -126,12 +112,8 @@ namespace sciter {
 
   window::window( UINT creationFlags, RECT frame): _hwnd(NULL)
   {
-    add_ref();
+    asset_add_ref();
     _hwnd = ::SciterCreateWindow(creationFlags,&frame,&msg_delegate,this,NULL);
-    if( _hwnd ) {
-      setup_callback();
-      sciter::attach_dom_event_handler(get_hwnd(),this);
-    }
   }
 
 }

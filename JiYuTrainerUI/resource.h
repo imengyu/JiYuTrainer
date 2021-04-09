@@ -17,6 +17,10 @@
 #define IDI_WARN                        147
 #define IDD_SETTINGS_MORE               148
 #define IDD_SETTINGS_DEBUG              149
+#define IDR_HTML1                       150
+#define IDR_HTML_ATTACK                 150
+#define IDR_HTML2                       152
+#define IDR_HTML_SCANIP                 152
 #define IDC_CHECK_INI_11                1001
 #define IDC_CHECK_INI_12                1002
 #define IDC_CHECK_INI_21                1003
@@ -40,6 +44,9 @@
 #define IDC_CHECK_DONOT_SHOW_AGAIN      1024
 #define IDC_MESSAGE                     1025
 #define IDC_TAB_SETTINGS                1026
+#define IDC_CHECK_INI_17                1027
+#define IDC_HOTKEY_FK                   1028
+#define IDC_HOTKEY_SHOWHIDE             1029
 #define IDM_HELP                        32774
 #define IDM_EXIT                        32775
 #define IDM_SHOWMAIN                    32776
@@ -48,9 +55,9 @@
 // 
 #ifdef APSTUDIO_INVOKED
 #ifndef APSTUDIO_READONLY_SYMBOLS
-#define _APS_NEXT_RESOURCE_VALUE        150
+#define _APS_NEXT_RESOURCE_VALUE        153
 #define _APS_NEXT_COMMAND_VALUE         40001
-#define _APS_NEXT_CONTROL_VALUE         1027
+#define _APS_NEXT_CONTROL_VALUE         1029
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

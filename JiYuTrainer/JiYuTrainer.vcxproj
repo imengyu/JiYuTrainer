@@ -23,32 +23,32 @@
     <ProjectGuid>{3F13035C-4164-4E05-9B5E-BC4546D7E4F6}</ProjectGuid>
     <Keyword>Win32Proj</Keyword>
     <RootNamespace>JiYuTrainer</RootNamespace>
-    <WindowsTargetPlatformVersion>7.0</WindowsTargetPlatformVersion>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141_xp</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141_xp</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>Application</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v141</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
@@ -72,14 +72,14 @@
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <LinkIncremental>true</LinkIncremental>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSdk_71A_LibraryPath_x86);$(SolutionDir)$(Configuration)\;</LibraryPath>
+    <LibraryPath>$(SolutionDir)$(Configuration)\;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <LinkIncremental>true</LinkIncremental>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <LinkIncremental>false</LinkIncremental>
-    <LibraryPath>$(VC_LibraryPath_x86);$(WindowsSdk_71A_LibraryPath_x86);$(SolutionDir)$(Configuration)\;</LibraryPath>
+    <LibraryPath>$(SolutionDir)$(Configuration)\;$(VC_LibraryPath_x86);$(WindowsSDK_LibraryPath_x86)</LibraryPath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <LinkIncremental>false</LinkIncremental>
@@ -97,7 +97,7 @@
     <Link>
       <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>ComCtl32.lib;ws2_32.lib;Wininet.lib;wldap32.lib;JiYuTrainerUI.lib;JiYuTrainerUpdater.lib;Dbghelp.lib;Shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ntdll.lib;Iphlpapi.lib;Mpr.lib;Ws2_32.lib;ComCtl32.lib;ws2_32.lib;Wininet.lib;wldap32.lib;JiYuTrainerUI.lib;JiYuTrainerUpdater.lib;Dbghelp.lib;Shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
     </Link>
@@ -138,7 +138,7 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>DebugFull</GenerateDebugInformation>
-      <AdditionalDependencies>ComCtl32.lib;ws2_32.lib;Wininet.lib;wldap32.lib;JiYuTrainerUI.lib;JiYuTrainerUpdater.lib;Dbghelp.lib;Shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>Ntdll.lib;Iphlpapi.lib;Mpr.lib;Ws2_32.lib;ComCtl32.lib;ws2_32.lib;Wininet.lib;wldap32.lib;JiYuTrainerUI.lib;JiYuTrainerUpdater.lib;Dbghelp.lib;Shlwapi.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <ModuleDefinitionFile>
       </ModuleDefinitionFile>
     </Link>
@@ -167,15 +167,18 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="AppPublic.h" />
+    <ClInclude Include="CAutoLock.h" />
     <ClInclude Include="DriverLoader.h" />
     <ClInclude Include="JiYuTrainer.h" />
     <ClInclude Include="App.h" />
+    <ClInclude Include="JyUdpAttack.h" />
     <ClInclude Include="KernelUtils.h" />
     <ClInclude Include="Logger.h" />
     <ClInclude Include="md5.h" />
     <ClInclude Include="MD5Utils.h" />
     <ClInclude Include="MemoryModule.h" />
     <ClInclude Include="MsgCenter.h" />
+    <ClInclude Include="NetUtils.h" />
     <ClInclude Include="NtHlp.h" />
     <ClInclude Include="PathHelper.h" />
     <ClInclude Include="RegHlp.h" />
@@ -193,15 +196,18 @@
     <ClInclude Include="XZip.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="CAutoLock.cpp" />
     <ClCompile Include="DriverLoader.cpp" />
     <ClCompile Include="JiYuTrainer.cpp" />
     <ClCompile Include="App.cpp" />
+    <ClCompile Include="JyUdpAttack.cpp" />
     <ClCompile Include="KernelUtils.cpp" />
     <ClCompile Include="Logger.cpp" />
     <ClCompile Include="md5.cpp" />
     <ClCompile Include="MD5Utils.cpp" />
     <ClCompile Include="MemoryModule.cpp" />
     <ClCompile Include="MsgCenter.cpp" />
+    <ClCompile Include="NetUtils.cpp" />
     <ClCompile Include="NtHlp.cpp" />
     <ClCompile Include="PathHelper.cpp" />
     <ClCompile Include="RegHlp.cpp" />

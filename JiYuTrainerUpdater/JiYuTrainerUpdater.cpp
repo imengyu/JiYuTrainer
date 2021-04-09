@@ -14,7 +14,7 @@
 
 using namespace std;
 
-#define UPDATE_HOST "http://update.imyzc.com/JiYuTrainer/" 
+#define UPDATE_HOST "http://imengyu.top/services/update/JiYuTrainer/" 
 //#define UPDATE_HOST "http://localhost/JiYuTrainer/" 
 
 JTApp* appCurrent = nullptr;

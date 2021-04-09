@@ -3,8 +3,9 @@
 #include "Logger.h"
 #include "SettingHlp.h"
 #include "TrainerWorker.h" 
+#include "JyUdpAttack.h" 
 
-#define CURRENT_VERSION "1.7.016.0202" 
+#define CURRENT_VERSION "1.7.6.0515" 
 
 #define FAST_STR_BINDER(str, fstr, size, ...) WCHAR str[size]; swprintf_s(str, fstr, __VA_ARGS__)
 
@@ -105,6 +106,7 @@ public:
 
 	virtual LPCWSTR GetStartupErr() { return nullptr; }
 
+	virtual JyUdpAttack* GetJyUdpAttack() { return nullptr; };
 	virtual Logger* GetLogger() { return nullptr; };
 	virtual SettingHlp* GetSettings() { return nullptr; };
 	virtual bool GetSelfProtect() { return false; }

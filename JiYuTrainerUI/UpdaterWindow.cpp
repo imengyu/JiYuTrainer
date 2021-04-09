@@ -9,139 +9,15 @@
 extern int screenWidth, screenHeight;
 extern MainWindow *currentMainWindow;
 
-UpdaterWindow::UpdaterWindow(HWND parentHWnd)
+UpdaterWindow::UpdaterWindow(HWND parentHWnd) : CommonWindow(parentHWnd, 430, 220, L"sciter-jytrainer-update-window", L"JiYu Trainer Update Window", IDR_HTML_UPDATER)
 {
-	_parentHWnd = parentHWnd;
-
-	if(!initClass()) return;
-
-	_hWnd = CreateWindowExW(0, L"sciter-jytrainer-update-window", L"JiYu Trainer Update Window", WS_OVERLAPPEDWINDOW ^ (WS_SIZEBOX | WS_MAXIMIZEBOX | WS_MINIMIZEBOX), CW_USEDEFAULT, CW_USEDEFAULT, 430, 220, nullptr, nullptr, currentApp->GetInstance(), this);
-	if (!_hWnd) return;
-
 	init();
-
-	ShowWindow(_hWnd, SW_SHOW);
-	UpdateWindow(_hWnd);
+	Show();
 }
 UpdaterWindow::~UpdaterWindow()
 {
 }
 
-int UpdaterWindow::RunLoop()
-{
-	if (!isValid())
-		return -1;
-
-	EnableWindow(_parentHWnd, FALSE);
-
-	// Main message loop:
-	MSG msg;
-	while (GetMessage(&msg, NULL, 0, 0))
-	{
-		TranslateMessage(&msg);
-		DispatchMessage(&msg);
-	}
-
-	EnableWindow(_parentHWnd, TRUE);
-	SetForegroundWindow(_parentHWnd);
-
-	return msg.lParam;
-}
-void UpdaterWindow::Close()
-{
-	DestroyWindow(_hWnd);
-}
-
-LRESULT UpdaterWindow::wndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
-{
-	//SCITER integration starts
-	BOOL handled = FALSE;
-	LRESULT lr = SciterProcND(hWnd, message, wParam, lParam, &handled);
-	if (handled)
-		return lr;
-	//SCITER integration ends
-
-	UpdaterWindow *self = ptr(hWnd);
-	switch (message)
-	{
-	case WM_CREATE: {
-		SetTimer(hWnd, 12, 1000, 0);
-		break;
-	}
-	case WM_SYSCOMMAND: {
-		if (wParam == SC_CLOSE) {
-			self->OnCancel();
-			return TRUE;
-		}
-	}
-	case WM_DESTROY: {
-		KillTimer(hWnd, 12);
-		SetWindowLong(hWnd, GWL_USERDATA, 0);
-		PostQuitMessage(0);
-		break;
-	}
-	case WM_QUERYENDSESSION: {
-		DestroyWindow(hWnd);
-		break;
-	}
-	case WM_SHOWWINDOW: {
-		if (self->firstShow) {		
-			self->firstShow = false;
-			//窗口居中
-			RECT rect; GetWindowRect(hWnd, &rect);
-			rect.left = (screenWidth - (rect.right - rect.left)) / 2;
-			rect.top = (screenHeight - (rect.bottom - rect.top)) / 2 - 60;
-			SetWindowPos(hWnd, 0, rect.left, rect.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
-
-			self->OnFirstShow();
-		}
-		break;
-	}
-	case WM_TIMER: {
-		if (wParam == 12) {
-			self->progress.set_style_attribute("width", self->updateProgressPrect.c_str());
-			self->progress_value.set_text(self->updateProgressPrect.c_str());
-		}
-		break;
-	}
-	case WM_COMMAND: {
-		if (wParam == IDC_UPDATE_CLOSE)
-			self->Close();
-		break;
-	}
-	}
-	return DefWindowProc(hWnd, message, wParam, lParam);
-}
-UpdaterWindow * UpdaterWindow::ptr(HWND hwnd)
-{
-	return reinterpret_cast<UpdaterWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
-}
-bool UpdaterWindow::initClass()
-{
-	static ATOM cls = 0;
-	if (cls)
-		return true;
-
-	WNDCLASSEX wcex;
-
-	wcex.cbSize = sizeof(WNDCLASSEX);
-
-	wcex.style = CS_HREDRAW | CS_VREDRAW;
-	wcex.lpfnWndProc = wndProc;
-	wcex.cbClsExtra = 0;
-	wcex.cbWndExtra = 0;
-	wcex.hInstance = currentApp->GetInstance();
-	wcex.hIcon = LoadIcon(currentApp->GetInstance(), MAKEINTRESOURCE(IDI_APP));
-	wcex.hCursor = LoadCursor(NULL, IDC_ARROW);
-	wcex.hbrBackground = (HBRUSH)(COLOR_WINDOW + 1);
-	wcex.lpszMenuName = 0;//MAKEINTRESOURCE(IDC_PLAINWIN);
-	wcex.lpszClassName = L"sciter-jytrainer-update-window";
-	wcex.hIconSm = LoadIcon(wcex.hInstance, MAKEINTRESOURCE(IDI_APP));
-
-	if (RegisterClassExW(&wcex) || GetLastError() == ERROR_CLASS_ALREADY_EXISTS)
-		return TRUE;
-	return FALSE;
-}
 bool UpdaterWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UINT_PTR reason)
 {
 	sciter::dom::element ele(he);
@@ -161,23 +37,59 @@ bool UpdaterWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type,
 	}
 	return false;
 }
-bool UpdaterWindow::init()
+LRESULT UpdaterWindow::onWndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam, BOOL* handled)
 {
-	SetWindowLongPtr(_hWnd, GWLP_USERDATA, LONG_PTR(this));
-	setup_callback(); // to receive SC_LOAD_DATA, SC_DATA_LOADED, etc. notification
-	attach_dom_event_handler(_hWnd, this); // to receive DOM events
-	BOOL result = FALSE;
-	HRSRC hResource = FindResource(currentApp->GetInstance(), MAKEINTRESOURCE(IDR_HTML_UPDATER), RT_HTML);
-	if (hResource) {
-		HGLOBAL hg = LoadResource(currentApp->GetInstance(), hResource);
-		if (hg) {
-			LPVOID pData = LockResource(hg);
-			if (pData)
-				result = load_html((LPCBYTE)pData, SizeofResource(currentApp->GetInstance(), hResource));
+	switch (message)
+	{
+	case WM_CREATE: {
+		SetTimer(hWnd, 12, 1000, 0);
+		break;
+	}
+	case WM_SYSCOMMAND: {
+		if (wParam == SC_CLOSE) {
+			OnCancel();
+			return TRUE;
 		}
 	}
-	return result;
+	case WM_DESTROY: {
+		KillTimer(hWnd, 12);
+		SetWindowLong(hWnd, GWL_USERDATA, 0);
+		PostQuitMessage(0);
+		break;
+	}
+	case WM_QUERYENDSESSION: {
+		DestroyWindow(hWnd);
+		break;
+	}
+	case WM_SHOWWINDOW: {
+		if (firstShow) {
+			firstShow = false;
+			//窗口居中
+			RECT rect; GetWindowRect(hWnd, &rect);
+			rect.left = (screenWidth - (rect.right - rect.left)) / 2;
+			rect.top = (screenHeight - (rect.bottom - rect.top)) / 2 - 60;
+			SetWindowPos(hWnd, 0, rect.left, rect.top, 0, 0, SWP_NOZORDER | SWP_NOSIZE);
+
+			OnFirstShow();
+		}
+		break;
+	}
+	case WM_TIMER: {
+		if (wParam == 12) {
+			progress.set_style_attribute("width", updateProgressPrect.c_str());
+			progress_value.set_text(updateProgressPrect.c_str());
+		}
+		break;
+	}
+	case WM_COMMAND: {
+		if (wParam == IDC_UPDATE_CLOSE)
+			Close();
+		break;
+	}
+	}
+	return 0;
 }
+
 void UpdaterWindow::OnCancel()
 {
 	if (JUpdater_Updatering()) {

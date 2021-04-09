@@ -51,6 +51,7 @@ public:
 	virtual void Start() {}
 	virtual void Stop() {}
 	virtual bool Running() { return false; }
+	virtual DWORD GetStudentMainPid() { return 0; }
 	virtual void* RunOperation(TrainerWorkerOp op) { return nullptr; }
 	virtual bool SwitchFakeFull() { return false; }
 	virtual bool FindProcess(LPCWSTR processName, DWORD*outPid) { return false; }
@@ -88,6 +89,7 @@ public:
 	void HandleMessageFromVirus(LPCWSTR buf);
 	void SendMessageToVirus(LPCWSTR buf);
 	bool AppointStudentMainLocation(LPCWSTR fullPath);
+	DWORD GetStudentMainPid() { return _StudentMainPid; }
 
 	bool Kill(bool autoWork = false);
 	bool KillStAuto();
@@ -165,6 +167,7 @@ private:
 	void ManualTop(bool fk);
 	bool ChecIsJIYuWindow(HWND hWnd, LPDWORD outPid, LPDWORD outTid);
 	bool CheckIsTargetWindow(LPWSTR text, HWND hWnd);
+	bool CheckWindowTextIsGb(const wchar_t* text);
 	void FixWindow(HWND hWnd, LPWSTR text);
 
 	static TrainerWorkerInternal * currentTrainerWorker;

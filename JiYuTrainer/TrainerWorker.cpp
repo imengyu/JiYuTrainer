@@ -715,7 +715,7 @@ void TrainerWorkerInternal::UpdateState()
 			}
 			else if (_StudentMainFileLocated) {
 				status = TrainerWorkerCallback::TrainerStatus::TrainerStatusNotRunning;
-				_StatusTextMore = L"已在此计算机上找到极域电子教室<br / >你可以点击 <b>下方按钮< / b> 运行它";
+				_StatusTextMore = L"已在此计算机上找到极域电子教室<br / >你可以点击 <b>下方按钮</b> 运行它";
 			}
 			else {
 				status = TrainerWorkerCallback::TrainerStatus::TrainerStatusNotFound;
@@ -944,22 +944,22 @@ bool TrainerWorkerInternal::ChecIsJIYuWindow(HWND hWnd, LPDWORD outPid, LPDWORD 
 }
 bool TrainerWorkerInternal::CheckIsTargetWindow(LPWSTR text, HWND hWnd) {
 	bool b = false;
-	if (StrEqual(text, L"屏幕广播") || StrEqual(text, L"屏幕演播室窗口")) {
-		b = true;
-		_LastResoveBroadcastWindow = true;
-		_CurrentBroadcastWnd = hWnd;
-		if (_FakeBroadcastFull) return false;
-	}
+	
 	if (StrEqual(text, L"BlackScreen Window")) {
 		b = true;
 		_LastResoveBlackScreenWindow = true;
 		if (!_FirstBlackScreenWindow) {
 			_FirstBlackScreenWindow = true;
 			if (_Callback) _Callback->OnResolveBlackScreenWindow();
-			//ShowTip(L"发现极域的非法黑屏窗口！", L"已将其处理并关闭，您可以继续您的工作。", 10);
 		}
 		_CurrentBlackScreenWnd = hWnd;
 		if (_FakeBlackScreenFull) return false;
+	}
+	else if (CheckWindowTextIsGb(text)) {
+		b = true;
+		_LastResoveBroadcastWindow = true;
+		_CurrentBroadcastWnd = hWnd;
+		if (_FakeBroadcastFull) return false;
 	}
 	return b;
 }
@@ -969,8 +969,17 @@ void TrainerWorkerInternal::FixWindow(HWND hWnd, LPWSTR text)
 
 	LONG oldLong = GetWindowLong(hWnd, GWL_EXSTYLE);
 
+	if (StrEqual(text, L"BlackScreen Window"))
+	{
+		oldLong = GetWindowLong(hWnd, GWL_EXSTYLE);
+		{
+			SetWindowLong(hWnd, GWL_EXSTYLE, oldLong ^ WS_EX_APPWINDOW | WS_EX_NOACTIVATE);
+			SetWindowPos(hWnd, 0, 20, 20, 90, 150, SWP_NOZORDER | SWP_DRAWFRAME | SWP_NOACTIVATE);
+			ShowWindow(hWnd, SW_HIDE);
+		}
+	}
 	//Un top
-	if (StrEqual(text, L"屏幕广播") || StrEqual(text, L"屏幕演播室窗口")) 
+	if (CheckWindowTextIsGb(text))
 	{
 		if (!setAllowGbTop && (oldLong & WS_EX_TOPMOST) == WS_EX_TOPMOST)
 		{
@@ -996,25 +1005,20 @@ void TrainerWorkerInternal::FixWindow(HWND hWnd, LPWSTR text)
 
 	}
 
-	if (StrEqual(text, L"BlackScreen Window"))
-	{
-		oldLong = GetWindowLong(hWnd, GWL_EXSTYLE);
-		{
-			SetWindowLong(hWnd, GWL_EXSTYLE, oldLong ^ WS_EX_APPWINDOW | WS_EX_NOACTIVATE);
-			SetWindowPos(hWnd, 0, 20, 20, 90, 150, SWP_NOZORDER | SWP_DRAWFRAME | SWP_NOACTIVATE);
-			ShowWindow(hWnd, SW_HIDE);
-		}
-	}
-
 	SetWindowPos(hWnd, 0, 0, 0, 0, 0, SWP_NOZORDER | SWP_NOSIZE | SWP_NOMOVE | SWP_DRAWFRAME | SWP_NOACTIVATE);
+}
+bool TrainerWorkerInternal::CheckWindowTextIsGb(const wchar_t* text) {
+	return StringHlp::StrContainsW(text, L"广播", nullptr) || StringHlp::StrContainsW(text, L"演示", nullptr)
+		|| StringHlp::StrContainsW(text, L"共享", nullptr)
+		|| StringHlp::StrEqualW(text, L"屏幕演播室窗口");
 }
 
 BOOL CALLBACK TrainerWorkerInternal::EnumWindowsProc(HWND hWnd, LPARAM lParam)
 {
 	TrainerWorkerInternal *self =(TrainerWorkerInternal *)lParam;
 	if (IsWindowVisible(hWnd) && self->ChecIsJIYuWindow(hWnd, NULL, NULL)) {
-		WCHAR text[32];
-		GetWindowText(hWnd, text, 32);
+		WCHAR text[50];
+		GetWindowText(hWnd, text, 50);
 		if (StrEqual(text, L"JiYu Trainer Virus Window")) return TRUE;
 
 		RECT rc;

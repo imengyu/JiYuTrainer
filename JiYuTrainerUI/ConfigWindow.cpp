@@ -104,11 +104,11 @@ INT_PTR CALLBACK SettingsDlgPageFunc(HWND hDlg, UINT message, WPARAM wParam, LPA
 		if (LOWORD(wParam) == IDC_CHECK_INI_11) {
 			if (IsDlgButtonChecked(hDlg, IDC_CHECK_INI_11)) {
 				EnableWindow(GetDlgItem(hDlg, IDC_CHECK_INI_12), FALSE);
-				CheckDlgButton(hDlg, IDC_CHECK_INI_11, BST_UNCHECKED);
+				//CheckDlgButton(hDlg, IDC_CHECK_INI_11, BST_CHECKED);
 			}
 			else {
 				EnableWindow(GetDlgItem(hDlg, IDC_CHECK_INI_12), TRUE);
-				CheckDlgButton(hDlg, IDC_CHECK_INI_11, currentSettings->GetSettingBool(L"SelfProtect", true) ? BST_CHECKED : BST_UNCHECKED);
+				//CheckDlgButton(hDlg, IDC_CHECK_INI_11, currentSettings->GetSettingBool(L"SelfProtect", true) ? BST_CHECKED : BST_UNCHECKED);
 			}
 		}
 		if (LOWORD(wParam) == IDC_CHECK_INI_16) {
@@ -143,12 +143,16 @@ void SaveSettings(HWND hDlg) {
 	currentSettings->SetSettingBool(L"AutoIncludeFullWindow", IsDlgButtonChecked(hTabMore, IDC_CHECK_INI_14));
 	currentSettings->SetSettingBool(L"AutoForceKill", IsDlgButtonChecked(hTabMore, IDC_CHECK_INI_13));
 	currentSettings->SetSettingBool(L"DoNotShowVirusWindow", IsDlgButtonChecked(hTabMore, IDC_CHECK_INI_15));
+	currentSettings->SetSettingBool(L"DoNotShowTrayIcon", IsDlgButtonChecked(hTabDebug, IDC_CHECK_INI_17));
 
 	currentSettings->SetSettingBool(L"AlwaysCheckUpdate", IsDlgButtonChecked(hTabDebug, IDC_CHECK_INI_21));
 	currentSettings->SetSettingBool(L"ForceInstallInCurrentDir", IsDlgButtonChecked(hTabDebug, IDC_CHECK_INI_24));
 	currentSettings->SetSettingBool(L"ForceDisableWatchDog", IsDlgButtonChecked(hTabDebug, IDC_CHECK_INI_25));
 	currentSettings->SetSettingBool(L"InjectMasterHelper", IsDlgButtonChecked(hTabDebug, IDC_CHECK_INI_22));
 	currentSettings->SetSettingBool(L"InjectProcHelper64", IsDlgButtonChecked(hTabDebug, IDC_CHECK_INI_23));
+
+	currentSettings->SetSettingInt(L"HotKeyFakeFull", SendDlgItemMessage(hTabMore, IDC_HOTKEY_FK, HKM_GETHOTKEY, NULL, NULL));
+	currentSettings->SetSettingInt(L"HotKeyShowHide", SendDlgItemMessage(hTabMore, IDC_HOTKEY_SHOWHIDE, HKM_GETHOTKEY, NULL, NULL));
 
 	WCHAR ckIntervalStrBuffer[16];
 	GetDlgItemText(hTabDebug, IDC_CKINTERVAL, ckIntervalStrBuffer, 16);
@@ -160,7 +164,12 @@ void SaveSettings(HWND hDlg) {
 	if (sel == 0)currentSettings->SetSettingStr(L"InjectMode", L"RemoteThread");
 	else if (sel == 1)currentSettings->SetSettingStr(L"InjectMode", L"HookDllStub");
 
-	currentApp->GetTrainerWorker()->InitSettings();
+	auto worker = currentApp->GetTrainerWorker();
+	if(worker) 
+		worker->InitSettings();
+	else 
+		MessageBox(NULL, L"设置保存成功，请重启软件", L"提示", MB_OK);
+	EndDialog(hDlg, IDOK);
 }
 void InitSettings(HWND hDlg) {
 	//IDC_COMBO1
@@ -184,7 +193,7 @@ void InitSettings(HWND hDlg) {
 
 	CheckDlgButton(hTabMore, IDC_CHECK_INI_13, currentSettings->GetSettingBool(L"BandAllRunOp", false) ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hTabMore, IDC_CHECK_INI_14, currentSettings->GetSettingBool(L"AutoIncludeFullWindow", false) ? BST_CHECKED : BST_UNCHECKED);
-	CheckDlgButton(hTabMore, IDC_CHECK_INI_15, currentSettings->GetSettingBool(L"DoNotShowVirusWindow", false) ? BST_CHECKED : BST_UNCHECKED);
+	CheckDlgButton(hTabMore, IDC_CHECK_INI_15, currentSettings->GetSettingBool(L"DoNotShowVirusWindow", true) ? BST_CHECKED : BST_UNCHECKED);
 	
 	if(currentApp->GetTrainerWorker())
 		CheckDlgButton(hTabMore, IDC_CHECK_INI_16, currentApp->GetTrainerWorker()->Running() ? BST_CHECKED : BST_UNCHECKED);
@@ -193,11 +202,18 @@ void InitSettings(HWND hDlg) {
 		EnableWindow(GetDlgItem(hTabMore, IDC_CHECK_INI_16), FALSE);
 	}
 
+	CheckDlgButton(hTabDebug, IDC_CHECK_INI_17, currentSettings->GetSettingBool(L"DoNotShowTrayIcon", false) ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hTabDebug, IDC_CHECK_INI_21, currentSettings->GetSettingBool(L"AlwaysCheckUpdate", false) ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hTabDebug, IDC_CHECK_INI_24, currentSettings->GetSettingBool(L"ForceInstallInCurrentDir", false) ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hTabDebug, IDC_CHECK_INI_25, currentSettings->GetSettingBool(L"ForceDisableWatchDog", false) ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hTabDebug, IDC_CHECK_INI_22, currentSettings->GetSettingBool(L"InjectMasterHelper", false) ? BST_CHECKED : BST_UNCHECKED);
 	CheckDlgButton(hTabDebug, IDC_CHECK_INI_23, currentSettings->GetSettingBool(L"InjectProcHelper64", false) ? BST_CHECKED : BST_UNCHECKED);
+
+	int HotKeyFakeFull = currentSettings->GetSettingInt(L"HotKeyFakeFull", 1606);
+	int HotKeyShowHide = currentSettings->GetSettingInt(L"HotKeyShowHide", 1604);
+
+	SendDlgItemMessage(hTabMore, IDC_HOTKEY_FK, HKM_SETHOTKEY, HotKeyFakeFull, NULL);
+	SendDlgItemMessage(hTabMore, IDC_HOTKEY_SHOWHIDE, HKM_SETHOTKEY, HotKeyShowHide, NULL);
 
 	std::wstring *setKillProcess = currentSettings->GetSettingStrPtr(L"KillProcess", L"NtTerminateProcess");
 	if (StrEqual(setKillProcess->c_str(), L"TerminateProcess"))  Button_SetCheck(GetDlgItem(hTabDebug, IDC_KILLPROC_TP), BST_CHECKED);

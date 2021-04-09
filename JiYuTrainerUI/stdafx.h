@@ -20,3 +20,6 @@
 #define UIEXPORT_CFUNC(x) EXTERN_C UIEXPORT x 
 
 // 在此处引用程序需要的其他标头
+
+#include <stdexcept>
+#include "messags.h"
