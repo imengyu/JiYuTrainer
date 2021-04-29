@@ -938,13 +938,9 @@
                         <label for="check_auto_update">自动更新软件</label>
                     </div>
 
-                    <div class="form-item" style="margin-top: 6px; ">
+                    <div class="form-item" style="margin-top: 16px; ">
                         <a href="#" id="link_unload_netfilter" class="cfg-link cfg-link-left text-info" style="margin-left: 30px" title="本功能可以卸载极域的网络过滤驱动，来防止教师通过极域限制您电脑的上网。本功能开机后卸载一次即可。">解除网络控制</a>
                         <a href="#" id="link_read_jiyu_password2" class="cfg-link cfg-link-right text-info" title="本软件可尝试破解极域电子教室的卸载和解锁密码">破解极域的密码</a>
-                    </div>
-                    <div class="form-item">
-                        <a href="#" id="link_attact" class="cfg-link cfg-link-left text-info" style="margin-left: 30px;width:150px" title="数据包(udp)重放攻击功能，该功能原理由ht0Ruial提供">重放攻击(by ht0Ruial)</a>
-
                     </div>
                     <div class="form-item">
                         <a href="#" id="link_more_settings" class="cfg-link cfg-link-left text-info" style="margin-left: 30px">软件高级配置</a>
@@ -1016,15 +1012,17 @@
                 <span>ckend 分离本程序与极域</span><br />
                 <span>whereisi 显示当前程序目录</span><br />
                 <span>version 显示当前程序版本</span><br />
-                <span>testupdate 测试升级模块</span><br />
-                <span>crash 测试崩溃</span><br />
-                <span>exit 强制退出程序</span><br />
                 <a href="#" id="link_hide">hide 隐藏主界面</a><br />
                 <a href="#" id="link_read_jiyu_password" class="text-info">jypasswd 破解极域密码</a><br />
-                <span>uj 强制从极域卸载已注入的病毒</span><br />
-                <span>inspector 启动 UI 调试器</span><br />
+                <span>exit 强制退出程序</span><br />
+                <span>testupdate</span><br />
+                <span>crash</span><br />
+                <span>attack</span><br />
+                <span>config</span><br />
+                <span>uj</span><br />
+                <span>inspector</span><br />
+                <span>unloaddrv</span><br />
                 <span>fuljydrv 强制卸载极域的保护驱动 <span class="text-danger">(有蓝屏风险 慎用)</span></span><br />
-                <span>unloaddrv 卸载本软件的驱动</span><br />
             </div>
 
         </div>
@@ -1032,7 +1030,6 @@
         <!--初次提示框-->
         <div class="window-extend-area with-mask upper" id="hello_message">
             <a href="#" id="link_close_hello_message" class="btn-close-extend-area"><i>&nbsp;</i></a>
-
         </div>
         <div class="window-extend-area-mask upper"></div>
         <!--电源提示框-->

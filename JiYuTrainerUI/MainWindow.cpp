@@ -405,6 +405,12 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 			}
 			else MessageBox(_hWnd, L"极域电子教室密码读取失败！或许你可以用 mythware_super_password 试试", L"JiYuTrainer - 提示", MB_ICONEXCLAMATION);
 		}
+		else if (cmd == L"attack") {
+			if (currentAttackWindow == nullptr)
+				currentAttackWindow = new AttackWindow(_hWnd);
+			else
+				currentAttackWindow->Show();
+		}
 		else if (cmd == L"unload_netfilter") {
 			if (MessageBox(_hWnd, L"您是否希望解除极域的网络控制？此操作会卸载极域的网络过滤驱动，卸载以后网络将不受其控制。\n" 
 				"卸载过程中可能卡顿，请等待程序执行完成。\n此操作只需执行一次即可。\n提示：在卸载完成以后最好在“控制面板”>"
@@ -435,6 +441,9 @@ void MainWindow::OnRunCmd(LPCWSTR cmd)
 #endif
 		else if (cmd == L"version") {
 			currentLogger->Log(L"当前版本是：%hs", CURRENT_VERSION);
+		}
+		else if (cmd == L"config") {
+			ShowMoreSettings(_hWnd);
 		}
 		else if (cmd == L"crash") {
 			currentLogger->Log(L"测试崩溃功能");
@@ -574,12 +583,6 @@ bool MainWindow::on_event(HELEMENT he, HELEMENT target, BEHAVIOR_EVENTS type, UI
 		else if (ele.get_attribute("id") == L"update_message_update") {
 			UpdaterWindow updateWindow(_hWnd);
 			updateWindow.RunLoop();
-		}
-		else if (ele.get_attribute("id") == L"link_attact") {
-			if (currentAttackWindow == nullptr)
-				currentAttackWindow = new AttackWindow(_hWnd);
-			else
-				currentAttackWindow->Show();
 		}
 		else if (ele.get_attribute("id") == L"exit_message_kill_and_exit") {
 			isUserCancel = true;
