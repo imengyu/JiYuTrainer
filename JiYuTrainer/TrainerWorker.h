@@ -1,6 +1,7 @@
 #pragma once
 #include "stdafx.h"
 #include <string>
+#include <list>
 #include "SysHlp.h"
 
 enum TrainerWorkerOp {
@@ -68,6 +69,11 @@ public:
 
 #ifdef JTEXPORT
 
+struct IncorrectStudentMainFilterData {
+	DWORD pid;
+	bool checked;
+};
+
 class TrainerWorkerInternal : public TrainerWorker
 {
 public:
@@ -105,11 +111,14 @@ private:
 	DWORD _MasterHelperPid = 0;
 	std::wstring _StudentMainPath;
 	bool _StudentMainFileLocated = false;
+	bool _StudentMainFileLocatedByProcess = false;
 	bool _StudentMainControlled = false;
 	bool _StudentMainRunningLock = false;
 	std::wstring _StatusTextMain;
 	std::wstring _StatusTextMore;
 	std::wstring _TopDomainPassword;
+
+	std::list<IncorrectStudentMainFilterData> incorrectStudentMainPids;
 
 	HHOOK hMsgBoxHook;
 	HWND hWndMain;
@@ -143,6 +152,9 @@ private:
 	bool LocateStudentMainLocation();
 	bool LocateStudentMain(DWORD *outFirstPid);
 	bool LocateMasterHelper(DWORD *outFirstPid);
+	bool CheckPidFilterd(DWORD pid);
+	void AddFilterdPid(DWORD pid);
+	void ClearFilterdPid();
 
 	/* Update ui*/
 

@@ -167,6 +167,20 @@ void TrainerWorkerInternal::HandleMessageFromVirus(LPCWSTR buf)
 			else if (arr[1] == L"gbuntop") ManualTop(false);
 			else if (arr[1] == L"gbtop") ManualTop(true);
 			else if (arr[1] == L"showhelp" && _Callback) _Callback->OnShowHelp();
+			else if (arr[1] == L"wtf") {
+				//插入了错误的目标，现在重置状态
+				DWORD pid = _wtol(arr[2].c_str());
+				AddFilterdPid(pid);
+
+				if (_StudentMainFileLocatedByProcess)
+					_StudentMainFileLocated = false;
+				_StudentMainPid = 0;
+
+				currentLogger->Log(L"插入了奇怪的 StudentMain.exe");
+
+				UpdateState();
+				UpdateStudentMainInfo(false);
+			}
 		}
 		else if (arr[0] == L"wcd")
 		{
@@ -555,6 +569,7 @@ bool TrainerWorkerInternal::AppointStudentMainLocation(LPCWSTR fullPath) {
 	{
 		_StudentMainPath = fullPath;
 		_StudentMainFileLocated = true;
+		_StudentMainFileLocatedByProcess = false;
 
 		currentApp->GetSettings()->SetSettingStr(L"StudentMainPath", fullPath);
 		currentLogger->Log(L"成功手动定位极域电子教室位置： %s", fullPath);
@@ -606,6 +621,7 @@ bool TrainerWorkerInternal::LocateStudentMainLocation()
 		if (Path::Exists(mabeInHere[i])) {
 			_StudentMainPath = mabeInHere[i];
 			_StudentMainFileLocated = true;
+			_StudentMainFileLocatedByProcess = false;
 			return true;
 		}
 	}
@@ -620,27 +636,40 @@ bool TrainerWorkerInternal::LocateStudentMain(DWORD *outFirstPid)
 		for (PSYSTEM_PROCESSES p = current_system_process; !done; p = PSYSTEM_PROCESSES(PCHAR(p) + p->NextEntryOffset)) {
 			if (p->ImageName.Length && StrEqual(p->ImageName.Buffer, L"StudentMain.exe"))
 			{
-				if (outFirstPid)*outFirstPid = (DWORD)p->ProcessId;
-				if (!_StudentMainFileLocated) {
-					//直接通过EXE确定进程位置
-					HANDLE hProcess;
-					if (NT_SUCCESS(MOpenProcessNt((DWORD)p->ProcessId, &hProcess))) {
-						WCHAR buffer[MAX_PATH];
-						if (MGetProcessFullPathEx(hProcess, buffer)) {
+				if (CheckPidFilterd((DWORD)p->ProcessId)) continue;
+
+				HANDLE hProcess;
+				if (NT_SUCCESS(MOpenProcessNt((DWORD)p->ProcessId, &hProcess))) {
+					WCHAR buffer[MAX_PATH];
+					if (MGetProcessFullPathEx(hProcess, buffer)) {
+						//检查exe相同目录下是否存在 LibTDMaster.dll 不存在则排除
+						PathRemoveFileSpec(buffer);
+						wcscat_s(buffer, L"\\LibTDMaster.dll");
+						if (!PathFileExists(buffer)) {
+							AddFilterdPid((DWORD)p->ProcessId);
+							currentLogger->Log(L"奇怪的 StudentMain.exe [%d]", (DWORD)p->ProcessId);
+							continue;
+						}
+
+						//Exe 确定位置
+						if (!_StudentMainFileLocated) {
+							currentLogger->Log(L"通过进程 StudentMain.exe [%d] 定位到位置： %s", (DWORD)p->ProcessId, _StudentMainPath);
 							_StudentMainPath = buffer;
 							_StudentMainFileLocated = true;
-							currentLogger->Log(L"通过进程 StudentMain.exe [%d] 定位到位置： %s", (DWORD)p->ProcessId, _StudentMainPath);
-							CloseHandle(hProcess);
-							return true;
+							_StudentMainFileLocatedByProcess = true;
 						}
-						CloseHandle(hProcess);
 					}
+					CloseHandle(hProcess);
 				}
 
+				if (outFirstPid) *outFirstPid = (DWORD)p->ProcessId;
+
+				ClearFilterdPid();
 				return true;
 			}
 			done = p->NextEntryOffset == 0;
 		}
+		ClearFilterdPid();
 	}
 	return false;
 }
@@ -660,6 +689,43 @@ bool TrainerWorkerInternal::LocateMasterHelper(DWORD *outFirstPid)
 	}
 	return false;
 }
+bool TrainerWorkerInternal::CheckPidFilterd(DWORD pid)
+{
+	for (auto it = incorrectStudentMainPids.begin(); it != incorrectStudentMainPids.end(); it++) {
+		if ((*it).pid == pid)
+			return true;
+	}
+	return false;
+}
+void TrainerWorkerInternal::AddFilterdPid(DWORD pid)
+{
+	IncorrectStudentMainFilterData data;
+	data.checked = true;
+	data.pid = pid;
+	incorrectStudentMainPids.push_back(data);
+}
+void TrainerWorkerInternal::ClearFilterdPid()
+{
+	if (current_system_process)
+	{
+		for (auto it = incorrectStudentMainPids.begin(); it != incorrectStudentMainPids.end(); it++) {
+			auto pid = (*it).pid;
+			bool founded = false;
+			bool done = false;
+			for (PSYSTEM_PROCESSES p = current_system_process; !done; p = PSYSTEM_PROCESSES(PCHAR(p) + p->NextEntryOffset)) {
+				if ((DWORD)p->ProcessId == pid)
+				{
+					founded = true;
+					break;
+				}
+				done = p->NextEntryOffset == 0;
+			}
+			if (!founded) 
+				it = incorrectStudentMainPids.erase(it);
+		}
+	}
+}
+
 
 void TrainerWorkerInternal::UpdateStudentMainInfo(bool byUser)
 {

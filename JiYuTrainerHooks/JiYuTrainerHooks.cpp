@@ -186,6 +186,18 @@ void VLoad()
 	std::wstring name = path.substr(lastQ + 1, path.length() - lastQ - 1);
 
 	if (name == L"StudentMain.exe") {
+
+		hLibTDMaster = GetModuleHandle(L"LibTDMaster.dll");
+		if (hLibTDMaster == NULL) {
+			//这不是极域, 混入了什么奇怪的东西？
+
+			WCHAR buf[32];
+			swprintf_s(buf, L"hkb:wtf:%d", GetCurrentProcessId());
+			VSendMessageBack(buf, hWndMsgCenter);
+			VUnloadAll();
+			FreeLibrary(hInst);//卸载本体
+		}
+
 		//This is target, run virus
 
 		GetModuleFileName(hInst, mainModName, MAX_PATH);
@@ -988,7 +1000,6 @@ void VInstallHooks(VirusMode mode) {
 	HMODULE hLibAVCodec52 = GetModuleHandle(L"LibAVCodec52.dll");
 	HMODULE hFltLib = GetModuleHandle(L"FltLib.dll");
 
-	hLibTDMaster = GetModuleHandle(L"LibTDMaster.dll");
 
 	raSetWindowPos = (fnSetWindowPos)GetProcAddress(hUser32, "SetWindowPos");
 	raMoveWindow = (fnMoveWindow)GetProcAddress(hUser32, "MoveWindow");
@@ -1042,12 +1053,6 @@ void VInstallHooks(VirusMode mode) {
 		//HMODULE hTDMaster = GetModuleHandle(L"libTDMaster.dll");
 		//UnHookLocalInput = (fnUnHookLocalInput)GetProcAddress(hTDMaster, "UnHookLocalInput");
 		//if (UnHookLocalInput) UnHookLocalInput();
-
-		if (hLibTDMaster == NULL) {
-			VOutPutStatus(L"[E] Not found LibTDMaster.dll ! Virus will not work.");
-			VUnloadAll();
-			return;
-		}
 
 		VOutPutStatus(L"[D] Install hook in mode VirusModeHook");
 
