@@ -1,3 +1,7 @@
+# 已废弃。本项目将永远不再更新
+
+---
+
 <p align="center">
   <a href="#">
     <img alt="JiYu Trainer" src="https://imengyu.top/assets/images/jy/JiYuTrainerLogo256.png" width="128">
